@@ -46,9 +46,9 @@ class BluetoothLEViewModel constructor(
         bluetoothLEController.stopDiscovery()
     }
 
-//    fun SendMessage(message: String) {
-//        bluetoothLEController.writeCharacteristic()
-//    }
+    fun SendMessage(device: BluetoothLEScannedDevices) {
+        bluetoothLEController.
+    }
 
     private fun Flow<ConnectionResult>.listen(): Job {
         return onEach { result ->
@@ -73,7 +73,7 @@ class BluetoothLEViewModel constructor(
         }
             .catch { throwable ->
                 _state.update { it.copy(
-                    toastMessage = "Some Error Occured!"
+                    toastMessage = "Some Error Occurred!"
                 ) }
                 Log.i(TAG,"ConnectionResult Error: ${throwable.message}")
             }

@@ -90,29 +90,23 @@ class NearByFragment : Fragment() {
             findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
         }
 
+        val adapter = NearByAdapter(
+            requireActivity(),
+            bluetoothLEViewModel,
+            state.scannedDevices
+        )
+
         lifecycleScope.launch {
             bluetoothLEViewModel.state.collect { state ->
 
-                if (state.error != null) {
+                if (state.toastMessage != null) {
                     Toast.makeText(
                         requireContext(),
-                        state.error,
+                        state.toastMessage,
                         Toast.LENGTH_LONG
                     ).show()
                 }
 
-                if (state.isConnected && !prevConnectionState.isConnected) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Device Connected",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-                if (state.message != null) {
-                    Log.i("Received", state.message.message)
-                    showSplashDialog("Help needed By -> ${state.message.message}")
-                }
                 prevConnectionState = state
             }
         }
@@ -129,25 +123,25 @@ class NearByFragment : Fragment() {
             }
         }
 
-        binding.allowIncomingConnections.setOnClickListener() {
-
-            if (bluetoothAdapter != null) {
-                if(isBluetoothEnabled) {
-                    val requestCode = 1;
-//                    val discoverableIntent: Intent =
-//                        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-//                            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-//                        }
-//                    startActivityForResult(discoverableIntent, requestCode)
-
-                   // bluetoothLEViewModel.waitForIncomingConnection()
-                } else {
-                    enableBluetoothLauncher.launch(
-                        Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                    )
-                }
-            }
-        }
+//        binding.allowIncomingConnections.setOnClickListener() {
+//
+//            if (bluetoothAdapter != null) {
+//                if(isBluetoothEnabled) {
+//                    val requestCode = 1;
+////                    val discoverableIntent: Intent =
+////                        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+////                            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
+////                        }
+////                    startActivityForResult(discoverableIntent, requestCode)
+//
+//                   // bluetoothLEViewModel.waitForIncomingConnection()
+//                } else {
+//                    enableBluetoothLauncher.launch(
+//                        Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+//                    )
+//                }
+//            }
+//        }
 
         if (bluetoothAdapter != null) {
             if (bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
@@ -156,21 +150,11 @@ class NearByFragment : Fragment() {
             ) {
                 if(isBluetoothEnabled) {
 
-//                    val requestCode = 1;
-//                    val discoverableIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-//                        putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-//                    }
-//                    startActivityForResult(discoverableIntent, requestCode)
-
                     bluetoothLEViewModel.startScan()
 
                     lifecycleScope.launch {
                         bluetoothLEViewModel.state.collect { state ->
-                            val adapter = NearByAdapter(
-                                requireActivity(),
-                                bluetoothLEViewModel,
-                                state.scannedDevices
-                            )
+
                             binding.rvMain.adapter = adapter
                             Log.i(TAG, "SAV_MEDaaaa")
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Invisible rectangle, placed first in the level list -->
+
+
+    <item >
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="100dp" android:topRightRadius="100dp" android:bottomRightRadius="100dp" android:bottomLeftRadius="100dp" />
+            <solid android:color="@color/light_pink"/>
+            <size android:width="350dp" android:height="100dp"> </size>
+            <gradient android:gradientRadius="100dp" android:type="radial" android:centerColor="@color/light_pink" />
+            <padding android:bottom="50dp"/>
+        </shape>
+    </item>
+
+<!--    <item>-->
+<!--        <shape android:shape="rectangle" >-->
+<!--            <corners-->
+<!--                android:bottomLeftRadius="50dp"-->
+<!--                android:bottomRightRadius="50dp"-->
+<!--                android:topLeftRadius="50dp"-->
+<!--                android:topRightRadius="50dp"/>-->
+<!--            <solid android:color="@color/white">-->
+<!--            </solid>-->
+<!--            <size android:height="200dp"/>-->
+<!--        </shape>-->
+
+<!--    </item>-->
+</layer-list>

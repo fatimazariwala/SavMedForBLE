@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="mu.location.savmed.ui.NotoSansFont" />
+        <variable
+            name="model"
+            type="mu.location.savmed.ui.chat.chatNew.model.ConversationModel" />
+        <variable
+            name="onClickListener"
+            type="View.OnClickListener" />
+        <variable
+            name="onLongClickListener"
+            type="View.OnLongClickListener" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:onClick="@{onClickListener}"
+        android:onLongClickListener="@{onLongClickListener}"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="@drawable/primary_cell_background">
+
+        <include
+            android:id="@+id/avatar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            layout="@layout/contact_avatar"
+            bind:model="@{model.avatarModel}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+<!--        <ImageView-->
+<!--            android:id="@+id/removal_in_progress"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:src="@drawable/animated_in_progress"-->
+<!--            android:contentDescription="@string/content_description_chat_removal_in_progress"-->
+<!--            android:visibility="gone"-->
+<!--            app:layout_constraintBottom_toBottomOf="@id/avatar"-->
+<!--            app:layout_constraintStart_toStartOf="@id/avatar"-->
+<!--            app:layout_constraintTop_toTopOf="@id/avatar"-->
+<!--            app:layout_constraintEnd_toEndOf="@id/avatar"/>-->
+
+        <!--    Inn below code changes were made to constraint_referenced_ids field -->
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/right_border"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="start"
+            app:barrierMargin="-5dp"
+            app:constraint_referenced_ids="notifications_count, date_time, last_sent_message_status" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style_500"
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@{model.lastMessageTextSender,default=JodhDoe}"
+            android:textSize="14sp"
+            android:textColor="?attr/color_main2_800"
+            textFont=""
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@id/avatar"
+            app:layout_constraintEnd_toStartOf="@id/right_border"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/last_message_or_composing"/>
+
+        <!-- for below code i have kept visibilty to visible, deafault was gone        -->
+
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style"
+            android:id="@+id/last_message_sender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="3sp"
+            android:gravity="center_vertical|start"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="?attr/color_main2_400"
+            android:visibility="visible"
+            textFont=" "
+            app:layout_constraintStart_toStartOf="@id/title"
+            app:layout_constraintEnd_toStartOf="@id/last_message_forward"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintBottom_toTopOf="@id/separator"/>
+
+
+<!--        for below cod ei have made changes to layout_margin start and  visibilty-->
+        <ImageView
+            android:id="@+id/last_message_forward"
+            android:layout_width="@dimen/small_icon_size"
+            android:layout_height="@dimen/small_icon_size"
+            android:layout_marginStart="@dimen/zero"
+            android:layout_marginEnd="5dp"
+            android:layout_marginTop="3dp"
+            android:src="@drawable/forward"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/last_message_sender"
+            app:layout_constraintEnd_toStartOf="@id/last_message_or_composing"
+            app:layout_constraintTop_toTopOf="@id/last_message_or_composing"
+            app:layout_constraintBottom_toBottomOf="@id/last_message_or_composing"/>
+
+<!--        for below code i have made changes to text and fontr filed-->
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style"
+            android:id="@+id/last_message_or_composing"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|start"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@{model.isComposing ? model.composingLabel : model.lastMessageText, default=Hellothere}"
+            android:textSize="14sp"
+            android:textColor="?attr/color_main2_400"
+            textFont="@{model.unreadMessageCount > 0 || model.isComposing ? NotoSansFont.NotoSansBold : NotoSansFont.NotoSansRegular}"
+            app:layout_constraintStart_toEndOf="@id/last_message_forward"
+            app:layout_constraintEnd_toStartOf="@id/right_border"
+            app:layout_constraintTop_toTopOf="@id/last_message_sender"
+            app:layout_constraintBottom_toBottomOf="@id/last_message_sender" />
+
+<!--        for below code i have made changes to text field-->
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style_300"
+            android:id="@+id/date_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:text="@{model.dateTime, default=1007}"
+            android:textSize="12sp"
+            android:textColor="?attr/color_main2_500"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/title"
+            app:layout_constraintBottom_toBottomOf="@id/title" />
+
+<!--    for below code i have made changes to text field and visibility-->
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style"
+            android:id="@+id/notifications_count"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            android:background="@drawable/shape_red_round"
+            android:text="@{String.valueOf(model.unreadMessageCount), default=99}"
+            android:textColor="?attr/color_on_main"
+            android:textSize="11sp"
+            android:visibility="@{model.unreadMessageCount > 0 ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date_time"
+            app:layout_constraintBottom_toTopOf="@id/separator"/>
+
+<!--    for below code i have made changes to src field and visibility-->
+        <ImageView
+            android:id="@+id/last_sent_message_status"
+            android:layout_width="@dimen/small_icon_size"
+            android:layout_height="@dimen/small_icon_size"
+            android:layout_marginEnd="10dp"
+            android:contentDescription="@string/content_description_chat_bubble_delivery_status"
+            android:src="@{model.lastMessageIcon, default=@drawable/animated_in_progress}"
+            android:visibility="@{model.isLastMessageOutgoing ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toStartOf="@id/notifications_count"
+            app:layout_constraintTop_toBottomOf="@id/date_time"
+            app:layout_constraintBottom_toTopOf="@id/separator"
+            app:tint="?attr/color_main1_500" />
+
+        <!--    below code for mute icon is removed-->
+
+
+        <!--    below code for clock icon is removed-->
+
+
+        <!--    below code for lock icon is removed-->
+
+
+        <View
+            android:id="@+id/separator"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginEnd="10dp"
+            android:background="?attr/color_main2_200"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="@id/title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="org.linphone.core.ConsolidatedPresence" />
+<!--        <import type="org.linphone.core.SecurityLevel" />-->
+        <variable
+            name="model"
+            type="mu.location.savmed.contacts.AbstractAvatarModel" />
+        <variable
+            name="hidePresence"
+            type="Boolean" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/avatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:contentDescription="@null"
+            coilAvatar="@{model}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:scaleType="centerCrop"
+            app:civ_border_width="2dp"
+            android:src="@drawable/shape_circle_contact_avatar_background"
+            app:civ_border_color="@color/green_main_100_alpha_50"
+            app:civ_border_overlay="true" />
+
+
+        <ImageView
+            android:id="@+id/presence_badge"
+            android:layout_width="@dimen/avatar_presence_badge_size"
+            android:layout_height="@dimen/avatar_presence_badge_size"
+            android:layout_marginEnd="@dimen/avatar_presence_badge_end_margin"
+            android:background="@drawable/led_background"
+            android:padding="@dimen/avatar_presence_badge_padding"
+            android:contentDescription="@string/content_description_contact_away"
+            app:presenceIcon="@{model.presenceStatus}"
+            app:hidePresence="@{hidePresence}"
+            app:layout_constraintEnd_toEndOf="@id/avatar"
+            app:layout_constraintBottom_toBottomOf="@id/avatar" />
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

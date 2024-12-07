@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.linphone.org/xsds/lpconfig.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.linphone.org/xsds/lpconfig.xsd lpconfig.xsd">
+  <section name="nat_policy_default_values">
+    <entry name="stun_server" overwrite="true"></entry>
+    <entry name="protocols" overwrite="true"></entry>
+  </section>
+  <section name="net">
+    <entry name="friendlist_subscription_enabled" overwrite="true">0</entry>
+  </section>
+</config>

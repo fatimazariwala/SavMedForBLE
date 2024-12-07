@@ -1,0 +1,48 @@
+
+## Start of factory rc
+
+# This file shall not contain path referencing package name, in order to be portable when app is renamed.
+# Paths to resources must be set from LinphoneManager, after creating LinphoneCore.
+
+[net]
+mtu=1300
+force_ice_disablement=0
+
+[rtp]
+accept_any_encryption=1
+
+[sip]
+guess_hostname=1
+auto_answer_replacing_calls=1
+ping_with_options=0
+use_cpim=1
+update_presence_model_timestamp_before_publish_expires_refresh=1
+rls_uri=sip:212.38.94.76
+
+[video]
+displaytype=MSAndroidTextureDisplay
+auto_resize_preview_to_keep_ratio=1
+max_conference_size=vga
+
+[misc]
+enable_basic_to_client_group_chat_room_migration=0
+enable_simple_group_chat_message_state=0
+aggregate_imdn=1
+notify_each_friend_individually_when_presence_received=1
+store_friends=1
+
+[app]
+activation_code_length=4
+prefer_basic_chat_room=1
+record_aware=1
+
+[account_creator]
+backend=0
+
+[lime]
+lime_update_threshold=86400
+
+[alerts]
+alerts_enabled=1
+
+## End of factory rc

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:title="Home"
+        android:icon="@drawable/baseline_home_24"
+        android:id="@+id/main_home" />
+    <item
+        android:title="NearBy"
+        android:icon="@drawable/nearbyhelp"
+        android:id="@+id/nearBy" />
+    <item
+        android:title="Connect"
+        android:icon="@drawable/phone_call"
+        android:id="@+id/call" />
+    <item
+        android:title="Medical data"
+        android:icon="@drawable/medicaldata"
+        android:id="@+id/medical" />
+
+</menu>

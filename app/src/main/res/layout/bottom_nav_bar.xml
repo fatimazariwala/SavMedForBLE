@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_gravity="center_horizontal">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="mu.location.savmed.ui.NotoSansFont" />
+    </data>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        app:cardCornerRadius="20dp"
+        android:backgroundTintMode="screen"
+        app:cardBackgroundColor="@color/light_pink">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/bottom_nav_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Contacts TextView -->
+            <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/contacts"
+            style="@style/bottom_nav_bar_label_style"
+            textFont="NotoSansRegular"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/address_book"
+            android:drawablePadding="10dp"
+            android:drawableTint="@color/main2_600"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/bottom_navigation_contacts_label"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/calls"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+            <!-- Calls TextView -->
+            <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/calls"
+            style="@style/bottom_nav_bar_label_style"
+            textFont="NotoSansRegular"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/phone"
+            android:drawablePadding="10dp"
+            android:drawableTint="@color/main2_600"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/bottom_navigation_calls_label"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/conversations"
+            app:layout_constraintStart_toEndOf="@id/contacts"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+            <!-- Missed Calls TextView -->
+            <androidx.appcompat.widget.AppCompatTextView
+                style="@style/default_text_style"
+                android:id="@+id/missed_calls"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:background="@drawable/shape_red_round"
+                android:text="1"
+                android:textColor="?attr/color_on_main"
+                android:textSize="13sp"
+                android:paddingBottom="2dp"
+                android:visibility="visible"
+                app:layout_constraintTop_toTopOf="@id/calls"
+                app:layout_constraintStart_toStartOf="@id/calls"
+                app:layout_constraintEnd_toEndOf="@id/calls"/>
+
+            <!-- Conversations TextView -->
+            <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/conversations"
+            style="@style/bottom_nav_bar_label_style"
+            textFont="NotoSansRegular"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/chat_teardrop_text"
+            android:drawablePadding="10dp"
+            android:drawableTint="@color/main2_600"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="Chat"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/calls"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+            <!-- Unread Messages TextView -->
+            <androidx.appcompat.widget.AppCompatTextView
+                style="@style/default_text_style"
+                android:id="@+id/unread_messages"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:background="@drawable/shape_red_round"
+                android:text="1"
+                android:textColor="?attr/color_on_main"
+                android:textSize="13sp"
+                android:paddingBottom="2dp"
+                android:visibility="visible"
+                app:layout_constraintTop_toTopOf="@id/conversations"
+                app:layout_constraintStart_toStartOf="@id/conversations"
+                app:layout_constraintEnd_toEndOf="@id/conversations"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

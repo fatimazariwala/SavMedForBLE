@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Circle background -->
+    <item>
+        <shape
+            android:shape="oval">
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+
+    <!-- Red border -->
+    <item android:right="10dp" android:left="10dp" android:top="10dp" android:bottom="10dp">
+        <shape
+            android:shape="oval">
+            <stroke android:color="@android:color/holo_red_light" android:width="4dp" />
+        </shape>
+    </item>
+</layer-list>

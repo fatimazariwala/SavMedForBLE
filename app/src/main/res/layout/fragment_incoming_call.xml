@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:bind="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="android.view.View"/>
+        <variable
+            name="viewModel"
+            type="mu.location.savmed.ui.call.viewModels.CurrentCallViewModel" />
+    </data>
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.call.fragments.OutgoingCallFragment">
+
+        <include
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/avatar_in_call_size"
+            android:layout_height="@dimen/avatar_in_call_size"
+            layout="@layout/call_aavatar_huge"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chronometer"
+            app:layout_constraintBottom_toTopOf="@id/display_name" />
+
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/display_name"
+            style="@style/default_text_style_300"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.displayedName, default=`John Doe`}"
+            android:textColor="@color/black"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:visibility="@{View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.475" />
+
+        <Chronometer
+            android:id="@+id/chronometer"
+            style="@style/call_header_style"
+            android:layout_width="59dp"
+            android:layout_height="32dp"
+            android:textColor="@color/black"
+            app:layout_constraintBottom_toTopOf="@+id/display_name"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/default_text_style"
+            android:id="@+id/callStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="Unknown"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:visibility="visible"
+
+            app:layout_constraintTop_toBottomOf="@id/display_name"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <include
+            bind:viewModel="@{viewModel}"
+            android:id="@+id/bottom_bar"
+            layout="@layout/call_incoming_actions"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/call_main_actions_menu_height"
+            android:layout_gravity="bottom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</layout>

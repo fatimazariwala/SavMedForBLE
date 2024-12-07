@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.medical.MedicalInfoActivity">
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="Upload Health Info"
+        android:textColor="#009688"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:gravity="center"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/horizontalScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="5dp">
+
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Medical Form"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="40dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            tools:layout_editor_absoluteX="-7dp">
+
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/gender"
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="150dp"
+                            android:ems='10'
+                            android:hint="Gender"
+                            android:inputType="text"
+                            android:textSize="15sp" />
+
+                        <EditText
+                            android:id="@+id/age"
+                            android:layout_width="70dp"
+                            android:layout_height="43dp"
+                            android:layout_marginStart="20dp"
+                            android:ems="10"
+                            android:hint="Age"
+                            android:inputType="text"
+                            android:textSize="15sp"/>
+
+                    </RelativeLayout>
+
+
+                    <EditText
+                        android:id="@+id/bloodGrp"
+                        android:layout_width="350dp"
+                        android:layout_height="43dp"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginTop="15dp"
+                        android:layout_marginEnd="15dp"
+                        android:layout_marginBottom="15dp"
+                        android:ems="10"
+                        android:hint="Your Blood Group"
+                        android:inputType="text"
+                        android:textSize="15sp"/>
+
+                    <EditText
+                        android:id="@+id/allergies"
+                        android:layout_width="350dp"
+                        android:layout_height="43dp"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="15dp"
+                        android:layout_marginBottom="15dp"
+                        android:ems="10"
+                        android:hint="What allergies do you have?"
+                        android:inputType="text"
+                        android:textSize="15sp"/>
+
+                    <EditText
+                        android:id="@+id/medicalNotes"
+                        android:layout_width="350dp"
+                        android:layout_height="43dp"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="15dp"
+                        android:layout_marginBottom="15dp"
+                        android:ems="10"
+                        android:hint="Important Medician Notes"
+                        android:inputType="text"
+                        android:textSize="15sp"/>
+
+                    <EditText
+                        android:id="@+id/chronicIllness"
+                        android:layout_width="350dp"
+                        android:layout_height="43dp"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="15dp"
+                        android:layout_marginBottom="15dp"
+                        android:ems="10"
+                        android:hint="Chronic Illness ? Specify"
+                        android:inputType="text"
+                        android:textSize="15sp"/>
+
+
+                </LinearLayout>
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="1. Have you had any problems with your heart?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:id="@+id/heart"
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+
+                    <RadioButton
+                        android:id="@+id/heart_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/hear_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="2. Have you had any problems with blood pressure?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/bp_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/bp_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="3. Have you had any problems with your lungs?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/lung_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/lung_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="4. Do you have diabetes?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/diabetes_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/diabetes_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="5. Have you had hepatitis, jaundice?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/jaundice_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/jaundice_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="6. Have you had any kidney or bladder problems?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/kidney_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/kidney_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="7. Have you had convulsions or seizures?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+
+                    <RadioButton
+                        android:id="@+id/seizures_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/seizures_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="8. Have you had any problems with excessive bleeding?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/bleeding_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/bleeding_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="9. Any muscle disease in your family?\n(Muscular Dystrophy, Multiple Sclerosis, etc.)"
+                    android:layout_marginLeft="15dp">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+
+                    <RadioButton
+                        android:id="@+id/muscle_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/muscle_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="10. Have you had psychiatric problems?">
+
+                </TextView>
+
+                <RadioGroup
+                    android:layout_width="79dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="50dp">
+                    <RadioButton
+                        android:id="@+id/psychiatric_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Yes"/>
+
+                    <RadioButton
+                        android:id="@+id/psychiatric_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No"/>
+                </RadioGroup>
+
+                <Button
+                    android:id="@+id/buttonSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Save"
+                    android:layout_marginBottom="10dp"/>
+
+            </TableLayout>
+
+        </ScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</LinearLayout>

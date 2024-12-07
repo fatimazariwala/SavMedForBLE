@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="viewModel"
+            type="mu.location.savmed.ui.call.viewModels.CurrentCallViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="82dp"
+        android:background="@drawable/shape_call_bottom_sheet_background">
+
+        <ImageView
+            android:id="@+id/pause_call"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/call_button_size"
+            android:background="@drawable/in_call_button_background_green"
+            android:contentDescription="@{viewModel.isPaused ? @string/call_action_resume_call : @string/call_action_pause_call}"
+            android:enabled="true"
+            android:onClick="@{() -> viewModel.togglePause()}"
+            android:padding="@dimen/call_button_icon_padding"
+            android:selected="@{viewModel.isPaused()}"
+            android:src="@{viewModel.isPaused ? @drawable/play : @drawable/pause, default=@drawable/pause}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/change_audio_output"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.56"
+            app:tint="@color/in_call_button_tint_color" />
+
+        <ImageView
+            android:id="@+id/hang_up"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/call_button_size"
+            android:background="@drawable/squircle_red_button_background"
+            android:contentDescription="@string/content_description_hang_up_call"
+            android:onClick="@{() -> viewModel.hangUp()}"
+            android:paddingStart="30dp"
+            android:paddingTop="15dp"
+            android:paddingEnd="30dp"
+            android:paddingBottom="15dp"
+            android:src="@drawable/phone_disconnect"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.048"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.56"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/toggle_mute_mic"
+            android:layout_width="@dimen/call_button_size"
+            android:layout_height="@dimen/call_button_size"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/in_call_button_background_red"
+            android:contentDescription="@string/content_description_toggle_microphone"
+            android:onClick="@{() -> viewModel.toggleMuteMicrophone()}"
+            android:padding="@dimen/call_button_icon_padding"
+            android:selected="@{viewModel.isMicrophoneMuted}"
+            android:src="@{viewModel.isMicrophoneMuted ? @drawable/microphone_slash : @drawable/microphone, default=@drawable/microphone}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/change_audio_output"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.56"
+            app:tint="@color/in_call_button_tint_color" />
+
+        <ImageView
+            android:id="@+id/change_audio_output"
+            android:layout_width="@dimen/call_button_size"
+            android:layout_height="@dimen/call_button_size"
+            android:background="@drawable/in_call_button_background_red"
+            android:contentDescription="@string/content_description_change_output_audio_device"
+            android:onClick="@{() -> viewModel.changeAudioOutputDevice()}"
+            android:padding="@dimen/call_button_icon_padding"
+            android:src="@{viewModel.isSpeakerEnabled ? @drawable/speaker_high : @drawable/speaker_slash, default=@drawable/speaker_slash}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.75"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.56"
+            app:tint="@color/in_call_button_tint_color" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_gravity="center_horizontal">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="mu.location.savmed.ui.NotoSansFont" />
+    </data>
+
+    <LinearLayout
+        android:id="@+id/bottom_nav_bar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:background="@drawable/chat_layout_topbar_upper_background"
+        android:gravity="center">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/contacts"
+                style="@style/bottom_nav_bar_label_style"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableTop="@drawable/address_book"
+                android:drawableTint="@color/main2_600"
+                android:gravity="center"
+                android:text="@string/bottom_navigation_contacts_label"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="40dp"
+            android:background="@color/black"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+
+            android:layout_weight="1">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/calls"
+                style="@style/bottom_nav_bar_label_style"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableTop="@drawable/phone"
+                android:drawableTint="@color/main2_600"
+                android:gravity="center"
+                android:text="@string/bottom_navigation_calls_label"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Missed Calls Badge -->
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/missed_calls"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="top"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/shape_red_round"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="?attr/color_on_main"
+                android:textSize="13sp"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/calls"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="40dp"
+            android:background="@color/black"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:layout_marginTop="5dp"
+            android:gravity="center_horizontal">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/conversations"
+                style="@style/bottom_nav_bar_label_style"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableTop="@drawable/chat_teardrop_text"
+                android:drawableTint="@color/main2_600"
+                android:gravity="center"
+                android:text="Chat"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Unread Messages Badge -->
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/unread_messages"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="@drawable/shape_red_round"
+                android:gravity="center"
+                android:layout_marginTop="4dp"
+                android:paddingBottom="2dp"
+                android:text="1"
+                android:textColor="?attr/color_on_main"
+                android:textSize="13sp"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/conversations"
+                app:layout_constraintTop_toTopOf="parent"  />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+
+</layout>

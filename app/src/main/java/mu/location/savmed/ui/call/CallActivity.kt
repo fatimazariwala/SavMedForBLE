@@ -1,0 +1,132 @@
+package mu.location.savmed.ui.call
+
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.util.Log
+import android.widget.RadioButton
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import mu.location.savmed.CallNavGraphDirections
+import mu.location.savmed.MainActivity
+import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.databinding.ActivityCallBinding
+import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.chat.chatNew.viewModel.AbstractConversationViewModel
+import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
+import mu.location.savmed.ui.main.SharedMainViewModel
+
+class CallActivity : AppCompatActivity() {
+
+    companion object {
+        const val TAG = "[Call Activity]"
+    }
+
+    private lateinit var binding : ActivityCallBinding
+    private lateinit var navController : NavController
+
+    private lateinit var callViewModel: CurrentCallViewModel
+    private lateinit var callViewModelFactory: CurrentCallViewModelFactory
+
+    private lateinit var conversationViewModel: AbstractConversationViewModel
+
+    private lateinit var sharedMainViewModel: SharedMainViewModel
+
+    var chatNotificationArgs = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        binding = ActivityCallBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        callViewModel = run {
+             ViewModelProvider(this)[CurrentCallViewModel::class.java]
+        }
+
+        sharedMainViewModel = run {
+            ViewModelProvider(this)[SharedMainViewModel::class.java]
+        }
+
+        conversationViewModel = run {
+            ViewModelProvider(this)[ConversationViewModel::class.java]
+        }
+
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
+        navController = navHostFragment.navController
+
+        chatNotificationArgs = intent.getBooleanExtra("Chat",false)
+        Log.i(TAG,"From ChatNotif $chatNotificationArgs")
+        if (chatNotificationArgs == true) {
+            val localSipUri = intent.getStringExtra("LocalSipUri")
+            val remoteSipUri = intent.getStringExtra("RemoteSipUri")
+
+            Log.i(TAG,"Notification Found LocalSipUri: [${localSipUri}] RemoteSipUri: [${remoteSipUri}]")
+
+            if (localSipUri != null && remoteSipUri != null) {
+                navController.navigate(
+                    CallNavGraphDirections.actionGlobalConversationFragment(
+                        localSipUri,
+                        remoteSipUri
+                    )
+                )
+            }
+        }
+
+        coreContext.isOutgoingCall.observe(this) { isOutgoingCall ->
+            Log.i("outgoing callll","calllll$isOutgoingCall")
+            if(isOutgoingCall) {
+                navController.navigate(R.id.outgoingCallFragment)
+            }
+        }
+        coreContext.isIncomingCall.observe(this) { isIncomingCall ->
+            Log.i("incoming callll","calllll$isIncomingCall")
+            if (isIncomingCall) {
+                navController.navigate(R.id.incomingCallFragment)
+            }
+            // callsViewModel.IncomingPostDataAPI(coreContext.remoteUri.value.toString())
+        }
+        coreContext.isActiveCall.observe(this) { isActiveCall ->
+            if(isActiveCall) {
+                navController.navigate(R.id.activeCallFragment)
+            }
+        }
+        coreContext.registrationStatus.observe(this) { registrationStatus ->
+
+            findViewById<RadioButton>(R.id.connectStatus).setText(registrationStatus)
+
+            if (registrationStatus.equals("Registration successful")) {
+                findViewById<RadioButton>(R.id.connectStatus).setText("Connected")
+                findViewById<RadioButton>(R.id.connectStatus).isChecked = true
+            }
+        }
+        coreContext.isCallEnded.observe(this) { isCallEnded ->
+            if(isCallEnded) {
+                val i = Intent(this,MainActivity::class.java)
+                startActivity(i)
+                finish()
+            }
+        }
+        callViewModel.goToEndedCallEvent.observe(this) {
+            navController.navigate(R.id.contactFragment)
+        }
+    }
+
+    init{
+        onBackPressedDispatcher.addCallback(this /* lifecycle owner */, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val intent = Intent(this@CallActivity,MainActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
+        })
+    }
+
+}

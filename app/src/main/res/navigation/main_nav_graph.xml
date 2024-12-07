@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/rippleFragment">
+
+    <fragment
+        android:id="@+id/nearByFragment"
+        android:name="mu.location.savmed.bluetooth.bluetoothLE.NearByFragment"
+        android:label="NearByFragment" >
+        <action
+            android:id="@+id/action_nearByFragment_to_rippleFragment"
+            app:destination="@id/rippleFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/emergency_contacts"
+        android:name="mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsFragment"
+        android:label="fragment_emergency_contacts"
+        tools:layout="@layout/fragment_emergency_contacts" >
+        <action
+            android:id="@+id/action_emergency_contacts_self"
+            app:destination="@id/emergency_contacts" />
+        <action
+            android:id="@+id/action_emergency_contacts_to_rippleFragment"
+            app:destination="@id/rippleFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/rippleFragment"
+        android:name="mu.location.savmed.ui.RippleFragment"
+        android:label="fragment_ripple"
+        tools:layout="@layout/fragment_ripple" >
+        <action
+            android:id="@+id/action_rippleFragment_to_emergency_contacts"
+            app:destination="@id/emergency_contacts" />
+        <action
+            android:id="@+id/action_rippleFragment_to_nearByFragment"
+            app:destination="@id/nearByFragment" />
+    </fragment>
+</navigation>

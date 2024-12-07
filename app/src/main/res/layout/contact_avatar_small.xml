@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="org.linphone.core.ConsolidatedPresence" />
+<!--        <import type="org.linphone.core.SecurityLevel" />-->
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            style="@style/avatar_imageview"
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/avatar_bubble_size"
+            android:layout_height="@dimen/avatar_bubble_size"
+            android:contentDescription="@null"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <ImageView
+            android:id="@+id/presence_badge"
+            android:layout_width="@dimen/avatar_bubble_presence_badge_size"
+            android:layout_height="@dimen/avatar_bubble_presence_badge_size"
+            android:layout_marginEnd="1dp"
+            android:background="@drawable/led_background"
+            android:padding="1dp"
+            app:layout_constraintEnd_toEndOf="@id/avatar"
+            app:layout_constraintBottom_toBottomOf="@id/avatar" />
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

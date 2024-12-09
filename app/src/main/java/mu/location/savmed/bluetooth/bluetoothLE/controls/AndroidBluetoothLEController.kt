@@ -39,8 +39,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
@@ -58,17 +60,17 @@ open class AndroidBluetoothLEController(
 
     companion object {
         const val TAG = "[BLE Controller]"
-        const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
-        const val CHARACTERISTIC_USERNAME_UUID = "87654321-4321-6789-4321-fedcba987654"
-        const val CHARACTERISTIC_MESSAGE_UUID = "fedcba987654-4321-6789-4321-87654321"
+//        const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
+//        const val CHARACTERISTIC_USERNAME_UUID = "87654321-4321-6789-4321-fedcba987654"
+//        const val CHARACTERISTIC_MESSAGE_UUID = "fedcba987654-4321-6789-4321-87654321"
 
 
-        const val ACTION_GATT_CONNECTED =
-            "ACTION_GATT_CONNECTED"
-        const val ACTION_GATT_DISCONNECTED =
-            "ACTION_GATT_DISCONNECTED"
-        const val ACTION_GAT_SERVICES_DISCOVERED =
-            "ACTION_GAT_SERVICES_DISCOVERED"
+//        const val ACTION_GATT_CONNECTED =
+//            "ACTION_GATT_CONNECTED"
+//        const val ACTION_GATT_DISCONNECTED =
+//            "ACTION_GATT_DISCONNECTED"
+//        const val ACTION_GAT_SERVICES_DISCOVERED =
+//            "ACTION_GAT_SERVICES_DISCOVERED"
     }
 
     val bluetoothManager by lazy {
@@ -79,8 +81,8 @@ open class AndroidBluetoothLEController(
         bluetoothManager?.adapter
     }
 
-    private val bleClient: BLEClient
-    private val bleServer: BLEServer
+    lateinit var  bleClient: BLEClient
+    lateinit var  bleServer: BLEServer
 
     lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
     lateinit var bluetoothGattServer: BluetoothGattServer
@@ -88,18 +90,18 @@ open class AndroidBluetoothLEController(
 
     val bluetoothLeScanner by lazy { bluetoothAdapter?.bluetoothLeScanner }
 
-    protected val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
-    override val scannedDevices: StateFlow<List<BluetoothLEScannedDevices>>
-        get() = _scannedDevices.asStateFlow()
+//    protected val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
+//    override val scannedDevices: StateFlow<List<BluetoothLEScannedDevices>>
+//        get() = _scannedDevices.asStateFlow()
+//
+//
+//    protected val _savMedDevices = MutableStateFlow<List<BluetoothLESavMedDevices>>(emptyList())
+//    override val savMedDevices: StateFlow<List<BluetoothLESavMedDevices>>
+//        get() = _savMedDevices.asStateFlow()
 
-
-    protected val _savMedDevices = MutableStateFlow<List<BluetoothLESavMedDevices>>(emptyList())
-    override val savMedDevices: StateFlow<List<BluetoothLESavMedDevices>>
-        get() = _savMedDevices.asStateFlow()
-
-    protected val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
-    override val listOfMessages: StateFlow<List<writeMessage>>
-        get() = _listOfMessages.asStateFlow()
+//    protected val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
+//    override val listOfMessages: StateFlow<List<writeMessage>>
+//        get() = _listOfMessages.asStateFlow()
 
     protected val _bleEvent = MutableSharedFlow<ConnectionResult>()
     override val bleEvent: SharedFlow<ConnectionResult> get() = _bleEvent
@@ -108,41 +110,91 @@ open class AndroidBluetoothLEController(
         Log.i(TAG,"IN andorid cont...")
         Log.i("AndroidBluetoothLEController", "Context: $context")
 
-        if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
-            Log.i(TAG,"Setting Adapter name to unknown_SavMed")
-            setAdapterName("unknown_SavMed")
-        }
-
-        bleClient = BLEClient(context)
-        bleServer = BLEServer(context)
-
-        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE)) {
-            bleServer.setUpBle()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                bleServer.startAdvertise()
-            } else {
-                Log.i(TAG,"ble advertise not spported")
+        GlobalScope.launch(Dispatchers.Main) {
+            scannedDevices.collect { devices ->
+                // Log or perform actions before stopping discovery
+                Log.i(TAG, "Scanned Devices before stopping discovery: $devices")
             }
-        } else {
-            Log.i(TAG,"Ble adv not granted...")
         }
     }
 
-    final override fun setAdapterName(userName: String) {
-        bluetoothAdapter?.name = "${Build.MODEL},${Build.MANUFACTURER}"
-    }
+//    override fun initialize() {
+//        if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT) && hasPermission(Manifest.permission.BLUETOOTH_SCAN)) {
+//            //Log.i(TAG,"Setting Adapter name to unknown_SavMed")
+//            setAdapterName()
+//            bleClient = BLEClient(context)
+//            bleServer = BLEServer(context)
+//
+//            if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE)) {
+//                bleServer.setUpBle()
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    bleServer.startAdvertise()
+//                } else {
+//                    Log.i(TAG,"ble advertise not spported")
+//                }
+//            } else {
+//                Log.i(TAG,"Ble adv not granted...")
+//            }
+//
+//        }
+//    }
+//
+//    fun addDeviceToSavMedDevicesList() {
+//        Log.i(TAG,"uoooo")
+//    }
 
-    override fun startDiscovery() {
-        bleClient.startBLEScan()
-    }
+//    fun addDeviceToScannedDeviceList(result: ScanResult, isSavMed: Boolean) {
+//
+//        // Add Calculation for dist
+//        val newDevice = BluetoothLEScannedDevices(
+//            deviceName = result.device.name ?: "N/A",
+//            address = result.device.address,
+//            rssi = result.rssi.toString(),
+//            isSavMed = isSavMed
+//        )
+//
+//        _scannedDevices.update { devices ->
+//            val mutableDevices = devices.toMutableList()
+//            val existingDeviceIndex = devices.indexOfFirst { it.address == newDevice.address }
+//
+//            if (existingDeviceIndex != -1) {
+//                mutableDevices[existingDeviceIndex] = newDevice // Replace the existing device
+//            } else {
+//                mutableDevices.add(newDevice) // Add the new device
+//            }
+//            mutableDevices
+//        }
+//
+//        for(devices in scannedDevices.value) {
+//            Log.i(TAG,"devocezzz ${devices.address}")
+//        }
+//    }
 
-    override fun stopDiscovery() {
-        bleClient.stopBleScan()
-    }
+//    final override fun setAdapterName() {
+//        bluetoothAdapter?.name = "${Build.MODEL},${Build.MANUFACTURER}"
+//    }
+//
+//    override fun startDiscovery() {
+//        bleClient = BLEClient(context)
+//        bleClient.startBLEScan()
+//    }
+//
+//    override fun stopDiscovery() {
+//        Log.i(TAG,"yooooo in stop disc")
+//
+//        for(devices in scannedDevices.value) {
+//            Log.i(TAG,"devocezz------z ${devices.address}")
+//        }
+//
+//    }
 
-    final override fun hasPermission(permission: String): Boolean {
-        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-    }
+//    override fun sendMessage(device: BluetoothLEScannedDevices) {
+//        bleClient.writeCharacteristic(device,"")
+//    }
+
+//    final override fun hasPermission(permission: String): Boolean {
+//        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+//    }
 
 //    private val leScanCallback: ScanCallback = object : ScanCallback() {
 //

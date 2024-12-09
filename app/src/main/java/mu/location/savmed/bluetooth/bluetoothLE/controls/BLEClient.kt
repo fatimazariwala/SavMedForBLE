@@ -36,6 +36,25 @@ class BLEClient(
     val context: Context
 ): AndroidBluetoothLEController(context) {
 
+    companion object {
+        const val TAG = "[BLE CLient]"
+        const val ACTION_GATT_CONNECTED =
+            "ACTION_GATT_CONNECTED"
+        const val ACTION_GATT_DISCONNECTED =
+            "ACTION_GATT_DISCONNECTED"
+        const val ACTION_GAT_SERVICES_DISCOVERED =
+            "ACTION_GAT_SERVICES_DISCOVERED"
+    }
+
+    protected val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
+    override val scannedDevices: StateFlow<List<BluetoothLEScannedDevices>>
+        get() = _scannedDevices.asStateFlow()
+
+
+    protected val _savMedDevices = MutableStateFlow<List<BluetoothLESavMedDevices>>(emptyList())
+    override val savMedDevices: StateFlow<List<BluetoothLESavMedDevices>>
+        get() = _savMedDevices.asStateFlow()
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     var scanning = false
@@ -268,7 +287,7 @@ class BLEClient(
         }.flowOn(Dispatchers.IO)
     }
 
-    private fun addDeviceToSavMedDevicesList(gatt: BluetoothGatt?, discoveredCharacteristics: List<BluetoothGattCharacteristic>?, name: String? = null) {
+    fun addDeviceToSavMedDevicesList(gatt: BluetoothGatt?, discoveredCharacteristics: List<BluetoothGattCharacteristic>?, name: String? = null) {
 
         val savMedDevice = BluetoothLESavMedDevices(
             deviceName = gatt?.device?.name ?: "N/A",
@@ -328,16 +347,19 @@ class BLEClient(
         )
 
         _scannedDevices.update { devices ->
-            //Log.i("[FSubscriber]",device.address)
-            val existingDeviceIndex = devices.indexOfFirst { device ->
-                device.address == newDevice.address
-            }
-            val updatedDevices = if (existingDeviceIndex != -1) {
-                devices.toMutableList().apply { removeAt(existingDeviceIndex) }
+            val mutableDevices = devices.toMutableList()
+            val existingDeviceIndex = devices.indexOfFirst { it.address == newDevice.address }
+
+            if (existingDeviceIndex != -1) {
+                mutableDevices[existingDeviceIndex] = newDevice // Replace the existing device
             } else {
-                devices.toMutableList()
+                mutableDevices.add(newDevice) // Add the new device
             }
-            updatedDevices + newDevice
+            mutableDevices
+        }
+
+        for(devices in scannedDevices.value) {
+            Log.i(TAG,"devocezzz ${devices.address}")
         }
     }
 

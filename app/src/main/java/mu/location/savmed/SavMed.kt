@@ -8,6 +8,7 @@ import com.google.android.material.color.DynamicColors
 import mu.location.savmed.bluetooth.bluetoothClassic.BluetoothController
 import mu.location.savmed.bluetooth.bluetoothLE.controls.AndroidBluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEControllerFactory
 import mu.location.savmed.models.CoreContext
 import mu.location.savmed.models.CorePreferences
 import mu.location.savmed.utils.ActivityMonitor
@@ -68,7 +69,7 @@ class SavMed : Application() {
 
         //Below lin eis comented out on 24/11/2024 at 5:22
         //Error was getBluetoothLeAdvertiser(...) must not be null
-        bluetoothLEController = AndroidBluetoothLEController(applicationContext)
+        bluetoothLEController = BLEControllerFactory.createBluetoothController(applicationContext)
         coreContext = CoreContext(context)
         coreContext.start()
 

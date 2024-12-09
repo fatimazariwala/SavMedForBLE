@@ -22,6 +22,8 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
@@ -52,7 +54,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bluetoothLEViewModel: BluetoothLEViewModel
     private lateinit var emrContactsViewModel: EmergencyContactsViewModel
 
+    private lateinit var navController : NavController
+
     private var permissionsChecked = false
+    var selectedFragment : Fragment ?= null
 
     val backgroundLocResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (it) {
@@ -136,30 +141,27 @@ class MainActivity : AppCompatActivity() {
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
         // By using switch we can easily get the
         // selected fragment by using there id
-        var selectedFragment: Fragment? = null
         when (it.itemId) {
             R.id.main_home -> {
-                selectedFragment = RippleFragment()
-
+                navController.navigate(R.id.rippleFragment)
+                return@OnNavigationItemSelectedListener true
             }
             R.id.call -> {
                 startActivity(Intent(applicationContext, CallActivity::class.java))
                 overridePendingTransition(0, 0)
+                return@OnNavigationItemSelectedListener true
             }
             R.id.nearBy -> {
-                selectedFragment = NearByFragment()
+                navController.navigate(R.id.nearByFragment)
+               // return@OnNavigationItemSelectedListener true
             }
             R.id.medical -> {
                 startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
                 overridePendingTransition(0, 0)
+                return@OnNavigationItemSelectedListener true
             }
         }
-        // It will help to replace the
-        // one fragment to other.
-        if (selectedFragment != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerView, selectedFragment).commit()
-        }
+
         true
     }
 
@@ -176,7 +178,7 @@ class MainActivity : AppCompatActivity() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, RippleFragment()).commit()
+        //supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, RippleFragment()).commit()
 
 //        bluetoothLEController = AndroidBluetoothLEController(this)
 
@@ -221,6 +223,17 @@ class MainActivity : AppCompatActivity() {
             }
         } else { corePreferences.keepServiceAlive = true }
 
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        navController = navHostFragment.navController
+
+        val intentExtra = intent.getIntExtra("frag",0)
+        if (intentExtra != 0) {
+            if (intentExtra == 2) {
+                Log.i(TAG,"i gett....ripple" )
+                navController.navigate(R.id.nearByFragment)
+                bottomNav.id = R.id.nearBy
+            }
+        }
 
         val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -258,25 +271,9 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             bluetoothLEViewModel.state.collect { state ->
 
-                if (state.error != null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        state.error,
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-                if (state.isConnected && !prevConnectionState.isConnected) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Device Connected",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
                 if (state.message != null) {
-                    Log.i("Received", state.message.message)
-                    showSplashDialog("Help needed By -> ${state.message.message}")
+                    Log.i("Received", state.message)
+                    showSplashDialog(state.message)
                 }
                 prevConnectionState = state
             }

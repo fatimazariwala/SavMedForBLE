@@ -1,5 +1,6 @@
 package mu.location.savmed.bluetooth.bluetoothLE.controls
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -19,6 +20,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
@@ -31,7 +35,32 @@ class BLEServer(
    val context: Context
 ): AndroidBluetoothLEController(context) {
 
+    companion object {
+        const val TAG = "[BLE Server]"
+        const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
+        const val CHARACTERISTIC_USERNAME_UUID = "87654321-4321-6789-4321-fedcba987654"
+        const val CHARACTERISTIC_MESSAGE_UUID = "fedcba987654-4321-6789-4321-87654321"
+    }
+
     private var advertiseData: AdvertiseData ?= null
+
+    private val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
+    val listOfMessages: StateFlow<List<writeMessage>>
+        get() = _listOfMessages.asStateFlow()
+
+    init {
+        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE)) {
+            bleServer.setUpBle()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                bleServer.startAdvertise()
+            } else {
+                Log.i(TAG,"ble advertise not spported")
+            }
+        } else {
+            Log.i(TAG,"Ble adv not granted...")
+        }
+
+    }
 
     @SuppressLint("MissingPermission")
     private val gattServerCallback = object : BluetoothGattServerCallback() {
@@ -109,6 +138,8 @@ class BLEServer(
     @SuppressLint("MissingPermission")
     fun setUpBle() {
         if (bluetoothAdapter?.bluetoothLeAdvertiser != null) {
+
+            bluetoothAdapter?.name = "${Build.MODEL},${Build.MANUFACTURER}"
             bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser!!
             try {
                 Handler(Looper.getMainLooper()).post {

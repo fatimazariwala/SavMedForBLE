@@ -7,19 +7,24 @@ import android.util.Log
 import android.widget.RadioButton
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import mu.location.savmed.CallNavGraphDirections
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ActivityCallBinding
+import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
 import mu.location.savmed.ui.chat.chatNew.viewModel.AbstractConversationViewModel
 import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
 import mu.location.savmed.ui.main.SharedMainViewModel
+import mu.location.savmed.ui.medical.MedicalInfoActivity
 
 class CallActivity : AppCompatActivity() {
 
@@ -38,6 +43,41 @@ class CallActivity : AppCompatActivity() {
     private lateinit var sharedMainViewModel: SharedMainViewModel
 
     var chatNotificationArgs = false
+
+    private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
+        // By using switch we can easily get the
+        // selected fragment by using there id
+        var selectedFragment: Fragment? = null
+        when (it.itemId) {
+            R.id.main_home -> {
+                val i = Intent(applicationContext,MainActivity::class.java)
+                i.putExtra("frag",1)
+                startActivity(i)
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.call -> {
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.nearBy -> {
+                val i = Intent(applicationContext,MainActivity::class.java)
+                i.putExtra("frag",2)
+                startActivity(i)
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.medical -> {
+                startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
+                overridePendingTransition(0, 0)
+                return@OnNavigationItemSelectedListener true
+            }
+        }
+        // It will help to replace the
+        // one fragment to other.
+        if (selectedFragment != null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainerView, selectedFragment).commit()
+        }
+        true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +101,10 @@ class CallActivity : AppCompatActivity() {
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
         navController = navHostFragment.navController
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNav.setOnNavigationItemSelectedListener(navListener)
+        bottomNav.id = R.id.call
 
         chatNotificationArgs = intent.getBooleanExtra("Chat",false)
         Log.i(TAG,"From ChatNotif $chatNotificationArgs")

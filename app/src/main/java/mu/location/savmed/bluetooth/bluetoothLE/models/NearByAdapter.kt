@@ -15,7 +15,9 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.flow
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ItemNearbyuserBinding
+import mu.location.savmed.databinding.SearchresultItemLayoutBinding
 import mu.location.savmed.ui.call.Adapters.SearchResultAdapter
 import mu.location.savmed.ui.call.Adapters.SearchResultAdapter.ContactDiffCallback
 import org.linphone.core.SearchResult
@@ -23,10 +25,14 @@ import org.linphone.core.SearchResult
 class NearByAdapter(
     private val onMessageClick: (BluetoothLEScannedDevices) -> Unit,
     private val onCallCLick: (String) -> Unit,
-) : ListAdapter<BluetoothLEScannedDevices, BluetoothLEScannedDevices.BlueToothBLEDeviceViewHolder>(BleDeviceDiffCallback()) {
+) : ListAdapter<BluetoothLEScannedDevices, NearByAdapter.BlueToothBLEDeviceViewHolder>(BleDeviceDiffCallback()) {
 
     companion object {
         const val TAG = "[BLE Adapter]"
+    }
+
+    init {
+        Log.i(TAG,"i am init.....")
     }
 
     inner class BlueToothBLEDeviceViewHolder(
@@ -34,6 +40,7 @@ class NearByAdapter(
     ): RecyclerView.ViewHolder(binding.root) {
 
         fun bind (device: BluetoothLEScannedDevices) {
+            Log.i(TAG,"in bind......")
             binding.apply {
                 bluetoothtvFullName.text = device.name ?: "N/A"
                 deviceName.text = device.deviceName ?: "N/A"
@@ -50,7 +57,7 @@ class NearByAdapter(
                 }
 
                 transferbtn.setOnClickListener() {
-                    if (device.characteristics != emptyList()) {
+                    if (!device.characteristics.isNullOrEmpty()) {
                         onMessageClick(device)
                     }
                 }
@@ -61,15 +68,21 @@ class NearByAdapter(
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): BluetoothLEScannedDevices.BlueToothBLEDeviceViewHolder {
-        TODO("Not yet implemented")
+    ): BlueToothBLEDeviceViewHolder {
+        val binding = ItemNearbyuserBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return BlueToothBLEDeviceViewHolder(binding)
     }
 
     override fun onBindViewHolder(
-        holder: BluetoothLEScannedDevices.BlueToothBLEDeviceViewHolder,
+        holder: BlueToothBLEDeviceViewHolder,
         position: Int
     ) {
-        TODO("Not yet implemented")
+        Log.i(TAG,"in bind.. creating virew b=holder....")
+        holder.bind(getItem(position))
     }
 
     class BleDeviceDiffCallback: DiffUtil.ItemCallback<BluetoothLEScannedDevices>() {
@@ -78,14 +91,14 @@ class NearByAdapter(
             oldItem: BluetoothLEScannedDevices,
             newItem: BluetoothLEScannedDevices
         ): Boolean {
-            return oldItem.name == newItem.name
+            return false
         }
 
         override fun areItemsTheSame(
             oldItem: BluetoothLEScannedDevices,
             newItem: BluetoothLEScannedDevices
         ): Boolean {
-           return oldItem.address.equals(newItem.address)
+           return false
         }
     }
 

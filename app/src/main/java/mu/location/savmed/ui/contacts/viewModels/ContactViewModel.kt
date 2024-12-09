@@ -315,6 +315,7 @@ class ContactViewModel : ViewModel() {
             addFriendToList()
         } else {
             friend!!.remove()
+            getContactList()
             addFriendToList()
         }
     }

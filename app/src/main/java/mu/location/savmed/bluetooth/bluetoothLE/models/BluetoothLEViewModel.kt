@@ -30,6 +30,16 @@ class BluetoothLEViewModel constructor(
         _state
     ) { scannedDevices,listOfMessages,state ->
 
+                Log.i(TAG, "Scanned Devices: ---${scannedDevices.size}")
+        scannedDevices.forEach { device ->
+            Log.i(TAG, "Device: ${device.deviceName} - ${device.address}")
+        }
+
+        Log.i(TAG, "List of Messages: ---${listOfMessages.size}")
+        listOfMessages.forEach { message ->
+            Log.i(TAG, "Message: $message")
+        }
+
         state.copy(
             scannedDevices = scannedDevices,
             listOfMessages =  listOfMessages
@@ -47,7 +57,7 @@ class BluetoothLEViewModel constructor(
     }
 
     fun SendMessage(device: BluetoothLEScannedDevices) {
-        bluetoothLEController.
+        bluetoothLEController.sendMessage(device)
     }
 
     private fun Flow<ConnectionResult>.listen(): Job {
@@ -60,7 +70,7 @@ class BluetoothLEViewModel constructor(
                 }
                 is ConnectionResult.BLETransferSucceeded -> {
                     _state.update { it.copy(
-                        toastMessage = result.message
+                        message = result.message
                     ) }
                 }
                 is ConnectionResult.Error -> {

@@ -16,7 +16,9 @@ interface BluetoothLEController {
    // val isConnected: StateFlow<Boolean>
 
     // Set Name for BluetoothAdapter
-    fun setAdapterName(userName: String)
+    fun setAdapterName()
+
+    fun initialize()
 
     // Start Bluetooth Near-by Scan
     fun startDiscovery()
@@ -30,8 +32,8 @@ interface BluetoothLEController {
     // Connecting to the launched server
    // fun connectToDevice(device: BluetoothLEDevice): Flow<ConnectionResult>
 
-    // Send outgoing Message
-    //suspend fun SendMessage(message: String): BluetoothMessage?
+    // Send A Help request
+   fun sendMessage(device: BluetoothLEScannedDevices)
 
     // Close Connection with the Connected Device
     //fun closeConnection()

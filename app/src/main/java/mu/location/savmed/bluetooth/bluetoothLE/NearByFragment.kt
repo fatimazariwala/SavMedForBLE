@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -13,14 +14,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.bluetoothLEController
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.controls.AndroidBluetoothLEController
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
 import mu.location.savmed.bluetooth.bluetoothLE.models.NearByAdapter
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
@@ -33,10 +39,12 @@ class NearByFragment : Fragment() {
     }
 
     lateinit var binding: FragmentNearbyhelpBinding
-
+    lateinit var scannedDeviceAdapter: NearByAdapter
     // Bluetooth ViewModel
     val viewModelFactory = BluetoothLEViewModelFactory(bluetoothLEController)
     lateinit var bluetoothLEViewModel: BluetoothLEViewModel
+
+    lateinit var ACBLE: AndroidBluetoothLEController
 
     // Initialize Bluetooth Manager Class
     private val bluetoothManager by lazy {
@@ -59,7 +67,7 @@ class NearByFragment : Fragment() {
     val enableBluetoothLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        bluetoothLEViewModel.startScan()
+        startScan()
     }
 
     private val permissionCheck =
@@ -75,36 +83,66 @@ class NearByFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        scannedDeviceAdapter = NearByAdapter(
+            onCallCLick = { sipUri -> coreContext.startCall(sipUri) },
+            onMessageClick = { device -> bluetoothLEViewModel.SendMessage(device) }
+        )
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+
+        ACBLE = AndroidBluetoothLEController(requireContext())
+
         binding = FragmentNearbyhelpBinding.inflate(inflater,container,false)
         bluetoothLEViewModel = ViewModelProvider(this, viewModelFactory)[BluetoothLEViewModel::class.java]
 
         var prevConnectionState = bluetoothLEViewModel.state.value
 
+        binding.rvMain.apply {
+            adapter = scannedDeviceAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+
+            addItemDecoration (
+                DividerItemDecoration(requireContext(),DividerItemDecoration.VERTICAL).apply {
+                    setDrawable(
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            R.drawable.search_result_divider,
+                            null
+                        )!!
+                    )
+                }
+            )
+        }
+        Log.i(TAG, "SAV_MEDaaaa")
+
+//        startScan()
+
         binding.btnHome.setOnClickListener() {
             findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
         }
 
-        val adapter = NearByAdapter(
-            requireActivity(),
-            bluetoothLEViewModel,
-            state.scannedDevices
-        )
-
         lifecycleScope.launch {
+
             bluetoothLEViewModel.state.collect { state ->
 
-                if (state.toastMessage != null) {
-                    Toast.makeText(
-                        requireContext(),
-                        state.toastMessage,
-                        Toast.LENGTH_LONG
-                    ).show()
+                if (state != prevConnectionState) {
+                    if (state.toastMessage != null) {
+                        Toast.makeText(
+                            requireContext(),
+                            state.toastMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                if (state.message != null) {
+                    Log.i("Received", state.message)
+                    showSplashDialog(state.message)
                 }
 
                 prevConnectionState = state
@@ -114,7 +152,7 @@ class NearByFragment : Fragment() {
         binding.searchForHelp.setOnClickListener(){
             if (bluetoothAdapter != null) {
                 if(isBluetoothEnabled) {
-                    bluetoothLEViewModel.startScan()
+                    startScan()
                 } else {
                     enableBluetoothLauncher.launch(
                         Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -123,72 +161,85 @@ class NearByFragment : Fragment() {
             }
         }
 
-//        binding.allowIncomingConnections.setOnClickListener() {
-//
-//            if (bluetoothAdapter != null) {
-//                if(isBluetoothEnabled) {
-//                    val requestCode = 1;
-////                    val discoverableIntent: Intent =
-////                        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-////                            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-////                        }
-////                    startActivityForResult(discoverableIntent, requestCode)
-//
-//                   // bluetoothLEViewModel.waitForIncomingConnection()
-//                } else {
-//                    enableBluetoothLauncher.launch(
-//                        Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//                    )
-//                }
-//            }
-//        }
+        binding.allowIncomingConnections.setOnClickListener() {
+            bluetoothLEViewModel.stopScan()
+        }
 
+        // Inflate the layout for this fragment
+        return binding.root
+    }
+
+    private fun startScan() {
         if (bluetoothAdapter != null) {
-            if (bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
-                bluetoothLEController.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) &&
-                bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            if (
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
+                            bluetoothLEController.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) &&
+                            bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                } else {
+                    bluetoothLEController.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                }
             ) {
-                if(isBluetoothEnabled) {
-
-                    bluetoothLEViewModel.startScan()
+                if (isBluetoothEnabled) {
+//
+//                    ACBLE.startDiscovery()
+//                    ACBLE.bleClient = BLEClient(requireContext())
 
                     lifecycleScope.launch {
+
+//                        ACBLE.scannedDevices.collect() { state ->
+//                            Log.i(TAG,"Device size ${state.size}")
+//                        }
+
                         bluetoothLEViewModel.state.collect { state ->
 
-                            binding.rvMain.adapter = adapter
-                            Log.i(TAG, "SAV_MEDaaaa")
+                            Log.i(TAG,"Ui state testing $state")
+
+                            for (device in state.scannedDevices) {
+                                Log.i(TAG,"SCanned ${device.address}")
+                            }
+
+                            scannedDeviceAdapter.submitList(state.scannedDevices)
 
                             if(state.scannedDevices.isEmpty()) {
                                 binding.sttTv.visibility = View.VISIBLE
                             } else {
                                 binding.sttTv.visibility = View.GONE
+                                Log.i(TAG,"Trynna ubmit")
                             }
                         }
                     }
+
                 } else {
-                    enableBluetoothLauncher.launch(
-                        Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    Toast.makeText(requireContext(), "Already Scanning...", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    permissionCheck.launch(
+                        arrayOf(
+                            Manifest.permission.BLUETOOTH_SCAN,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        )
+                    )
+                } else {
+                    permissionCheck.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                        )
                     )
                 }
-
-            } else {
-                permissionCheck.launch(
-                    arrayOf(
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    )
-                )
             }
         } else {
-            Toast.makeText(
-                requireContext(),
-                "Bluetooth Not Supported!",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(),"Current Device Dose not Have Bluetooth Capabilities!",Toast.LENGTH_SHORT).show()
         }
-        // Inflate the layout for this fragment
-        return binding.root
+    }
+
+    private fun showScannedDevices() {
+
+        Log.i(TAG,"Trynna ubmit----")
+
     }
 
     private fun showSplashDialog(message: String) {

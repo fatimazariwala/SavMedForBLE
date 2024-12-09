@@ -24,7 +24,7 @@ data class BluetoothLEUiState(
     val savMedDevices: List<BluetoothLESavMedDevices> = emptyList(),
     var toastMessage: String ?= null,
     val listOfMessages: List<writeMessage> ?= null,
-    val message: writeMessage?= null
+    val message: String ?= null
 )
 
 data class writeMessage(

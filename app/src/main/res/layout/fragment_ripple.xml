@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+
     <data>
         <import type="android.view.View"/>
         <variable
@@ -11,376 +12,431 @@
             type="mu.location.savmed.ui.RippleViewModel" />
     </data>
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginTop="20dp">
 
-    <ScrollView
-        android:id="@+id/scrollView2"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent">
 
-        <androidx.coordinatorlayout.widget.CoordinatorLayout
+
+        <ScrollView
+            android:id="@+id/scrollView2"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
 
-                <com.google.android.material.button.MaterialButton
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-
-                    android:id="@+id/idBtnLogOut"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="Logout"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.933"
-                    app:layout_constraintStart_toEndOf="@+id/imageView"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Button
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:id="@+id/loginBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="Login"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.933"
-                    app:layout_constraintStart_toEndOf="@+id/imageView"
-                    app:layout_constraintTop_toTopOf="parent"/>
-
-                <ImageView
-                    android:id="@+id/imageView"
-                    android:layout_width="62dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/savlogpng" />
-
-                <TextView
-                    android:id="@+id/appname"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="40dp"
-                    android:layout_marginTop="52dp"
-                    android:gravity="center_horizontal"
-                    android:letterSpacing="0.025"
-                    android:text="SavMed"
-                    android:textColor="#E61EA856"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="@+id/imageView"
-                    app:layout_constraintTop_toTopOf="parent" />
 
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardView"
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="20dp"
-                    android:elevation="12dp"
-                    app:cardCornerRadius="15dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/appname">
+                    android:layout_height="wrap_content">
 
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/usernotloggedin"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:visibility="gone">
 
 
-                        <TextView
-                            android:id="@+id/logintoview"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="Login/Sign up to view profile"
-                            android:textAllCaps="true"
-                            android:textColor="@color/green_500"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintHorizontal_bias="0.125"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <Button
-                            android:id="@+id/gotoRegist"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginTop="8dp"
-                            android:text="Sign Up"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintHorizontal_bias="0.057"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toBottomOf="@+id/logintoview" />
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/userloggedin"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:visibility="visible">
-
-                        <include
-                            android:id="@+id/avatar"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:layout_marginTop="5dp"
-                            android:layout_marginBottom="5dp"
-                            layout="@layout/contact_avatar"
-                            bind:model="@{viewModel.avatar}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-<!--                        <ImageButton-->
-<!--                            android:id="@+id/idBtnShowBottomSheet"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:background="@color/white"-->
-<!--                            android:backgroundTint="@color/white"-->
-<!--                            android:contentDescription="TODO"-->
-<!--                            android:src="@drawable/bluetooth"-->
-<!--                            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                            app:layout_constraintEnd_toEndOf="parent"-->
-<!--                            app:layout_constraintHorizontal_bias="1.0"-->
-<!--                            app:layout_constraintStart_toEndOf="@+id/ecbtn"-->
-<!--                            app:layout_constraintTop_toBottomOf="@+id/idTVUserName"-->
-<!--                            app:layout_constraintVertical_bias="0.06" />-->
-
-                        <TextView
-                            android:id="@+id/idTVUserName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="60dp"
-                            android:layout_marginTop="10dp"
-                            android:text="Username"
-                            android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            app:layout_constraintStart_toStartOf="@id/avatar"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <TextView
-                            android:id="@+id/saviourid"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="60dp"
-                            android:layout_marginTop="4dp"
-                            android:layout_marginBottom="10dp"
-                            android:text="Saviour ID"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="@+id/avatar"
-                            app:layout_constraintTop_toBottomOf="@+id/idTVUserName" />
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
 
 
-                        <!--                        <ImageButton-->
-<!--                            android:id="@+id/profileB"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginEnd="44dp"-->
-<!--                            android:background="?attr/selectableItemBackground"-->
-<!--                            android:padding="8dp"-->
-<!--                            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                            app:layout_constraintEnd_toEndOf="parent"-->
-<!--                            app:layout_constraintTop_toTopOf="parent"-->
-<!--                            app:layout_constraintVertical_bias="0.232" />-->
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                </androidx.cardview.widget.CardView>
-
-<!--                <Button-->
-<!--                    android:id="@+id/ecbtn"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="16dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    android:text="EMR Contacts"-->
-<!--                    app:layout_constraintEnd_toEndOf="parent"-->
-<!--                    app:layout_constraintTop_toTopOf="parent">-->
-
-<!--                </Button>-->
-
-                <FrameLayout
-                    android:id="@+id/sos_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fitsSystemWindows="true"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/cardView"
-                    tools:context=".ui.RippleFragment">
-
-                    <com.skyfishjy.library.RippleBackground
-                        android:id="@+id/content"
-                        android:layout_width="match_parent"
+                        android:id="@+id/idBtnLogOut"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        app:rb_color="@color/light_pink"
-                        app:rb_duration="2000"
-                        app:rb_radius="50dp"
-                        app:rb_rippleAmount="2"
-                        app:rb_scale="3"
-                        app:rb_type="fillRipple">
 
-                        <ImageView
-                            android:id="@+id/sos"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_centerInParent="true"
-                            android:layout_marginBottom="400dp"
-                            android:src="@drawable/soshelp">
 
-                        </ImageView>
+                        android:text="Logout"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.933"
+                        app:layout_constraintStart_toEndOf="@+id/imageView"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                    </com.skyfishjy.library.RippleBackground>
+
+                    <Button
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:id="@+id/loginBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Login"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.933"
+                        app:layout_constraintStart_toEndOf="@+id/imageView"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="62dp"
+                        android:layout_height="56dp"
+                        android:layout_marginStart="16dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/savlogpng" />
+
+
+                    <TextView
+                        android:id="@+id/appname"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="40dp"
+                        android:layout_marginTop="35dp"
+                        android:gravity="center_horizontal"
+                        android:letterSpacing="0.025"
+                        android:text="SavMed"
+                        android:textColor="#E61EA856"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="@+id/imageView"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+
 
                     <androidx.cardview.widget.CardView
+                        android:id="@+id/cardView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="30dp"
                         android:layout_marginEnd="20dp"
-                        android:elevation="20dp"
+                        android:elevation="12dp"
                         app:cardCornerRadius="15dp"
-                        android:backgroundTint="@color/red_danger_500">
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/appname">
+
+
+
 
                         <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/usernotloggedin"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="5dp">
+                            android:visibility="gone">
 
-                            <ImageView
-                                android:id="@+id/image_view22"
-                                android:layout_width="46dp"
-                                android:layout_height="42dp"
-                                android:foregroundGravity="center_vertical"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintVertical_bias="0.0"
-                                app:srcCompat="@drawable/location"
-                                app:tint="@color/white" />
+
+
 
                             <TextView
-                                android:id="@+id/headeing_location"
+                                android:id="@+id/logintoview"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="You are here"
-                                android:textColor="@color/white"
-                                android:layout_marginStart="10dp"
+                                android:layout_marginTop="16dp"
+                                android:text="Login/Sign up to view profile"
+                                android:textAllCaps="true"
+                                android:textColor="@color/green_500"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
                                 app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="0.0"
-                                app:layout_constraintStart_toEndOf="@+id/image_view22"
+                                app:layout_constraintHorizontal_bias="0.125"
+                                app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
 
+
+                            <Button
+                                android:id="@+id/gotoRegist"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:layout_marginTop="8dp"
+                                android:text="Sign Up"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintHorizontal_bias="0.057"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toBottomOf="@+id/logintoview" />
+
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/userloggedin"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:visibility="visible">
+
+
+                            <include
+                                android:id="@+id/avatar"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginBottom="5dp"
+                                layout="@layout/contact_avatar"
+                                bind:model="@{viewModel.avatar}"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+
+                            <!--                        <ImageButton-->
+                            <!--                            android:id="@+id/idBtnShowBottomSheet"-->
+                            <!--                            android:layout_width="wrap_content"-->
+                            <!--                            android:layout_height="wrap_content"-->
+                            <!--                            android:background="@color/white"-->
+                            <!--                            android:backgroundTint="@color/white"-->
+                            <!--                            android:contentDescription="TODO"-->
+                            <!--                            android:src="@drawable/bluetooth"-->
+                            <!--                            app:layout_constraintBottom_toBottomOf="parent"-->
+                            <!--                            app:layout_constraintEnd_toEndOf="parent"-->
+                            <!--                            app:layout_constraintHorizontal_bias="1.0"-->
+                            <!--                            app:layout_constraintStart_toEndOf="@+id/ecbtn"-->
+                            <!--                            app:layout_constraintTop_toBottomOf="@+id/idTVUserName"-->
+                            <!--                            app:layout_constraintVertical_bias="0.06" />-->
+
+
                             <TextView
-                                android:id="@+id/location_data"
-                                android:layout_width="match_parent"
+                                android:id="@+id/idTVUserName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="60dp"
+                                android:layout_marginTop="10dp"
+                                android:text="Username"
+                                android:textColor="@color/black"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                app:layout_constraintStart_toStartOf="@id/avatar"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+
+                            <TextView
+                                android:id="@+id/saviourid"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="60dp"
                                 android:layout_marginTop="4dp"
-                                android:text=" "
-                                android:textColor="@color/white"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="1.0"
-                                app:layout_constraintStart_toEndOf="@+id/image_view22"
-                                app:layout_constraintTop_toBottomOf="@id/headeing_location" />
+                                android:layout_marginBottom="10dp"
+                                android:text="Saviour ID"
+                                android:textColor="@android:color/black"
+                                android:textSize="14sp"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="@+id/avatar"
+                                app:layout_constraintTop_toBottomOf="@+id/idTVUserName" />
+
+
+
+
+                            <!--                        <ImageButton-->
+                            <!--                            android:id="@+id/profileB"-->
+                            <!--                            android:layout_width="wrap_content"-->
+                            <!--                            android:layout_height="wrap_content"-->
+                            <!--                            android:layout_marginEnd="44dp"-->
+                            <!--                            android:background="?attr/selectableItemBackground"-->
+                            <!--                            android:padding="8dp"-->
+                            <!--                            app:layout_constraintBottom_toBottomOf="parent"-->
+                            <!--                            app:layout_constraintEnd_toEndOf="parent"-->
+                            <!--                            app:layout_constraintTop_toTopOf="parent"-->
+                            <!--                            app:layout_constraintVertical_bias="0.232" />-->
+
 
                         </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                     </androidx.cardview.widget.CardView>
 
 
-                </FrameLayout>
-
-<!--                <androidx.cardview.widget.CardView-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginHorizontal="20dp"-->
-<!--                    android:layout_marginVertical="10dp"-->
-<!--                    android:elevation="20dp"-->
-<!--                    app:cardCornerRadius="15dp"-->
-<!--                    app:layout_constraintTop_toBottomOf="@id/sos_button"-->
-<!--                    app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                    app:layout_constraintEnd_toEndOf="parent"-->
-<!--                    app:layout_constraintStart_toStartOf="parent">-->
-<!--                    <androidx.constraintlayout.widget.ConstraintLayout-->
-<!--                        android:layout_width="match_parent"-->
-<!--                        android:layout_height="match_parent">-->
+                    <!--                <Button-->
+                    <!--                    android:id="@+id/ecbtn"-->
+                    <!--                    android:layout_width="wrap_content"-->
+                    <!--                    android:layout_height="wrap_content"-->
+                    <!--                    android:layout_marginTop="16dp"-->
+                    <!--                    android:layout_marginEnd="16dp"-->
+                    <!--                    android:text="EMR Contacts"-->
+                    <!--                    app:layout_constraintEnd_toEndOf="parent"-->
+                    <!--                    app:layout_constraintTop_toTopOf="parent">-->
 
 
-<!--                        <ImageView-->
-<!--                            android:id="@+id/image_view20"-->
-<!--                            android:layout_width="60dp"-->
-<!--                            android:layout_height="60dp"-->
-<!--                            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                            app:layout_constraintStart_toStartOf="parent"-->
-<!--                            app:layout_constraintTop_toTopOf="parent"-->
-<!--                            app:srcCompat="@drawable/uploaddata" />-->
-
-<!--                        <TextView-->
-<!--                            android:id="@+id/textView8"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginStart="10dp"-->
-<!--                            android:text="Your Medical infor"-->
-<!--                            app:layout_constraintEnd_toEndOf="parent"-->
-<!--                            app:layout_constraintHorizontal_bias="0.0"-->
-<!--                            app:layout_constraintStart_toEndOf="@+id/image_view20"-->
-<!--                            app:layout_constraintTop_toTopOf="parent" />-->
-
-<!--                        <Button-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="40dp"-->
-<!--                            android:text="Add medical data"-->
-<!--                            android:textSize=""-->
-<!--                            app:layout_constraintEnd_toEndOf="parent"-->
-<!--                            app:layout_constraintHorizontal_bias="0.0"-->
-<!--                            android:layout_marginStart="10dp"-->
-<!--                            android:layout_marginTop="3dp"-->
-<!--                            android:backgroundTint="@color/light_pink"-->
-<!--                            app:layout_constraintStart_toEndOf="@+id/image_view20"-->
-<!--                            app:layout_constraintTop_toBottomOf="@+id/textView8" />-->
-
-<!--                    </androidx.constraintlayout.widget.ConstraintLayout>-->
-
-<!--                </androidx.cardview.widget.CardView>-->
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-    </ScrollView>
+                    <!--                </Button>-->
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                    <FrameLayout
+                        android:id="@+id/sos_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fitsSystemWindows="true"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/cardView"
+                        tools:context=".ui.RippleFragment">
+
+
+                        <com.skyfishjy.library.RippleBackground
+                            android:id="@+id/content"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            app:rb_color="@color/light_pink"
+                            app:rb_duration="2000"
+                            app:rb_radius="50dp"
+                            app:rb_rippleAmount="2"
+                            app:rb_scale="3"
+                            app:rb_type="fillRipple">
+
+
+                            <ImageView
+                                android:id="@+id/sos"
+                                android:layout_width="100dp"
+                                android:layout_height="100dp"
+                                android:layout_centerInParent="true"
+                                android:layout_marginBottom="400dp"
+                                android:src="@drawable/soshelp">
+
+
+                            </ImageView>
+
+
+                        </com.skyfishjy.library.RippleBackground>
+
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="30dp"
+                            android:layout_marginEnd="20dp"
+                            android:elevation="20dp"
+                            app:cardCornerRadius="15dp"
+                            android:backgroundTint="@color/red_danger_500">
+
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="5dp">
+
+
+                                <ImageView
+                                    android:id="@+id/image_view22"
+                                    android:layout_width="46dp"
+                                    android:layout_height="42dp"
+                                    android:foregroundGravity="center_vertical"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintVertical_bias="0.0"
+                                    app:srcCompat="@drawable/location"
+                                    app:tint="@color/white" />
+
+
+                                <TextView
+                                    android:id="@+id/headeing_location"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="You are here"
+                                    android:textColor="@color/white"
+                                    android:layout_marginStart="10dp"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintHorizontal_bias="0.0"
+                                    app:layout_constraintStart_toEndOf="@+id/image_view22"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+
+                                <TextView
+                                    android:id="@+id/location_data"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="60dp"
+                                    android:layout_marginTop="4dp"
+                                    android:text=" "
+                                    android:textColor="@color/white"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintHorizontal_bias="1.0"
+                                    app:layout_constraintStart_toEndOf="@+id/image_view22"
+                                    app:layout_constraintTop_toBottomOf="@id/headeing_location" />
+
+
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                        </androidx.cardview.widget.CardView>
+
+
+
+
+                    </FrameLayout>
+
+
+                    <!--                <androidx.cardview.widget.CardView-->
+                    <!--                    android:layout_width="match_parent"-->
+                    <!--                    android:layout_height="wrap_content"-->
+                    <!--                    android:layout_marginHorizontal="20dp"-->
+                    <!--                    android:layout_marginVertical="10dp"-->
+                    <!--                    android:elevation="20dp"-->
+                    <!--                    app:cardCornerRadius="15dp"-->
+                    <!--                    app:layout_constraintTop_toBottomOf="@id/sos_button"-->
+                    <!--                    app:layout_constraintBottom_toBottomOf="parent"-->
+                    <!--                    app:layout_constraintEnd_toEndOf="parent"-->
+                    <!--                    app:layout_constraintStart_toStartOf="parent">-->
+                    <!--                    <androidx.constraintlayout.widget.ConstraintLayout-->
+                    <!--                        android:layout_width="match_parent"-->
+                    <!--                        android:layout_height="match_parent">-->
+
+
+
+
+                    <!--                        <ImageView-->
+                    <!--                            android:id="@+id/image_view20"-->
+                    <!--                            android:layout_width="60dp"-->
+                    <!--                            android:layout_height="60dp"-->
+                    <!--                            app:layout_constraintBottom_toBottomOf="parent"-->
+                    <!--                            app:layout_constraintStart_toStartOf="parent"-->
+                    <!--                            app:layout_constraintTop_toTopOf="parent"-->
+                    <!--                            app:srcCompat="@drawable/uploaddata" />-->
+
+
+                    <!--                        <TextView-->
+                    <!--                            android:id="@+id/textView8"-->
+                    <!--                            android:layout_width="wrap_content"-->
+                    <!--                            android:layout_height="wrap_content"-->
+                    <!--                            android:layout_marginStart="10dp"-->
+                    <!--                            android:text="Your Medical infor"-->
+                    <!--                            app:layout_constraintEnd_toEndOf="parent"-->
+                    <!--                            app:layout_constraintHorizontal_bias="0.0"-->
+                    <!--                            app:layout_constraintStart_toEndOf="@+id/image_view20"-->
+                    <!--                            app:layout_constraintTop_toTopOf="parent" />-->
+
+
+                    <!--                        <Button-->
+                    <!--                            android:layout_width="wrap_content"-->
+                    <!--                            android:layout_height="40dp"-->
+                    <!--                            android:text="Add medical data"-->
+                    <!--                            android:textSize=""-->
+                    <!--                            app:layout_constraintEnd_toEndOf="parent"-->
+                    <!--                            app:layout_constraintHorizontal_bias="0.0"-->
+                    <!--                            android:layout_marginStart="10dp"-->
+                    <!--                            android:layout_marginTop="3dp"-->
+                    <!--                            android:backgroundTint="@color/light_pink"-->
+                    <!--                            app:layout_constraintStart_toEndOf="@+id/image_view20"-->
+                    <!--                            app:layout_constraintTop_toBottomOf="@+id/textView8" />-->
+
+
+                    <!--                    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+
+                    <!--                </androidx.cardview.widget.CardView>-->
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+        </ScrollView>
+
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </layout>

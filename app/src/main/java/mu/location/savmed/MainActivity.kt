@@ -28,13 +28,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import mu.location.savmed.SavMed.Companion.bluetoothLEController
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
-import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
-import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
 import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.RippleFragment.Companion
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsViewModel
@@ -51,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         const val TAG = "[Main Activity]"
     }
 
-    private lateinit var bluetoothLEViewModel: BluetoothLEViewModel
+   // private lateinit var bluetoothLEViewModel: BluetoothLEViewModel
     private lateinit var emrContactsViewModel: EmergencyContactsViewModel
 
     private lateinit var navController : NavController
@@ -267,17 +264,17 @@ class MainActivity : AppCompatActivity() {
 //            }, delayMillis)
 //        }
 
-        var prevConnectionState = bluetoothLEViewModel.state.value
-        lifecycleScope.launch {
-            bluetoothLEViewModel.state.collect { state ->
-
-                if (state.message != null) {
-                    Log.i("Received", state.message)
-                    showSplashDialog(state.message)
-                }
-                prevConnectionState = state
-            }
-        }
+//        var prevConnectionState = bluetoothLEViewModel.state.value
+//        lifecycleScope.launch {
+//            bluetoothLEViewModel.state.collect { state ->
+//
+//                if (state.message != null) {
+//                    Log.i("Received", state.message)
+//                    showSplashDialog(state.message)
+//                }
+//                prevConnectionState = state
+//            }
+//        }
 
         observeRegistrationStatus()
         observeEmergencyContacts()
@@ -287,7 +284,7 @@ class MainActivity : AppCompatActivity() {
     private fun initializeViewModels() {
 
         // Below was comente dout on 24/11/2024 at 5:30
-        bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
+       // bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
         emrContactsViewModel = ViewModelProvider(this)[EmergencyContactsViewModel::class.java]
     }
 

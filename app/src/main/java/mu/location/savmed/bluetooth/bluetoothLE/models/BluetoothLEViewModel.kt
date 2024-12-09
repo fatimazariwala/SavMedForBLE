@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import mu.location.savmed.SavMed.Companion.bleClient
+import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 
-class BluetoothLEViewModel constructor(
-    private val bluetoothLEController: BluetoothLEController
-): ViewModel() {
+class BluetoothLEViewModel constructor(): ViewModel() {
 
     companion object {
         const val TAG = "[BLE ViewModel]"
@@ -25,20 +25,20 @@ class BluetoothLEViewModel constructor(
 
     private val _state = MutableStateFlow(BluetoothLEUiState())
     val state = combine(
-        bluetoothLEController.scannedDevices,
-        bluetoothLEController.listOfMessages,
+        bleClient.scannedDevices,
+        bleServer.listOfMessages,
         _state
     ) { scannedDevices,listOfMessages,state ->
 
-                Log.i(TAG, "Scanned Devices: ---${scannedDevices.size}")
-        scannedDevices.forEach { device ->
-            Log.i(TAG, "Device: ${device.deviceName} - ${device.address}")
-        }
+//                Log.i(TAG, "Scanned Devices: ---${scannedDevices.size}")
+//        scannedDevices.forEach { device ->
+//            Log.i(TAG, "Device: ${device.deviceName} - ${device.address}")
+//        }
 
-        Log.i(TAG, "List of Messages: ---${listOfMessages.size}")
-        listOfMessages.forEach { message ->
-            Log.i(TAG, "Message: $message")
-        }
+//        Log.i(TAG, "List of Messages: ---${listOfMessages.size}")
+//        listOfMessages.forEach { message ->
+//            Log.i(TAG, "Message: $message")
+//        }
 
         state.copy(
             scannedDevices = scannedDevices,
@@ -49,15 +49,17 @@ class BluetoothLEViewModel constructor(
 
 
     fun startScan() {
-        bluetoothLEController.startDiscovery()
+        bleClient.startBLEScan()
     }
 
+    // AllowIncomignDevices
     fun stopScan() {
-        bluetoothLEController.stopDiscovery()
+        bleClient.stopBleScan()
     }
 
     fun SendMessage(device: BluetoothLEScannedDevices) {
-        bluetoothLEController.sendMessage(device)
+        Log.i(TAG,"Tryynnaa sneddd....")
+        bleClient.writeCharacteristic(device,"")
     }
 
     private fun Flow<ConnectionResult>.listen(): Job {
@@ -69,6 +71,7 @@ class BluetoothLEViewModel constructor(
                     ) }
                 }
                 is ConnectionResult.BLETransferSucceeded -> {
+                    Log.i(TAG,"wriet message -> ${result.message}")
                     _state.update { it.copy(
                         message = result.message
                     ) }

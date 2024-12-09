@@ -42,8 +42,8 @@ class NearByAdapter(
         fun bind (device: BluetoothLEScannedDevices) {
             Log.i(TAG,"in bind......")
             binding.apply {
-                bluetoothtvFullName.text = device.name ?: "N/A"
-                deviceName.text = device.deviceName ?: "N/A"
+                bluetoothtvFullName.text = device.name ?: ""
+                deviceName.text = device.deviceName ?: ""
                 tvDeviceAdd.text = device.address
 
                 callBtn.setOnClickListener() {
@@ -57,6 +57,7 @@ class NearByAdapter(
                 }
 
                 transferbtn.setOnClickListener() {
+                    Log.i(TAG,"Device characteristice on tf clicked ${device.characteristics?.size}")
                     if (!device.characteristics.isNullOrEmpty()) {
                         onMessageClick(device)
                     }
@@ -91,17 +92,17 @@ class NearByAdapter(
             oldItem: BluetoothLEScannedDevices,
             newItem: BluetoothLEScannedDevices
         ): Boolean {
-            return false
+            return oldItem.name == newItem.name
         }
 
         override fun areItemsTheSame(
             oldItem: BluetoothLEScannedDevices,
             newItem: BluetoothLEScannedDevices
         ): Boolean {
-           return false
+           return oldItem.address == newItem.address
         }
-    }
 
+    }
 }
 
 

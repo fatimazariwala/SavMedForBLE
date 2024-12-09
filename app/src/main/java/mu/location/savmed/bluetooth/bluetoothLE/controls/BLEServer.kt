@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
@@ -14,45 +15,69 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.AdvertisingSet
 import android.bluetooth.le.AdvertisingSetCallback
 import android.bluetooth.le.AdvertisingSetParameters
+import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.bluetoothAdapter
+import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
+import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.util.UUID
 
-@SuppressLint("MissingPermission")
+//@SuppressLint("MissingPermission")
 class BLEServer(
    val context: Context
-): AndroidBluetoothLEController(context) {
+) {
 
     companion object {
         const val TAG = "[BLE Server]"
         const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
         const val CHARACTERISTIC_USERNAME_UUID = "87654321-4321-6789-4321-fedcba987654"
-        const val CHARACTERISTIC_MESSAGE_UUID = "fedcba987654-4321-6789-4321-87654321"
+        const val CHARACTERISTIC_MESSAGE_UUID = "ba987654-4321-6789-4321-000087654321"
     }
 
+    private var coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private var advertiseData: AdvertiseData ?= null
+
+    lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
+    lateinit var bluetoothGattServer: BluetoothGattServer
+
+    private val _bleServerEvent = MutableSharedFlow<ConnectionResult>()
+    val bleServerEvent: SharedFlow<ConnectionResult>
+        get() = _bleServerEvent
 
     private val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
     val listOfMessages: StateFlow<List<writeMessage>>
         get() = _listOfMessages.asStateFlow()
 
     init {
-        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE)) {
-            bleServer.setUpBle()
+        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE,context)) {
+            if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
+                setUpBle()
+            } else {
+                Log.e(TAG,"Could not SETup BLE Server Permission Issues!!")
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                bleServer.startAdvertise()
+                startAdvertise()
             } else {
                 Log.i(TAG,"ble advertise not spported")
             }
@@ -107,10 +132,17 @@ class BLEServer(
     private fun processWriteRequest(device: BluetoothDevice, value: ByteArray) {
 
         val received = String(value).split('#')
+        Log.i(TAG,"in receuved ${received.size} ${received.lastOrNull()}")
         val message = writeMessage(
             From = received[0],
             message = received[1]
         )
+
+        coroutineScope.launch {
+            _bleServerEvent.emit(ConnectionResult.BLETransferSucceeded(
+                "Help Needed by ${message.From} at ${message.message}"
+            ))
+        }
 
         _listOfMessages.update { messages ->
             val existingIndex = messages.indexOfFirst { messageZ ->
@@ -128,23 +160,24 @@ class BLEServer(
             messages
         }
 
-        flow {
-            emit (ConnectionResult.BLETransferSucceeded(
-                "Help Request Received From ${message.From} -> ${message.message} 3m way"
-            ))
-        }
+
+
+//        flow {
+//            emit (ConnectionResult.BLETransferSucceeded(
+//                "Help Request Received From ${message.From} -> ${message.message} 3m way"
+//            ))
+//        }
     }
 
     @SuppressLint("MissingPermission")
     fun setUpBle() {
         if (bluetoothAdapter?.bluetoothLeAdvertiser != null) {
-
             bluetoothAdapter?.name = "${Build.MODEL},${Build.MANUFACTURER}"
             bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser!!
             try {
                 Handler(Looper.getMainLooper()).post {
                     bluetoothGattServer =
-                        bluetoothManager?.openGattServer(context, gattServerCallback)!!
+                        bluetoothManager.openGattServer(context, gattServerCallback)!!
                     createBLEServerService()
                 }
             } catch (e: Exception) {
@@ -155,16 +188,18 @@ class BLEServer(
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun createBLEServerService() {
 
         Log.i(TAG,"Creating BLE Service...")
         val serviceUuid = UUID.fromString(SERVICE_UUID)
-        val characteristicUuid = UUID.fromString(CHARACTERISTIC_USERNAME_UUID)
+        val characteristicUuid_USER = UUID.fromString(CHARACTERISTIC_USERNAME_UUID)
+        val characteristicUuid_MESSAGE = UUID.fromString(CHARACTERISTIC_MESSAGE_UUID)
 
         val service = BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val characteristics_username = BluetoothGattCharacteristic(
-            characteristicUuid,
+            characteristicUuid_USER,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
         )
@@ -178,7 +213,7 @@ class BLEServer(
         }
 
         val characteristic_message = BluetoothGattCharacteristic(
-            characteristicUuid,
+            characteristicUuid_MESSAGE,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
         )
@@ -191,11 +226,17 @@ class BLEServer(
         bluetoothGattServer.addService(service)
     }
 
+    @SuppressLint("MissingPermission")
     fun startAdvertise() {
         val advertiser = bluetoothAdapter?.bluetoothLeAdvertiser
 
         Log.i(TAG,"Creating BLE Advertising Data...")
         advertiseData = AdvertiseData.Builder()
+            .addServiceUuid(ParcelUuid(UUID.fromString(SERVICE_UUID)))
+            .build()
+
+        val extraAdvertiseData = AdvertiseData.Builder()
+            .setIncludeDeviceName(true)
             .addServiceUuid(ParcelUuid(UUID.fromString(SERVICE_UUID)))
             .build()
 
@@ -222,6 +263,7 @@ class BLEServer(
                         TAG, "onAdvertisingSetStarted(): txPower:" + txPower + " , status: "
                                 + status + advertisingSet.setPeriodicAdvertisingData(advertiseData)
                     )
+                   // advertisingSet.setAdvertisingData(extraAdvertiseData)
 
                 }
 

@@ -11,13 +11,16 @@ import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.os.ParcelUuid
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
@@ -25,16 +28,22 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.bluetoothAdapter
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_MESSAGE_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USERNAME_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.SERVICE_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.io.IOException
+import java.util.UUID
 
 @Suppress("MissingPermission")
 class BLEClient(
     val context: Context
-): AndroidBluetoothLEController(context) {
+) {
 
     companion object {
         const val TAG = "[BLE CLient]"
@@ -46,13 +55,21 @@ class BLEClient(
             "ACTION_GAT_SERVICES_DISCOVERED"
     }
 
-    protected val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
-    override val scannedDevices: StateFlow<List<BluetoothLEScannedDevices>>
+    var bluetoothGatt: BluetoothGatt? = null
+
+    private val _bleEvent = MutableSharedFlow<ConnectionResult>()
+    val bleEvent: SharedFlow<ConnectionResult>
+        get() = _bleEvent
+
+    val bluetoothLeScanner by lazy { bluetoothAdapter?.bluetoothLeScanner }
+
+    private val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
+    val scannedDevices: StateFlow<List<BluetoothLEScannedDevices>>
         get() = _scannedDevices.asStateFlow()
 
 
-    protected val _savMedDevices = MutableStateFlow<List<BluetoothLESavMedDevices>>(emptyList())
-    override val savMedDevices: StateFlow<List<BluetoothLESavMedDevices>>
+    private val _savMedDevices = MutableStateFlow<List<BluetoothLESavMedDevices>>(emptyList())
+    val savMedDevices: StateFlow<List<BluetoothLESavMedDevices>>
         get() = _savMedDevices.asStateFlow()
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -116,7 +133,7 @@ class BLEClient(
             Log.i(TAG, "In disssssssssssssssssssssss")
             if (status == BluetoothGatt.GATT_SUCCESS) {
 
-                val discoveredCharacteristics = emptyList<BluetoothGattCharacteristic>()
+                val discoveredCharacteristics = mutableListOf<BluetoothGattCharacteristic>()
                 Log.i(TAG, "SErvice Discovered")
                 val services = getSupportedGattService()
 
@@ -133,12 +150,12 @@ class BLEClient(
                             Log.i(TAG, "Characteristic with UserName Found!")
 
                             bluetoothGatt?.readCharacteristic(characteristic)
-                            discoveredCharacteristics + characteristic
+                            discoveredCharacteristics.add(characteristic)
 
                         } else if (char_uuid.equals(CHARACTERISTIC_MESSAGE_UUID)) {
 
                             Log.i(TAG, "Characteristics with Message Found!!")
-                            discoveredCharacteristics + characteristic
+                            discoveredCharacteristics.add(characteristic)
                         }
                     }
                 }
@@ -159,11 +176,13 @@ class BLEClient(
             super.onCharacteristicRead(gatt, characteristic, status)
             if (status == BluetoothGatt.GATT_SUCCESS) {
 
+                val char = characteristic.uuid.toString()
                 val value = characteristic.value
                 val valueString = String(value ?: ByteArray(0)) // Convert byte array to string
-                Log.i(TAG, "Characteristic Value-----: $valueString")
+                Log.i(TAG, "Characteristic Value-----: $valueString ${characteristic.uuid}")
 
-                if (characteristic.equals(CHARACTERISTIC_USERNAME_UUID)) {
+                if (char.equals(CHARACTERISTIC_USERNAME_UUID)) {
+                    Log.i(TAG,"In char found!!!")
                     addDeviceToSavMedDevicesList(gatt, null, valueString)
                 }
 
@@ -186,7 +205,7 @@ class BLEClient(
     }
 
     fun startBLEScan() {
-        if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)) {
+        if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN,context)) {
             flow {
                emit(ConnectionResult.Error("BLE Scan Security Exception"))
             }
@@ -212,10 +231,16 @@ class BLEClient(
         Log.i(TAG,"In write...")
 
         for (characteristic in device.characteristics ?: emptyList()) {
-            if (characteristic.uuid.equals(CHARACTERISTIC_MESSAGE_UUID))
+
+            val char = characteristic.uuid.toString()
+
+            Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_MESSAGE_UUID")
+            if (char.equals(CHARACTERISTIC_MESSAGE_UUID)) {
                 characteristic.setValue("fatima#3m way")
-            Log.i(TAG,"char data---ini: ${characteristic.value}}")
-            bluetoothGatt?.writeCharacteristic(characteristic)
+                bluetoothGatt?.writeCharacteristic(characteristic)
+                Log.i(TAG,"Found Message char $char $CHARACTERISTIC_MESSAGE_UUID")
+            }
+            Log.i(TAG,"char data---ini: ${characteristic.value}")
         }
     }
 
@@ -227,9 +252,12 @@ class BLEClient(
         if (serviceUuids != null) {
 
             for(uuid in serviceUuids) {
-                val uuids = uuid.toString()
-                if(uuids.equals(SERVICE_UUID)) {
+                val uuidFetched = uuid.toString()
 
+                Log.i(TAG,"Checking Service UUIDS in process Scan [Fetched UUID:$uuidFetched] [SavMed UUID:$SERVICE_UUID] ")
+                if(uuidFetched.equals(SERVICE_UUID)) {
+
+                    Log.i(TAG,"----------------Found SavMed Device----------------------")
                     addDeviceToScannedDeviceList(result,true)
 
                     coroutineScope.launch { connectToDevice(result.device).collect { result ->
@@ -244,7 +272,7 @@ class BLEClient(
                             }
                         }
                     }
-                    stopDiscovery()
+                    //stopBleScan()
 
                 } else {
                     Log.i(TAG,"SavMed uuid not found $uuid")
@@ -261,19 +289,21 @@ class BLEClient(
         Log.i(TAG,"Connecting to BLE Device ${device.address}")
         return flow {
 
-            if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+            if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
                 throw SecurityException("Bluetooth Connect permission Not Granted!")
             }
-            Log.i(TAG,"Security exception passed ${bluetoothGatt?.device}")
+            //Log.i(TAG,"Security exception passed ${bluetoothGatt?.device}")
             bluetoothAdapter.let { adapter ->
 
                 Log.i(TAG,"Going to tryyyyyyyyyyyyyyyy ${bluetoothGatt?.device}")
                 try {
                     Log.i(TAG,"In tryyyyyyyyyyyy ${bluetoothGatt?.device}")
 
-                    val deviceFound = device
+                    val deviceFound = adapter?.getRemoteDevice(device.address)
 
-                    bluetoothGatt = deviceFound.connectGatt(context, true, BLEgattCallBack)
+                    Log.i(TAG,"FOund device ${deviceFound?.address}")
+
+                    bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
 
                     Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
                     emit(ConnectionResult.Success("Successfully Connected To ${device.address}"))
@@ -290,7 +320,7 @@ class BLEClient(
     fun addDeviceToSavMedDevicesList(gatt: BluetoothGatt?, discoveredCharacteristics: List<BluetoothGattCharacteristic>?, name: String? = null) {
 
         val savMedDevice = BluetoothLESavMedDevices(
-            deviceName = gatt?.device?.name ?: "N/A",
+            deviceName = gatt?.device?.name ?: "",
             address = gatt?.device?.address,
             characteristics = discoveredCharacteristics,
         )
@@ -315,24 +345,49 @@ class BLEClient(
             }
 
             if (existingDeviceIndex != -1) {
+                // Create a mutable copy of the devices list to modify
+                val updatedDevices = devices.toMutableList()
 
+                // Update characteristics if needed
                 if (discoveredCharacteristics != null) {
+                    val updatedDevice = updatedDevices[existingDeviceIndex].copy(
+                        characteristics = discoveredCharacteristics
+                    )
+                    updatedDevices[existingDeviceIndex] = updatedDevice
+                    Log.i(TAG, "Updating Characteristics: ${updatedDevice.characteristics?.size}")
 
-                    devices.toMutableList().apply {
-                        this[existingDeviceIndex].characteristics = discoveredCharacteristics
+                    // Log characteristics values
+                    updatedDevice.characteristics?.forEach { char ->
+                        Log.i(TAG, "Device characteristic value: ${char.value?.toString()}")
                     }
                 }
+
+                // Update the name if needed
                 if (name != null) {
-
-                    devices.toMutableList().apply {
-                        this[existingDeviceIndex].name = name
-                    }
+                    val updatedDevice = updatedDevices[existingDeviceIndex].copy(
+                        name = name
+                    )
+                    updatedDevices[existingDeviceIndex] = updatedDevice
+                    Log.i(TAG, "Updated Name: $name")
                 }
 
+                // Optionally, move the updated device to the first position
+                val updatedDevice = updatedDevices[existingDeviceIndex]
+                updatedDevices.removeAt(existingDeviceIndex)
+                updatedDevices.add(0, updatedDevice)
+
+                // Log the updated devices list
+                updatedDevices.forEach {
+                    Log.i(TAG, "Updated Device: ${it.name} - ${it.address}")
+                }
+
+                // Return the updated list to trigger the update
+                updatedDevices
             } else {
-                Log.i(TAG,"SavMed Device ${gatt?.device?.address} not found in Scanned Device List")
+                // If the device is not found, return the original list unchanged
+                Log.i(TAG, "SavMed Device ${gatt?.device?.address} not found in Scanned Device List")
+                devices
             }
-            devices
         }
     }
 
@@ -340,7 +395,7 @@ class BLEClient(
 
         // Add Calculation for dist
         val newDevice = BluetoothLEScannedDevices(
-            deviceName = result.device.name ?: "N/A",
+            deviceName = result.device.name ?: "",
             address = result.device.address,
             rssi = result.rssi.toString(),
             isSavMed = isSavMed
@@ -358,13 +413,13 @@ class BLEClient(
             mutableDevices
         }
 
-        for(devices in scannedDevices.value) {
-            Log.i(TAG,"devocezzz ${devices.address}")
-        }
+//        for(devices in scannedDevices.value) {
+//            Log.i(TAG,"devocezzz ${devices.address}")
+//        }
     }
 
     fun stopBleScan() {
-        if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)) return
+        if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN,context)) return
         bluetoothLeScanner?.stopScan(bleScanCallBack)
     }
 

@@ -18,6 +18,7 @@ import org.linphone.core.tools.Log
 
 class CoreForeground : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     companion object {
         private const val TAG = "[Core Keep Alive Third Party Accounts Service]"
     }
@@ -25,6 +26,7 @@ class CoreForeground : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i("$TAG Created")
+
         val locationClient = DefaultLocationClient(
             applicationContext,
             LocationServices.getFusedLocationProviderClient(applicationContext)

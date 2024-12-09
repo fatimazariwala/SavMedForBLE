@@ -20,17 +20,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import mu.location.savmed.R
-import mu.location.savmed.SavMed.Companion.bluetoothLEController
+import mu.location.savmed.SavMed.Companion.bleServer
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.bluetooth.bluetoothLE.controls.AndroidBluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
 import mu.location.savmed.bluetooth.bluetoothLE.models.NearByAdapter
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
-import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
+import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+//import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
 import mu.location.savmed.databinding.FragmentNearbyhelpBinding
+import mu.location.savmed.utils.SettingsManager
 
 class NearByFragment : Fragment() {
 
@@ -41,10 +43,7 @@ class NearByFragment : Fragment() {
     lateinit var binding: FragmentNearbyhelpBinding
     lateinit var scannedDeviceAdapter: NearByAdapter
     // Bluetooth ViewModel
-    val viewModelFactory = BluetoothLEViewModelFactory(bluetoothLEController)
     lateinit var bluetoothLEViewModel: BluetoothLEViewModel
-
-    lateinit var ACBLE: AndroidBluetoothLEController
 
     // Initialize Bluetooth Manager Class
     private val bluetoothManager by lazy {
@@ -95,10 +94,8 @@ class NearByFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        ACBLE = AndroidBluetoothLEController(requireContext())
-
         binding = FragmentNearbyhelpBinding.inflate(inflater,container,false)
-        bluetoothLEViewModel = ViewModelProvider(this, viewModelFactory)[BluetoothLEViewModel::class.java]
+        bluetoothLEViewModel = ViewModelProvider(this)[BluetoothLEViewModel::class.java]
 
         var prevConnectionState = bluetoothLEViewModel.state.value
 
@@ -120,13 +117,25 @@ class NearByFragment : Fragment() {
         }
         Log.i(TAG, "SAV_MEDaaaa")
 
-//        startScan()
+        startScan()
 
         binding.btnHome.setOnClickListener() {
             findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
         }
 
         lifecycleScope.launch {
+
+            bleServer.bleServerEvent.onEach { result ->
+
+                when(result) {
+                    is ConnectionResult.BLETransferSucceeded -> {
+                        Log.i(TAG,"yoooooooooooo ${result.message}")
+                        Toast.makeText(requireContext(),result.message,Toast.LENGTH_SHORT).show()
+                    }
+                    else -> { }
+                }
+
+            }
 
             bluetoothLEViewModel.state.collect { state ->
 
@@ -173,16 +182,16 @@ class NearByFragment : Fragment() {
         if (bluetoothAdapter != null) {
             if (
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
-                            bluetoothLEController.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) &&
-                            bluetoothLEController.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                    SettingsManager.hasPermission(Manifest.permission.BLUETOOTH_SCAN,requireContext()) &&
+                            SettingsManager.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION,requireContext()) &&
+                            SettingsManager.hasPermission(Manifest.permission.BLUETOOTH_CONNECT,requireContext())
                 } else {
-                    bluetoothLEController.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    SettingsManager.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION,requireContext())
                 }
             ) {
                 if (isBluetoothEnabled) {
 //
-//                    ACBLE.startDiscovery()
+                    bluetoothLEViewModel.startScan()
 //                    ACBLE.bleClient = BLEClient(requireContext())
 
                     lifecycleScope.launch {
@@ -193,11 +202,11 @@ class NearByFragment : Fragment() {
 
                         bluetoothLEViewModel.state.collect { state ->
 
-                            Log.i(TAG,"Ui state testing $state")
+                           // Log.i(TAG,"Ui state testing $state")
 
-                            for (device in state.scannedDevices) {
-                                Log.i(TAG,"SCanned ${device.address}")
-                            }
+//                            for (device in state.scannedDevices) {
+//                                Log.i(TAG,"SCanned ${device.address}")
+//                            }
 
                             scannedDeviceAdapter.submitList(state.scannedDevices)
 

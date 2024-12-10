@@ -8,6 +8,11 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
+                  <entry key="action_global_conversationFragment">
+                    <value>
+                      <LayoutPositions />
+                    </value>
+                  </entry>
                   <entry key="activeCallFragment">
                     <value>
                       <LayoutPositions>
@@ -29,6 +34,15 @@
                             <option name="y" value="-386" />
                           </Point>
                         </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_chatListFragment_to_conversationFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
+                        </option>
                       </LayoutPositions>
                     </value>
                   </entry>
@@ -43,6 +57,11 @@
                         </option>
                         <option name="myPositions">
                           <map>
+                            <entry key="action_contactFragment_to_chatListFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_contactFragment_to_contactProfilePage">
                               <value>
                                 <LayoutPositions />
@@ -79,6 +98,16 @@
                         </option>
                         <option name="myPositions">
                           <map>
+                            <entry key="action_contactProfilePage_to_contactFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_contactProfilePage_to_conversationFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_contactProfilePage_to_newOrEditContactFragment">
                               <value>
                                 <LayoutPositions />
@@ -100,6 +129,11 @@
                         </option>
                         <option name="myPositions">
                           <map>
+                            <entry key="action_conversationFragment_to_chatListFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_conversationFragment_to_contactFragment">
                               <value>
                                 <LayoutPositions />
@@ -137,6 +171,18 @@
                               </value>
                             </entry>
                           </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="mapsFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="-343" />
+                            <option name="y" value="-325" />
+                          </Point>
                         </option>
                       </LayoutPositions>
                     </value>
@@ -373,7 +419,7 @@
                                 <LayoutPositions />
                               </value>
                             </entry>
-                            <entry key="action_emergency_contacts_to_homeFragment">
+                            <entry key="action_emergency_contacts_to_rippleFragment">
                               <value>
                                 <LayoutPositions />
                               </value>
@@ -383,7 +429,7 @@
                       </LayoutPositions>
                     </value>
                   </entry>
-                  <entry key="homeFragment">
+                  <entry key="mapsFragment">
                     <value>
                       <LayoutPositions>
                         <option name="myPosition">
@@ -391,20 +437,6 @@
                             <option name="x" value="12" />
                             <option name="y" value="12" />
                           </Point>
-                        </option>
-                        <option name="myPositions">
-                          <map>
-                            <entry key="action_homeFragment_to_emergency_contacts">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
-                            <entry key="action_homeFragment_to_nearByFragment">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
-                          </map>
                         </option>
                       </LayoutPositions>
                     </value>
@@ -420,7 +452,7 @@
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_nearByFragment_to_homeFragment">
+                            <entry key="action_nearByFragment_to_rippleFragment">
                               <value>
                                 <LayoutPositions />
                               </value>
@@ -438,6 +470,20 @@
                             <option name="x" value="-168" />
                             <option name="y" value="274" />
                           </Point>
+                        </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_rippleFragment_to_emergency_contacts">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_rippleFragment_to_nearByFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
                         </option>
                       </LayoutPositions>
                     </value>

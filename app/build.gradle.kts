@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kapt)
     alias(libs.plugins.navigation)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     //alias(libs.android-extensions)
 }
 
@@ -87,6 +88,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.emoji2.emojipicker)
+   implementation(libs.play.services.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

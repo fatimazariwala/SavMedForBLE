@@ -360,14 +360,14 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
             for (contact in contacts) {
                 if (contact.address != null) {
                     if (contact.starred) {
-                        Log.i(TAG, "In emt list----")
+                        Log.i(TAG, "In emt list---- ${contact.starred} ${contact.name}")
                         emrList.add(
                             coreContext.contactsManager.getContactAvatarModelForAddress(
                                 contact.address
                             )
                         )
                     } else {
-                        Log.i(TAG, "in list-----${contact.address?.asStringUriOnly()}-")
+                        Log.i(TAG, "in list-----${contact.address?.asStringUriOnly()}- ${contact.starred}")
                         list.add(coreContext.contactsManager.getContactAvatarModelForAddress(contact.address))
                     }
                 } else {

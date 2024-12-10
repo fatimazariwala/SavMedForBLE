@@ -583,6 +583,8 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
         )
         context.startActivity(intent)
     }
+
+
 //
 //    private fun startChatActivity(username: String?) {
 //        val i  = Intent(context,ChatActivity::class.java)

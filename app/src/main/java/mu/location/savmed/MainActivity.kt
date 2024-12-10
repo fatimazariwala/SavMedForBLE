@@ -20,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ReportFragment.Companion.reportFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -28,6 +29,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import mu.location.savmed.SavMed.Companion.bleServer
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
@@ -37,6 +39,7 @@ import mu.location.savmed.ui.RippleFragment.Companion
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsViewModel
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.locationing.LocationActivity
+import mu.location.savmed.ui.locationing.MapsFragment
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.ActivityHolder
 import mu.location.savmed.utils.SettingsManager
@@ -60,19 +63,19 @@ class MainActivity : AppCompatActivity() {
         if (it) {
             Log.i(TAG,"Background Location Permissions Granted!")
         } else {
-            val dialogResult = showSplashDialog("Please Allow All Time Location Permissions For Background Tracking During Emergencies.")
+           // val dialogResult = showSplashDialog("Please Allow All Time Location Permissions For Background Tracking During Emergencies.")
 
-            if (dialogResult) {
-                val param = arrayOf(
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
-                launchPermissionAgain(param)
-            } else {
-                Toast.makeText(
-                    this,
-                    "Background Tracking disabled..",
-                    Toast.LENGTH_SHORT).show()
-            }
+//            if (dialogResult) {
+//                val param = arrayOf(
+//                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+//                )
+//                launchPermissionAgain(param)
+//            } else {
+//                Toast.makeText(
+//                    this,
+//                    "Background Tracking disabled..",
+//                    Toast.LENGTH_SHORT).show()
+//            }
         }
     }
 
@@ -180,6 +183,54 @@ class MainActivity : AppCompatActivity() {
 //        bluetoothLEController = AndroidBluetoothLEController(this)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        bleServer.mesgReciwd.observe(this){ result ->
+
+            val message = bleServer.messageReceivedFromBLE
+
+            if (!bleServer.isPrevMessage) {
+                Log.i(NearByFragment.TAG,"mesdg slpash $result")
+                showSplashDialog(result) { resultz ->
+                    if (resultz) {
+                        Log.i(TAG, "Dialog confirmed")
+
+                        if (message != null) {
+//                            val lat = message.lat.toDouble()
+//                            val lon = message.lon
+//                            val name = message.From
+//                            val dist = message.dist
+//
+//                            // Create the bundle to pass the data to the MapsFragment
+//                            val bundle = Bundle().apply {
+//                                putDouble("lat", lat)
+//                                putDouble("long", lon)
+//                                putString("foundUserName", name)
+//                                putDouble("dist",dist)
+//                            }
+//
+//                            // Navigate to MapsFragment and pass the data
+//                            val mapsFragment = MapsFragment()
+//                            mapsFragment.arguments = bundle
+//
+//                            supportFragmentManager.beginTransaction()
+//                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
+//                                .addToBackStack(null) // Optional: add to back stack if needed
+//                                .commit()
+
+                        } else {
+                            Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
+                        }
+
+                    } else {
+                        Log.i(TAG, "Dialog dismissed or canceled")
+                    }
+                }
+                bleServer.isPrevMessage = true
+            } else {
+                Log.i(NearByFragment.TAG,"message already displayed")
+            }
+        }
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -349,41 +400,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSplashDialog(message: String): Boolean {
-
+    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
         val dialogBuilder = AlertDialog.Builder(this)
-        val result = CompletableDeferred<Boolean>()
 
         dialogBuilder.setMessage(message)
-            .setCancelable(false) // Prevent dismissing the dialog by tapping outside
+            .setCancelable(false)
             .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss() // Dismiss the dialog when "OK" is pressed
-                result.complete(true) // Complete with true when OK is pressed
+                dialog.dismiss()
+                callback(true) // Call the callback with true
             }
-
             .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss() // Dismiss the dialog when "Cancel" is pressed
-                result.complete(false) // Complete with false when Cancel is pressed
+                dialog.dismiss()
+                callback(false) // Call the callback with false
             }
 
-        // Create and show the dialog
         val alert = dialogBuilder.create()
         alert.show()
 
-        // Set the size of the dialog
-        alert.window?.setLayout(800, 400) // Set size of the dialog
-
-        // Auto-dismiss the dialog after a certain time
+        // Auto-dismiss after a certain time
         alert.setOnShowListener {
             alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-                alert.dismiss()
-                result.complete(false) // Complete with false if dismissed automatically
-            }, 2000) // Dismiss after 2 seconds
+                if (alert.isShowing) {
+                    alert.dismiss()
+                    callback(false) // Auto-dismiss and return false
+                }
+            }, 2000)
         }
-
-        // Block and wait for the result
-        return runBlocking { result.await() }
     }
+
 
 }
 

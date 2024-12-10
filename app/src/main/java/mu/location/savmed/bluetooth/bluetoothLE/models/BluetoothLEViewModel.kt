@@ -1,7 +1,9 @@
 package mu.location.savmed.bluetooth.bluetoothLE.models
 
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,8 @@ import kotlinx.coroutines.flow.update
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
+import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
+import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment.Companion
 
 class BluetoothLEViewModel constructor(): ViewModel() {
 
@@ -23,6 +27,22 @@ class BluetoothLEViewModel constructor(): ViewModel() {
         const val TAG = "[BLE ViewModel]"
     }
 
+    init {
+        bleServer.bleServerEvent.onEach { result ->
+
+            when(result) {
+                is ConnectionResult.BLETransferSucceeded -> {
+                    Log.i(TAG,"yoooooooooooo ${result.message}")
+                }
+                else -> { }
+            }
+
+        }
+            .catch { throwable ->
+                Log.e(TAG, "Error: $throwable")
+            }
+            .launchIn(viewModelScope)
+    }
     private val _state = MutableStateFlow(BluetoothLEUiState())
     val state = combine(
         bleClient.scannedDevices,
@@ -92,6 +112,7 @@ class BluetoothLEViewModel constructor(): ViewModel() {
             }
             .launchIn(viewModelScope)
     }
+
 
     override fun onCleared() {
         super.onCleared()

@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
+import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_MESSAGE_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USERNAME_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.SERVICE_UUID
@@ -39,6 +41,7 @@ import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.io.IOException
 import java.util.UUID
+import kotlin.math.pow
 
 @Suppress("MissingPermission")
 class BLEClient(
@@ -61,6 +64,8 @@ class BLEClient(
     val bleEvent: SharedFlow<ConnectionResult>
         get() = _bleEvent
 
+    val scanStatus = MutableLiveData<String>()
+
     val bluetoothLeScanner by lazy { bluetoothAdapter?.bluetoothLeScanner }
 
     private val _scannedDevices = MutableStateFlow<List<BluetoothLEScannedDevices>>(emptyList())
@@ -77,7 +82,7 @@ class BLEClient(
     var scanning = false
     val handler = android.os.Handler()
 
-    val SCAN_PERIOD: Long = 10000
+    val SCAN_PERIOD: Long = 100000
 
     private val bleScanCallBack: ScanCallback = object: ScanCallback() {
 
@@ -94,6 +99,7 @@ class BLEClient(
 
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
+            scanStatus.postValue("Scan Failed!")
             coroutineScope.launch {
                 _bleEvent.emit(ConnectionResult.Error("Scan Error Code: $errorCode"))
             }
@@ -113,16 +119,13 @@ class BLEClient(
                 coroutineScope.launch {
                     _bleEvent.emit(ConnectionResult.ConnectionEstablished)
                 }
-                // Not needed IG
-                flow {
-                    emit(ConnectionResult.Success("Connected Successfully!"))
-                }
+
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
                 Log.i(TAG, "Connection DisConnected!")
                 coroutineScope.launch {
-                    _bleEvent.emit(ConnectionResult.Error("Connection Error: $status "))
+                    _bleEvent.emit(ConnectionResult.Error("Connection Disconnected!"))
                 }
             }
         }
@@ -218,9 +221,11 @@ class BLEClient(
             }, SCAN_PERIOD)
             scanning = true
 
+            scanStatus.postValue("Scanning...")
             Log.i(TAG, "Scan Start...")
             bluetoothLeScanner?.startScan(bleScanCallBack)
         } else {
+            scanStatus.postValue("Scan Completed!")
             scanning = false
             bluetoothLeScanner?.stopScan(bleScanCallBack)
         }
@@ -236,7 +241,21 @@ class BLEClient(
 
             Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_MESSAGE_UUID")
             if (char.equals(CHARACTERISTIC_MESSAGE_UUID)) {
-                characteristic.setValue("fatima#3m way")
+
+                if (coreContext.onLocationEvent["latitude"] == null) {
+                    Log.i(TAG,"Writtingggggg not location")
+                    characteristic.setValue("fatima#${device.dist}#0.0#0.0")
+                } else {
+                    Log.i(TAG,"Writtingggggg yes location")
+
+                    val latitude = coreContext.onLocationEvent["latitude"]?.toDouble()
+                    val longitude = coreContext.onLocationEvent["longitude"]?.toDouble()
+                    val roundedLatitude = latitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
+                    val roundedLongitude = longitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
+
+                    characteristic.setValue("fatima#${device.dist?.toInt()}#${roundedLatitude}#${roundedLongitude}")
+                    Log.i(TAG,"${characteristic.value.toString()} fatima#${device.dist?.toInt()}#${roundedLatitude}#${roundedLongitude}")
+                }
                 bluetoothGatt?.writeCharacteristic(characteristic)
                 Log.i(TAG,"Found Message char $char $CHARACTERISTIC_MESSAGE_UUID")
             }
@@ -258,21 +277,33 @@ class BLEClient(
                 if(uuidFetched.equals(SERVICE_UUID)) {
 
                     Log.i(TAG,"----------------Found SavMed Device----------------------")
-                    addDeviceToScannedDeviceList(result,true)
+                    stopBleScan()
+                    val isExisting = _scannedDevices.value.any { device ->
+                        device.address == result.device.address
+                    }
 
-                    coroutineScope.launch { connectToDevice(result.device).collect { result ->
-                            when (result) {
-                                is ConnectionResult.Success -> {
-                                    Log.i(TAG, result.message)
+                    if (!isExisting) {
+                        addDeviceToScannedDeviceList(result, true)
+
+                        coroutineScope.launch {
+                            connectToDevice(result.device).collect { connectionResult ->
+                                when (connectionResult) {
+                                    is ConnectionResult.Success -> {
+                                        _bleEvent.emit(ConnectionResult.ConnectionEstablished)
+                                        Log.i(TAG, connectionResult.message)
+                                    }
+                                    is ConnectionResult.Error -> {
+                                        _bleEvent.emit(
+                                            ConnectionResult.Error("Connection Error -> ${connectionResult.message}")
+                                        )
+                                        Log.e(TAG, connectionResult.message)
+                                    }
+                                    else -> {}
                                 }
-                                is ConnectionResult.Error -> {
-                                    Log.e(TAG, result.message)
-                                }
-                                else -> { }
                             }
                         }
                     }
-                    //stopBleScan()
+                    //
 
                 } else {
                     Log.i(TAG,"SavMed uuid not found $uuid")
@@ -305,10 +336,12 @@ class BLEClient(
 
                     bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
 
+                    emit(ConnectionResult.Success("Successful Connection!"))
+
                     Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
-                    emit(ConnectionResult.Success("Successfully Connected To ${device.address}"))
 
                 } catch (e: IOException) {
+
                     emit(ConnectionResult.Error("Error Connecting To ${device.address}"))
                 }
             }
@@ -364,8 +397,20 @@ class BLEClient(
 
                 // Update the name if needed
                 if (name != null) {
+                    val split = name.split('#')
+
+//                    val existingNAME = devices.indexOfFirst { device ->
+//                        device.name == name
+//                    }
+//                    Log.i(TAG,"Existing username of Device found! Updating details")
+//
+//                    if (existingNAME != -1) {
+//                        updatedDevices.removeAt(existingNAME)
+//                    }
+
                     val updatedDevice = updatedDevices[existingDeviceIndex].copy(
-                        name = name
+                        name = split[0],
+                        deviceName = split[1]
                     )
                     updatedDevices[existingDeviceIndex] = updatedDevice
                     Log.i(TAG, "Updated Name: $name")
@@ -394,10 +439,12 @@ class BLEClient(
     fun addDeviceToScannedDeviceList(result: ScanResult, isSavMed: Boolean) {
 
         // Add Calculation for dist
+
         val newDevice = BluetoothLEScannedDevices(
             deviceName = result.device.name ?: "",
             address = result.device.address,
             rssi = result.rssi.toString(),
+            dist = calculateDistance(result.rssi),
             isSavMed = isSavMed
         )
 
@@ -425,6 +472,11 @@ class BLEClient(
 
     fun getSupportedGattService(): List<BluetoothGattService?>? {
         return bluetoothGatt?.services
+    }
+
+    fun calculateDistance(rssi: Int, rssiAt1Meter: Int = -50, pathLossExponent: Double = 2.0): Double {
+        val rawDistance = 10.0.pow((rssiAt1Meter - rssi) / (10 * pathLossExponent))
+        return rawDistance.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
     }
 
 }

@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +24,7 @@ import mu.location.savmed.ui.call.Adapters.SearchResultAdapter.ContactDiffCallba
 import org.linphone.core.SearchResult
 
 class NearByAdapter(
+    private val recyclerView: RecyclerView,
     private val onMessageClick: (BluetoothLEScannedDevices) -> Unit,
     private val onCallCLick: (String) -> Unit,
 ) : ListAdapter<BluetoothLEScannedDevices, NearByAdapter.BlueToothBLEDeviceViewHolder>(BleDeviceDiffCallback()) {
@@ -39,13 +41,39 @@ class NearByAdapter(
         private val binding: ItemNearbyuserBinding
     ): RecyclerView.ViewHolder(binding.root) {
 
-        fun bind (device: BluetoothLEScannedDevices) {
+        fun bind (device: BluetoothLEScannedDevices,recyclerView: RecyclerView) {
             Log.i(TAG,"in bind......")
             binding.apply {
-                bluetoothtvFullName.text = device.name ?: ""
-                deviceName.text = device.deviceName ?: ""
-                tvDeviceAdd.text = device.address
 
+                if (device.deviceName.isNullOrEmpty() && device.name.isNullOrEmpty()) {
+                    bluetoothtvFullName.text = "[${device.dist}m way] rssi:(${device.rssi})"
+                    deviceName.text = ""
+                    tvDeviceAdd.text = device.address
+                    distanceRssi.text = ""
+                } else {
+                    bluetoothtvFullName.text = device.name ?: ""
+                    deviceName.text = device.deviceName ?: ""
+                    tvDeviceAdd.text = device.address
+                    distanceRssi.text = "[${device.dist}m way] rssi:(${device.rssi})"
+                }
+
+                if (device.isSavMed) {
+
+                    val currentIndex = adapterPosition
+                    if (currentIndex > 0) {
+                        val updatedList = currentList.toMutableList()
+                        updatedList.removeAt(currentIndex)
+                        updatedList.add(0, device)
+                        submitList(updatedList)
+                    }
+
+                    recyclerView.scrollToPosition(0)
+
+                    root.setBackgroundColor(ContextCompat.getColor(root.context, R.color.green_main_300))
+                } else {
+
+                    root.setBackgroundColor(ContextCompat.getColor(root.context, R.color.white))
+                }
                 callBtn.setOnClickListener() {
                     if (device.name != null) {
                         onCallCLick(device.name!!)
@@ -83,7 +111,7 @@ class NearByAdapter(
         position: Int
     ) {
         Log.i(TAG,"in bind.. creating virew b=holder....")
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), recyclerView = recyclerView)
     }
 
     class BleDeviceDiffCallback: DiffUtil.ItemCallback<BluetoothLEScannedDevices>() {

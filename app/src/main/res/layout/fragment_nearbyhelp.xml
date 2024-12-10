@@ -86,12 +86,12 @@
 
 
                     <Button
-                        android:id="@+id/allowIncomingConnections"
+                        android:id="@+id/messages"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:backgroundTint="#B1ABAB"
-                        android:text="Allow incoming help"
+                        android:text="Received Messages"
                         android:textAllCaps="false"
                         android:textColor="#000000"
                         app:cornerRadius="5dp" />
@@ -134,13 +134,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="bottom">
-                <Button
-                    android:id="@+id/btnHome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="51dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_centerInParent="true"
-                    android:text="HomePage" />
+<!--                <Button-->
+<!--                    android:id="@+id/btnHome"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="51dp"-->
+<!--                    android:layout_marginTop="10dp"-->
+<!--                    android:layout_centerInParent="true"-->
+<!--                    android:text="HomePage" />-->
 
                 </RelativeLayout>
 

@@ -96,35 +96,34 @@ class ContactsManager  @UiThread constructor() {
                     usersList = response.body()!!
                     Log.i(TAG,"Got user last ${usersList.firstOrNull()?.lastName}")
 
-                    val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
+                    var friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)
+                    if (friendList == null) {
+                        val fl = coreContext.core.createFriendList()
+                        fl.isDatabaseStorageEnabled = true // We do want to store friends created in app in DB
+                        fl.displayName = SAVMED_ADDRESS_BOOK_FRIEND_LIST
+                        coreContext.core.addFriendList(fl)
+                        friendList = fl
+                    }
+                    val friendListFriend = friendList.friends
 
                     for (data in usersList) {
                         Log.i(TAG,"In the userList Lopp ${data.firstName}")
-                        if (friendList == null) {
-                            Log.i(TAG, "In friends list null")
-                            val dataInList = usersList.firstOrNull()
-                            dataInList?.firstName?.let {
-                                // Launch a new coroutine for creating the friend
-                                coroutineScope.launch {
-                                    createFriendForAPI(it, dataInList.lastName)
-                                }
+
+                        Log.i(TAG, "Going in for checking friends...")
+                        val existing = friendListFriend.indexOfFirst { friend ->
+                            friend.address?.asStringUriOnly() == "sip:${data.firstName}@212.38.94.76"
+                        }
+                        if (existing == -1) {
+                            Log.i(TAG, "Existing not found")
+                            // Launch a new coroutine for creating the friend
+                            coroutineScope.launch {
+                                createFriendForAPI(data.firstName, data.lastName)
                             }
                         } else {
-                            Log.i(TAG, "Going in for checking friends...")
-                            val existing = friendList.indexOfFirst { friend ->
-                                friend.address?.asStringUriOnly() == "sip:${data.firstName}@212.38.94.76"
-                            }
-                            if (existing == -1) {
-                                Log.i(TAG, "Existing not found")
-                                // Launch a new coroutine for creating the friend
-                                coroutineScope.launch {
-                                    createFriendForAPI(data.firstName, data.lastName)
-                                }
-                            } else {
-                                Log.i(TAG, "Existing Friend ${data.firstName}")
-                                continue
-                            }
+                            Log.i(TAG, "Existing Friend ${data.firstName}")
+                            continue
                         }
+
                     }
                 }
             }

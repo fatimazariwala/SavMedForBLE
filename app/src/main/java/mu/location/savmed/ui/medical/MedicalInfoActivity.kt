@@ -1,6 +1,7 @@
 package mu.location.savmed.ui.medical
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -17,6 +18,8 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.bleServer
+import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.utils.RetroFit
 import retrofit2.Call
@@ -31,6 +34,7 @@ class MedicalInfoActivity : AppCompatActivity() {
     companion object {
         const val SHARED_PREFS = "shared_prefs"
         const val USERNAME_KEY = "username_key"
+        const val TAG = "[Medical Info Activity]"
     }
 
     private var heartProbs  = false
@@ -104,6 +108,24 @@ class MedicalInfoActivity : AppCompatActivity() {
 
         bottomNav.id = R.id.medical
 //        Log.i("UserNamezzzzzzzz",usernameLogin)
+
+
+        bleServer.mesgReciwd.observe(this){ result ->
+
+            if (!bleServer.isPrevMessage) {
+                Log.i(TAG,"mesdg slpash $result")
+                showSplashDialog(result) { result ->
+                    if (result) {
+                        Log.i(MainActivity.TAG, "Dialog confirmed")
+                    } else {
+                        Log.i(MainActivity.TAG, "Dialog dismissed or canceled")
+                    }
+                }
+                bleServer.isPrevMessage = true
+            } else {
+                Log.i(NearByFragment.TAG,"message already displayed")
+            }
+        }
 
         saveBtn = findViewById(R.id.buttonSave)
 
@@ -221,5 +243,33 @@ class MedicalInfoActivity : AppCompatActivity() {
                 finish()
             }
         })
+    }
+
+    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
+        val dialogBuilder = AlertDialog.Builder(this)
+
+        dialogBuilder.setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                callback(true) // Call the callback with true
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                callback(false) // Call the callback with false
+            }
+
+        val alert = dialogBuilder.create()
+        alert.show()
+
+        // Auto-dismiss after a certain time
+        alert.setOnShowListener {
+            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
+                if (alert.isShowing) {
+                    alert.dismiss()
+                    callback(false) // Auto-dismiss and return false
+                }
+            }, 2000)
+        }
     }
 }

@@ -20,9 +20,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
@@ -32,6 +35,9 @@ import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 //import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
 import mu.location.savmed.databinding.FragmentNearbyhelpBinding
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.contacts.fragments.ContactFragment
+import mu.location.savmed.ui.contacts.fragments.ContactFragment.Companion
 import mu.location.savmed.utils.SettingsManager
 
 class NearByFragment : Fragment() {
@@ -44,6 +50,7 @@ class NearByFragment : Fragment() {
     lateinit var scannedDeviceAdapter: NearByAdapter
     // Bluetooth ViewModel
     lateinit var bluetoothLEViewModel: BluetoothLEViewModel
+    lateinit var callViewModel: CurrentCallViewModel
 
     // Initialize Bluetooth Manager Class
     private val bluetoothManager by lazy {
@@ -82,11 +89,6 @@ class NearByFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        scannedDeviceAdapter = NearByAdapter(
-            onCallCLick = { sipUri -> coreContext.startCall(sipUri) },
-            onMessageClick = { device -> bluetoothLEViewModel.SendMessage(device) }
-        )
     }
 
     override fun onCreateView(
@@ -96,8 +98,15 @@ class NearByFragment : Fragment() {
 
         binding = FragmentNearbyhelpBinding.inflate(inflater,container,false)
         bluetoothLEViewModel = ViewModelProvider(this)[BluetoothLEViewModel::class.java]
+        callViewModel = ViewModelProvider(this)[CurrentCallViewModel::class.java]
 
         var prevConnectionState = bluetoothLEViewModel.state.value
+
+        scannedDeviceAdapter = NearByAdapter(
+            recyclerView = binding.rvMain,
+            onCallCLick = { sipUri -> callViewModel.outgoingCall(sipUri,requireContext(),"nearByFrag") },
+            onMessageClick = { device -> bluetoothLEViewModel.SendMessage(device) }
+        )
 
         binding.rvMain.apply {
             adapter = scannedDeviceAdapter
@@ -117,25 +126,18 @@ class NearByFragment : Fragment() {
         }
         Log.i(TAG, "SAV_MEDaaaa")
 
+        observeEvents()
         startScan()
+//
+//        binding.btnHome.setOnClickListener() {
+//            findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
+//        }
 
-        binding.btnHome.setOnClickListener() {
-            findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
+        bleClient.scanStatus.observe(viewLifecycleOwner) { stat ->
+            Toast.makeText(requireContext(),stat,Toast.LENGTH_SHORT).show()
         }
 
         lifecycleScope.launch {
-
-            bleServer.bleServerEvent.onEach { result ->
-
-                when(result) {
-                    is ConnectionResult.BLETransferSucceeded -> {
-                        Log.i(TAG,"yoooooooooooo ${result.message}")
-                        Toast.makeText(requireContext(),result.message,Toast.LENGTH_SHORT).show()
-                    }
-                    else -> { }
-                }
-
-            }
 
             bluetoothLEViewModel.state.collect { state ->
 
@@ -148,11 +150,11 @@ class NearByFragment : Fragment() {
                         ).show()
                     }
                 }
-
-                if (state.message != null) {
-                    Log.i("Received", state.message)
-                    showSplashDialog(state.message)
-                }
+//
+//                if (state.message != null) {
+//                    Log.i("Received------", state.message)
+//                    showSplashDialog(state.message)
+//                }
 
                 prevConnectionState = state
             }
@@ -170,12 +172,66 @@ class NearByFragment : Fragment() {
             }
         }
 
-        binding.allowIncomingConnections.setOnClickListener() {
-            bluetoothLEViewModel.stopScan()
+//        lifecycleScope.launchWhenStarted {
+//            bleServer.bleServerEvent.collect { result ->
+//                if (result != null) {
+//                    Log.i(TAG, "StateFlow received: $result")
+//                    showSplashDialog(result.toString())
+//                }
+//            }
+//        }
+
+        binding.messages.setOnClickListener() {
+            Toast.makeText(requireContext(),"Upcoming!!",Toast.LENGTH_SHORT).show()
+            //bluetoothLEViewModel.stopScan()
         }
 
         // Inflate the layout for this fragment
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        observeMessages()
+    }
+
+    private fun observeEvents() {
+        bleClient.bleEvent.onEach { result ->
+            when (result) {
+                ConnectionResult.ConnectionEstablished -> {
+                    Toast.makeText(requireContext(),"Connected!",Toast.LENGTH_SHORT).show()
+                }
+                is ConnectionResult.Error -> {
+                    Toast.makeText(requireContext(),result.message,Toast.LENGTH_LONG).show()
+                }
+                else -> {
+
+                }
+            }
+        }
+        .catch { throwable ->
+            Log.e(TAG, "Error: $throwable")
+        }
+        .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun observeMessages() {
+
+        bleServer.bleServerEvent.onEach { result ->
+
+            when(result) {
+                is ConnectionResult.BLETransferSucceeded -> {
+                    Log.i(TAG,"yoooooooooooo ${result.message}")
+                    Toast.makeText(requireContext(),result.message,Toast.LENGTH_SHORT).show()
+                }
+                else -> { }
+            }
+
+        }
+        .catch { throwable ->
+            Log.e(TAG, "Error: $throwable")
+        }
+        .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun startScan() {
@@ -251,25 +307,25 @@ class NearByFragment : Fragment() {
 
     }
 
-    private fun showSplashDialog(message: String) {
-        val dialogBuilder = AlertDialog.Builder(requireContext())
-
-        dialogBuilder.setMessage(message)
-            .setCancelable(false) // Prevent dismissing the dialog by tapping outside
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss() // Dismiss the dialog when "OK" is pressed
-            }
-
-        // Create and show the dialog
-        val alert = dialogBuilder.create()
-        alert.show()
-
-        // Optional: Auto-dismiss the dialog after a certain time
-        alert.window?.setLayout(800, 400) // Set size of the dialog
-        alert.setOnShowListener {
-            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-                alert.dismiss()
-            }, 2000) // Dismiss after 2 seconds
-        }
-    }
+//    private fun showSplashDialog(message: String) {
+//        val dialogBuilder = AlertDialog.Builder(requireContext())
+//
+//        dialogBuilder.setMessage(message)
+//            .setCancelable(false) // Prevent dismissing the dialog by tapping outside
+//            .setPositiveButton("OK") { dialog, _ ->
+//                dialog.dismiss() // Dismiss the dialog when "OK" is pressed
+//            }
+//
+//        // Create and show the dialog
+//        val alert = dialogBuilder.create()
+//        alert.show()
+//
+//        // Optional: Auto-dismiss the dialog after a certain time
+//        alert.window?.setLayout(800, 400) // Set size of the dialog
+//        alert.setOnShowListener {
+//            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
+//                alert.dismiss()
+//            }, 2000) // Dismiss after 2 seconds
+//        }
+//    }
 }

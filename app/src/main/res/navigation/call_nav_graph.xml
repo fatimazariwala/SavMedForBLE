@@ -112,4 +112,22 @@
             android:id="@+id/action_chatListFragment_to_conversationFragment"
             app:destination="@id/conversationFragment" />
     </fragment><action android:id="@+id/action_global_conversationFragment" app:destination="@id/conversationFragment"/>
+<!--    <fragment-->
+<!--        android:id="@+id/mapsFragment"-->
+<!--        android:name="mu.location.savmed.ui.locationing.MapsFragment"-->
+<!--        android:label="fragment_maps"-->
+<!--        tools:layout="@layout/fragment_maps" >-->
+<!--        <argument-->
+<!--            android:name="lat"-->
+<!--            app:argType="double"/>-->
+<!--    <argument-->
+<!--        android:name="lon"-->
+<!--        app:argType="double"/>-->
+<!--    <argument-->
+<!--        android:name="dist"-->
+<!--        app:argType="int"/>-->
+<!--    <argument-->
+<!--        android:name="foundUserName"-->
+<!--        app:argType="string"/>-->
+<!--    </fragment>-->
 </navigation>

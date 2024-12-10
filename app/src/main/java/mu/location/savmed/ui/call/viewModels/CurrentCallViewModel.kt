@@ -14,6 +14,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
+import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.contacts.models.EndSwitchCallBack
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
 import mu.location.savmed.ui.chat.ChatTestActivity
@@ -417,7 +419,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         }
     }
 
-    fun outgoingCall(remoteUri: String,fragmentContext: Context) {
+    fun outgoingCall(remoteUri: String,fragmentContext: Context,frag: String?=null) {
 
         val lat = coreContext.onLocationEvent["latitude"] ?: 0.0
         val lon = coreContext.onLocationEvent["longitude"] ?: 0.0
@@ -435,6 +437,15 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         for (contact in coreContext.emrContact) {
             android.util.Log.i(ContactFragment.TAG,"in for ${contact}")
             createBasicChatRoom(contact.contact)
+            val message = "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
+            android.util.Log.i(ContactFragment.TAG,message)
+            val chatMessage = chatRoom!!.createMessageFromUtf8(message)
+            chatMessage.send()
+        }
+
+        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
+        for (contact in friendList ?: emptyArray()) {
+            createBasicChatRoom(contact.address?.username.toString())
             val message = "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
             android.util.Log.i(ContactFragment.TAG,message)
             val chatMessage = chatRoom!!.createMessageFromUtf8(message)
@@ -497,14 +508,18 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             coreContext.startCall(remoteUri.trim())
         }
         displayedName.postValue(remoteUri.trim())
-        callBack?.switchToOutgoingCallFragment()
+
+        if (frag == "nearByFrag") {
+            startCallActivity(context = fragmentContext)
+        } else {
+            callBack?.switchToOutgoingCallFragment()
+
+        }
     }
 
-    fun startChat(remoteUri: String,context: Context) {
-        val i = Intent(context, ChatTestActivity::class.java)
-        i.putExtra("remoteAddress",remoteUri)
+    fun startCallActivity(context: Context) {
+        val i = Intent(context, CallActivity::class.java)
         context.startActivity(i)
-        callBack?.endMainActivity()
     }
 
 

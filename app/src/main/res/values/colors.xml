@@ -13,6 +13,10 @@
     <color name="bottom_nav_selected_item">#E4606160</color>
     <color name="light_pink">#E4FBE0FB</color>
 
+<!--    colors for map-->
+    <color name="red">#FF0000</color>
+    <color name="red_translucent">#44FF0000</color>
+
     <color name="transparent_color">#00000000</color>
     <color name="dialog_background">#99000000</color><!-- 60% opacity -->
 

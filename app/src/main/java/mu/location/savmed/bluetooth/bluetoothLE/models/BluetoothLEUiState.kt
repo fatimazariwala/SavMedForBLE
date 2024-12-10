@@ -29,5 +29,7 @@ data class BluetoothLEUiState(
 
 data class writeMessage(
     val From: String,
-    var message: String
+    val dist :Double,
+    val lat : Double,
+    val lon : Double
 )

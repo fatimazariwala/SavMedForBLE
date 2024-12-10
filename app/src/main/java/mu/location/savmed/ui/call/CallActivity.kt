@@ -1,5 +1,6 @@
 package mu.location.savmed.ui.call
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -14,7 +15,9 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import mu.location.savmed.CallNavGraphDirections
 import mu.location.savmed.MainActivity
+import mu.location.savmed.MainActivity.Companion
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ActivityCallBinding
@@ -124,6 +127,23 @@ class CallActivity : AppCompatActivity() {
             }
         }
 
+        bleServer.mesgReciwd.observe(this){ result ->
+
+            if (!bleServer.isPrevMessage) {
+                Log.i(NearByFragment.TAG,"mesdg slpash $result")
+                showSplashDialog(result) { result ->
+                    if (result) {
+                        Log.i(MainActivity.TAG, "Dialog confirmed")
+                    } else {
+                        Log.i(MainActivity.TAG, "Dialog dismissed or canceled")
+                    }
+                }
+                bleServer.isPrevMessage = true
+            } else {
+                Log.i(NearByFragment.TAG,"message already displayed")
+            }
+        }
+
         coreContext.isOutgoingCall.observe(this) { isOutgoingCall ->
             Log.i("outgoing callll","calllll$isOutgoingCall")
             if(isOutgoingCall) {
@@ -171,6 +191,34 @@ class CallActivity : AppCompatActivity() {
                 finish()
             }
         })
+    }
+
+    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
+        val dialogBuilder = AlertDialog.Builder(this)
+
+        dialogBuilder.setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                callback(true) // Call the callback with true
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                callback(false) // Call the callback with false
+            }
+
+        val alert = dialogBuilder.create()
+        alert.show()
+
+        // Auto-dismiss after a certain time
+        alert.setOnShowListener {
+            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
+                if (alert.isShowing) {
+                    alert.dismiss()
+                    callback(false) // Auto-dismiss and return false
+                }
+            }, 2000)
+        }
     }
 
 }

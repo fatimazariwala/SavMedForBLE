@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
 import mu.location.savmed.ui.contacts.fragments.ContactFragment.Companion
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
@@ -54,6 +55,7 @@ class ContactViewModel : ViewModel() {
     init {
         isEmr.postValue(false)
         picturePath.postValue("")
+        corePreferences.showFavoriteContacts = true
     }
 
     fun addFriendToList() {
@@ -131,7 +133,7 @@ class ContactViewModel : ViewModel() {
 
                     if (isEmrContact == true) {
                         friend!!.starred = true
-                        Log.i(TAG, "Friend is emrrrrrr")
+                        Log.i(TAG, "Friend is emrrrrrr ${friend!!.starred}")
                     } else {
                         Log.i(TAG, "Friend is Not emrrrrr")
                     }

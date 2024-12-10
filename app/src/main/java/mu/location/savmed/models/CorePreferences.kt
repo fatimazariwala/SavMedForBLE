@@ -6,6 +6,7 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
 import org.linphone.core.Config
 import org.linphone.core.BuildConfig
 import java.io.File
@@ -45,11 +46,58 @@ class CorePreferences @UiThread constructor(private val context: Context){
         }
 
     @get:WorkerThread @set:WorkerThread
+    var publishPresence: Boolean
+        get() = config.getBool("app", "publish_presence", true)
+        set(value) {
+            config.setBool("app", "publish_presence", value)
+        }
+
+    @get:WorkerThread @set:WorkerThread
     var showFavoriteContacts: Boolean
         get() = config.getBool("ui", "show_favorites_contacts", true)
         set(value) {
-            config.setBool("ui", "show_favorites_contacts", value)
+            config.setBool("ui", "show_favorites_contacts", true)
         }
+
+    @get:WorkerThread @set:WorkerThread
+    var contactsFilter: String
+        get() = config.getString("ui", "contacts_filter", "")!! // Default value must be empty!
+        set(value) {
+            config.setString("ui", "contacts_filter", value)
+        }
+
+    @get:WorkerThread @set:WorkerThread
+    var friendListInWhichStoreNewlyCreatedFriends: String
+        get() = config.getString(
+            "app",
+            "friend_list_to_store_newly_created_contacts",
+            SAVMED_ADDRESS_BOOK_FRIEND_LIST
+        )!!
+        set(value) {
+            config.setString("app", "friend_list_to_store_newly_created_contacts", value)
+        }
+
+    @get:WorkerThread @set:WorkerThread
+    var darkMode: Int
+        get() {
+            if (!darkModeAllowed) return 0
+            return config.getInt("app", "dark_mode", -1)
+        }
+        set(value) {
+            config.setInt("app", "dark_mode", value)
+        }
+
+    @get:WorkerThread
+    val darkModeAllowed: Boolean
+        get() = config.getBool("ui", "dark_mode_allowed", true)
+
+    @get:WorkerThread @set:WorkerThread
+    var themeMainColor: String
+        get() = config.getString("ui", "theme_main_color", "blue")!!
+        set(value) {
+            config.setString("ui", "theme_main_color", value)
+        }
+
 
     @get:WorkerThread @set:WorkerThread
     var keepServiceAlive: Boolean

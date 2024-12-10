@@ -17,11 +17,14 @@ import android.bluetooth.le.AdvertisingSetCallback
 import android.bluetooth.le.AdvertisingSetParameters
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import androidx.annotation.UiThread
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,10 +37,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mu.location.savmed.MainActivity
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.bluetoothManager
+import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
+import mu.location.savmed.models.CoreContext
+import mu.location.savmed.models.CoreContext.Companion
+import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.util.UUID
@@ -54,9 +62,12 @@ class BLEServer(
         const val CHARACTERISTIC_MESSAGE_UUID = "ba987654-4321-6789-4321-000087654321"
     }
 
+    var messageReceivedFromBLE: writeMessage ?= null
+
     private var coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var advertiseData: AdvertiseData ?= null
+    var isPrevMessage = true
 
     lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
     lateinit var bluetoothGattServer: BluetoothGattServer
@@ -64,6 +75,8 @@ class BLEServer(
     private val _bleServerEvent = MutableSharedFlow<ConnectionResult>()
     val bleServerEvent: SharedFlow<ConnectionResult>
         get() = _bleServerEvent
+
+    val mesgReciwd = MutableLiveData<String>()
 
     private val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
     val listOfMessages: StateFlow<List<writeMessage>>
@@ -121,9 +134,17 @@ class BLEServer(
             characteristic.setValue(value)
             Log.i(TAG, "Characteristic write request: ${characteristic.uuid} ${String(characteristic.value ?: ByteArray(0))}")
 
+            coreContext.postOnMainThread {
+                showMessageActivity()
+            }
+            isPrevMessage = false
             processWriteRequest(device,value)
 
-            flow{ emit(ConnectionResult.Success("BLE Write Message Received!")) }
+            coroutineScope.launch {
+                _bleServerEvent.emit(
+                    ConnectionResult.Success("BLE Write Message Received!")
+                )
+            }
 
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
@@ -132,28 +153,40 @@ class BLEServer(
     private fun processWriteRequest(device: BluetoothDevice, value: ByteArray) {
 
         val received = String(value).split('#')
+
         Log.i(TAG,"in receuved ${received.size} ${received.lastOrNull()}")
-        val message = writeMessage(
+        messageReceivedFromBLE = writeMessage(
             From = received[0],
-            message = received[1]
+            dist = received[1].toDouble(),
+            lat = received[2].toDouble(),
+            lon = received[3].toDouble()
         )
 
-        coroutineScope.launch {
-            _bleServerEvent.emit(ConnectionResult.BLETransferSucceeded(
-                "Help Needed by ${message.From} at ${message.message}"
-            ))
-        }
+//        coroutineScope.launch {
+//            _bleServerEvent.emit(ConnectionResult.BLETransferSucceeded(
+//                "Help Needed by ${messageReceivedFromBLE!!.From} ${messageReceivedFromBLE!!.dist}m way from you!"
+//            ))
+//        }
+
+        mesgReciwd.postValue("Help Needed by ${messageReceivedFromBLE!!.From} approx ${messageReceivedFromBLE!!.dist}m way from you!")
+        coreContext.postOnMainThread {  Log.i(TAG,"jidjewdejw ${mesgReciwd.value}") }
+
+
 
         _listOfMessages.update { messages ->
+
+            for (message in messages) {
+                Log.i(TAG,"${message.From} : ")
+            }
             val existingIndex = messages.indexOfFirst { messageZ ->
-                messageZ.From == message.From
+                messageZ.From == messageReceivedFromBLE!!.From
             }
 
             if (existingIndex == -1) {
-                messages + message
+                messages + messageReceivedFromBLE!!
             } else {
                 messages.toMutableList().apply {
-                    this[existingIndex] = message
+                    this[existingIndex] = messageReceivedFromBLE!!
                 }
             }
 
@@ -206,7 +239,7 @@ class BLEServer(
 
         if (SharedPreference.username.isNotEmpty()) {
             Log.i(TAG,"Found ${SharedPreference.username} setting it as characteristic params")
-            characteristics_username.setValue(SharedPreference.username)
+            characteristics_username.setValue("${SharedPreference.username}#${Build.MANUFACTURER}")
         } else {
             Log.i(TAG,"Could not set Username in characteristic FOUND EMPTY")
             characteristics_username.setValue("unknown_savMed_user")
@@ -261,7 +294,7 @@ class BLEServer(
                 ) {
                     Log.i(
                         TAG, "onAdvertisingSetStarted(): txPower:" + txPower + " , status: "
-                                + status + advertisingSet.setPeriodicAdvertisingData(advertiseData)
+                                + status + advertisingSet.setPeriodicAdvertisingData(extraAdvertiseData)
                     )
                    // advertisingSet.setAdvertisingData(extraAdvertiseData)
 
@@ -308,4 +341,17 @@ class BLEServer(
             advertiser?.startAdvertising(settings, advertiseData,AdvertiseCallback)
         }
     }
+
+    @UiThread
+    fun showMessageActivity() {
+        Log.i(TAG,"Starting Main activity For BLE Message")
+        val intent = Intent(context, MainActivity::class.java)
+        // This flag is required to start an Activity from a Service context
+        intent.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        )
+        context.startActivity(intent)
+    }
+
+
 }

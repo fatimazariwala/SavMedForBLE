@@ -21,7 +21,7 @@
             android:layout_height="25dp"
             android:layout_marginTop="4dp"
             android:text="Full Name"
-            android:textSize="16sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,11 +31,11 @@
         <TextView
             android:id="@+id/deviceName"
             android:layout_width="wrap_content"
-            android:layout_height="25dp"
+            android:layout_height="18dp"
             android:layout_marginTop="4dp"
             android:text="Device Name"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:textSize="13sp"
+            android:textColor="@color/blue"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.32"
             app:layout_constraintStart_toStartOf="parent"
@@ -44,20 +44,25 @@
         <TextView
             android:id="@+id/tvDeviceAdd"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="16dp"
             android:layout_marginTop="8dp"
             android:text="bluetooth address"
-            android:textSize="14sp"
+            android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/bluetoothtvFullName" />
 
-        <ImageView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/call_btn"
-            android:layout_width="35dp"
-            android:layout_height="45dp"
-            android:src="@drawable/phone"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:gravity="center_horizontal|center_vertical"
+            app:icon="@android:drawable/ic_menu_call"
+            app:iconGravity="top"
+            app:iconSize="13dp"
+            app:iconTint="@color/purple_main_500"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.907"
@@ -65,12 +70,17 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.555" />
 
-        <ImageView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/transferbtn"
-            android:layout_width="35dp"
-            android:layout_height="45dp"
             android:foregroundGravity="center"
-            android:src="@drawable/bluetooth_transfer"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:iconTint="@color/purple_main_500"
+            android:gravity="center_horizontal|center_vertical"
+            app:icon="@android:drawable/stat_notify_sync"
+            app:iconGravity="top"
+            app:iconSize="13dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/call_btn"
             app:layout_constraintHorizontal_bias="0.916"
@@ -78,7 +88,21 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.615">
 
-        </ImageView>
+        </com.google.android.material.button.MaterialButton>
+
+        <TextView
+            android:id="@+id/distanceRssi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textStyle="bold"
+            android:textSize="12dp"
+            android:textColor="@color/green_500"
+            android:text="[3m way] rssi:(-50)"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/tvDeviceAdd"
+            app:layout_constraintTop_toBottomOf="@+id/deviceName"
+            app:layout_constraintVertical_bias="0.882" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

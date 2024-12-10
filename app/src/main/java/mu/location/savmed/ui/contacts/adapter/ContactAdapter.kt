@@ -39,7 +39,7 @@ class ContactAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(contactModel: ContactAvatarModel) {
-            Log.i(TAG,"in viewMOdelssssss ${contactModel.name}")
+           // Log.i(TAG,"in viewMOdelssssss ${contactModel.name}")
             with(binding) {
                 model = contactModel
                 executePendingBindings()
@@ -80,13 +80,21 @@ class ContactAdapter(
             with(binding) {
                 model = emrModel
                 executePendingBindings()
+                root.setOnClickListener() {
+                    emrModel.friend.refKey?.let { it1 -> onInfoClick(it1)}
+                }
+
+                root.setOnLongClickListener() {
+                    emrModel.friend.address?.username?.let { it1 -> onCallClick(it1) }
+                    true
+                }
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
-        Log.i(TAG,"in on crearteeee bolder")
+      //  Log.i(TAG,"in on crearteeee bolder")
 
         if (favourite) {
             val binding: ChatEmergencyConatctConnectAvatarBarCellBinding = DataBindingUtil.inflate(
@@ -119,7 +127,7 @@ class ContactAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        Log.i(TAG,"in on bind bolder")
+      //  Log.i(TAG,"in on bind bolder")
         if (favourite) {
             (holder as EmergencyContactViewHolder).bind(getItem(position))
         } else {

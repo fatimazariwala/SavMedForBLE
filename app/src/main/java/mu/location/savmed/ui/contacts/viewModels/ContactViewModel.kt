@@ -12,14 +12,22 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
+import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
 import mu.location.savmed.ui.contacts.fragments.ContactFragment.Companion
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.ui.contacts.models.ContactEvent
 import mu.location.savmed.utils.FileUtils
+import mu.location.savmed.utils.RetrofitInstance
+import mu.location.savmed.utils.SharedPreference
 import org.linphone.core.Friend
 import org.linphone.core.FriendList
 import org.linphone.core.SubscribePolicy
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.HttpException
+import retrofit2.Response
+import java.io.IOException
 
 class ContactViewModel : ViewModel() {
 
@@ -182,6 +190,18 @@ class ContactViewModel : ViewModel() {
 
                     friend?.done()
 
+                    if (friend?.starred == true) {
+                        friend!!.address?.username?.let {
+                            Log.i(TAG, "Storing Contact At gosaviour...${it}..")
+                            createOrDeleteEmrContact(it,true)
+                        }
+                    } else {
+                        friend!!.address?.username?.let {
+                            Log.i(TAG, "Storing Contact At gosaviour...${it}..")
+                            createOrDeleteEmrContact(it,false)
+                        }
+                    }
+
                     val fl = core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)
                         ?: core.createFriendList()
 
@@ -228,6 +248,54 @@ class ContactViewModel : ViewModel() {
             }
         } else {
             EditUser()
+        }
+    }
+
+    private fun createOrDeleteEmrContact(username: String,isCreate:Boolean) {
+        Log.i(TAG,"GOT da userName outside VS $username")
+        viewModelScope.launch {
+            val call: Call<EmergencyContact?>? = try {
+
+                Log.i(TAG,"GOT da userName $username")
+                val emergencyContact = EmergencyContact (
+                    userName = SharedPreference.username,
+                    emergencyContact = username
+                )
+
+                Log.i(TAG,"EMR CONT ${emergencyContact.emergencyContact} ${emergencyContact.userName}")
+
+                if (isCreate == true) {
+                    RetrofitInstance.apiEmergencyContacts.postEmergencyContacts(emergencyContact)
+                } else {
+                    Log.i(TAG,"in delet")
+                    RetrofitInstance.apiEmergencyContacts.deleteEmergencyContacts(emergencyContact)
+                }
+            } catch (e: IOException) {
+                Log.i(TAG, "EEROR: ${e.message.toString()}")
+                return@launch
+            } catch (e: HttpException) {
+                Log.i(TAG, "ERROR ${e.message.toString()}")
+                return@launch
+            }
+
+            call?.enqueue(object: Callback<EmergencyContact?> {
+                override fun onResponse(
+                    call: Call<EmergencyContact?>,
+                    response: Response<EmergencyContact?>
+                ) {
+                    val res = response.body()
+                    Log.i(TAG,"Post Response: $res")
+                }
+                override fun onFailure(call: Call<EmergencyContact?>, t: Throwable) {
+                    Log.i(TAG,"Post Response Failure: ${t.message}")
+                    viewModelScope.launch {
+                        _contactEvent.emit(
+                            ContactEvent.ContactError("starred_error")
+                        )
+                    }
+
+                }
+            })
         }
     }
 

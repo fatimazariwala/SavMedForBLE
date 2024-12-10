@@ -36,7 +36,6 @@ import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.RippleFragment.Companion
-import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsViewModel
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.locationing.LocationActivity
 import mu.location.savmed.ui.locationing.MapsFragment
@@ -52,7 +51,6 @@ class MainActivity : AppCompatActivity() {
     }
 
    // private lateinit var bluetoothLEViewModel: BluetoothLEViewModel
-    private lateinit var emrContactsViewModel: EmergencyContactsViewModel
 
     private lateinit var navController : NavController
 
@@ -195,27 +193,27 @@ class MainActivity : AppCompatActivity() {
                         Log.i(TAG, "Dialog confirmed")
 
                         if (message != null) {
-//                            val lat = message.lat.toDouble()
-//                            val lon = message.lon
-//                            val name = message.From
-//                            val dist = message.dist
-//
-//                            // Create the bundle to pass the data to the MapsFragment
-//                            val bundle = Bundle().apply {
-//                                putDouble("lat", lat)
-//                                putDouble("long", lon)
-//                                putString("foundUserName", name)
-//                                putDouble("dist",dist)
-//                            }
-//
-//                            // Navigate to MapsFragment and pass the data
-//                            val mapsFragment = MapsFragment()
-//                            mapsFragment.arguments = bundle
-//
-//                            supportFragmentManager.beginTransaction()
-//                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
-//                                .addToBackStack(null) // Optional: add to back stack if needed
-//                                .commit()
+                            val lat = message.lat.toDouble()
+                            val lon = message.lon
+                            val name = message.From
+                            val dist = message.dist
+
+                            // Create the bundle to pass the data to the MapsFragment
+                            val bundle = Bundle().apply {
+                                putDouble("lat", lat)
+                                putDouble("long", lon)
+                                putString("foundUserName", name)
+                                putDouble("dist",dist)
+                            }
+
+                            // Navigate to MapsFragment and pass the data
+                            val mapsFragment = MapsFragment()
+                            mapsFragment.arguments = bundle
+
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
+                                .addToBackStack(null) // Optional: add to back stack if needed
+                                .commit()
 
                         } else {
                             Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
@@ -294,41 +292,8 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Enable GPS for precise location!", Toast.LENGTH_SHORT).show()
         }
 
-//        if (!isNetworkEnabled) {
-//            // Prompt user to enable network
-//            val networkIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
-//            startActivity(networkIntent)
-//
-//            Toast.makeText(this, "Enable Network for location services!", Toast.LENGTH_SHORT).show()
-//        }
-//        if (coreContext.isCoreAvailable()) {
-//            coreContext.postOnCoreThread {
-//                coreContext.contactsManager.getInstituteContactsFromEndpoint()
-//            }
-//        } else {
-//            val delayMillis = (10000..20000).random().toLong() // Random delay between 10 and 20 seconds
-//            Log.i("Main Activity", "Latitude or Longitude is null, retrying after $delayMillis milliseconds.")
-
-//            // Use Handler to post a delayed task
-//            Handler(Looper.getMainLooper()).postDelayed({
-//                coreContext.contactsManager.getInstituteContactsFromEndpoint()
-//            }, delayMillis)
-//        }
-
-//        var prevConnectionState = bluetoothLEViewModel.state.value
-//        lifecycleScope.launch {
-//            bluetoothLEViewModel.state.collect { state ->
-//
-//                if (state.message != null) {
-//                    Log.i("Received", state.message)
-//                    showSplashDialog(state.message)
-//                }
-//                prevConnectionState = state
-//            }
-//        }
-
         observeRegistrationStatus()
-        observeEmergencyContacts()
+       // observeEmergencyContacts()
     }
 
 
@@ -336,7 +301,6 @@ class MainActivity : AppCompatActivity() {
 
         // Below was comente dout on 24/11/2024 at 5:30
        // bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
-        emrContactsViewModel = ViewModelProvider(this)[EmergencyContactsViewModel::class.java]
     }
 
 
@@ -361,19 +325,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeEmergencyContacts() {
-        emrContactsViewModel.contactsList.observe(this) { contactList ->
-            for (contact in contactList) {
-                if (!coreContext.emrContact.contains(contact)) {
-                    coreContext.emrContact.add(contact) // Explicitly add the contact
-                }
-                Log.i(TAG,coreContext.emrContact.size.toString())
-                for(contactz in coreContext.emrContact) {
-                    Log.i(TAG,"EMR OCntacts= ${contactz}")
-                }
-            }
-        }
-    }
+//    private fun observeEmergencyContacts() {
+//        emrContactsViewModel.contactsList.observe(this) { contactList ->
+//            for (contact in contactList) {
+//                if (!coreContext.emrContact.contains(contact)) {
+//                    coreContext.emrContact.add(contact) // Explicitly add the contact
+//                }
+//                Log.i(TAG,coreContext.emrContact.size.toString())
+//                for(contactz in coreContext.emrContact) {
+//                    Log.i(TAG,"EMR OCntacts= ${contactz}")
+//                }
+//            }
+//        }
+//    }
 
     private fun checkAndRequestPermissions() {
 

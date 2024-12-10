@@ -25,8 +25,6 @@ import mu.location.savmed.contacts.ContactsDB
 import mu.location.savmed.contacts.ContactsManager
 import mu.location.savmed.notifications.NotificationsManager
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
-import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsViewModel
-import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsViewModel.Companion
 import mu.location.savmed.ui.call.CallActivity
 //import mu.location.savmed.sip.SipActivity
 import mu.location.savmed.ui.call.services.CoreForeground
@@ -377,6 +375,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
         notificationManager.onCoreStarted(core,false)
         contactsManager.getInstituteContactsFromEndpoint()
+        contactsManager.getEmergencyContacts()
         //fetchApiData()
         Log.i(TAG ,"Build Type ${BuildConfig.BUILD_TYPE}")
     }

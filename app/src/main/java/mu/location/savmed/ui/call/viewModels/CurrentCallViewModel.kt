@@ -433,23 +433,19 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             address = "Unable to fetch address"
         }
 
-        android.util.Log.i(ContactFragment.TAG,"in outside for")
-        for (contact in coreContext.emrContact) {
-            android.util.Log.i(ContactFragment.TAG,"in for ${contact}")
-            createBasicChatRoom(contact.contact)
-            val message = "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
-            android.util.Log.i(ContactFragment.TAG,message)
-            val chatMessage = chatRoom!!.createMessageFromUtf8(message)
-            chatMessage.send()
-        }
+        android.util.Log.i(TAG,"in outside for")
 
         val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
         for (contact in friendList ?: emptyArray()) {
-            createBasicChatRoom(contact.address?.username.toString())
-            val message = "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
-            android.util.Log.i(ContactFragment.TAG,message)
-            val chatMessage = chatRoom!!.createMessageFromUtf8(message)
-            chatMessage.send()
+
+            if (contact.starred) {
+                createBasicChatRoom(contact.address?.username.toString())
+                val message =
+                    "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
+                android.util.Log.i(ContactFragment.TAG, message)
+                val chatMessage = chatRoom!!.createMessageFromUtf8(message)
+                chatMessage.send()
+            }
         }
 
         viewModelScope.launch {

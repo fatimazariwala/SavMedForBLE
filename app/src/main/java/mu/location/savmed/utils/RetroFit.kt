@@ -5,12 +5,13 @@ import mu.location.savmed.ui.auth.registrationDetails
 import mu.location.savmed.ui.medical.MedicalInfo
 import mu.location.savmed.models.Users
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
-import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContacts
+import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
 import mu.location.savmed.ui.locationing.liveLocationData
 import mu.location.savmed.ui.locationing.locationData
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
@@ -39,11 +40,15 @@ interface RetroFit {
 
     @Headers("Content-Type: application/json")
     @POST("post")
-    fun postEmergencyContacts(@Body EmergencyContacts: EmergencyContacts): Call<EmergencyContacts?>?
+    fun postEmergencyContacts(@Body EmergencyContacts: EmergencyContact): Call<EmergencyContact?>?
+
+    @Headers("Content-Type: application/json")
+    @POST("delete")
+    fun deleteEmergencyContacts(@Body EmergencyContacts: EmergencyContact): Call<EmergencyContact?>?
 
     @GET("get")
     suspend fun getcallUsers(): Response<Users>
 
     @GET("get")
-    suspend fun getEmergencyContacts(@Query("userName") userName: String): Response<List<EmergencyContact>>
+    suspend fun getEmergencyContacts(@Query("userName") userName: String): Response<List<EmergencyContactResponse>>
 }

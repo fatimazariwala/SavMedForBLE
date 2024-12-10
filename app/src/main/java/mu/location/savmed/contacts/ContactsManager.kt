@@ -13,6 +13,7 @@ import androidx.annotation.WorkerThread
 import androidx.core.app.ActivityCompat
 import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -23,11 +24,14 @@ import kotlinx.coroutines.withContext
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.models.Users
 import mu.location.savmed.models.UsersItem
+import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
+import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.ImageUtils
 import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
+import mu.location.savmed.utils.SharedPreference
 import org.linphone.core.Address
 import org.linphone.core.Friend
 import org.linphone.core.FriendList
@@ -69,6 +73,49 @@ class ContactsManager  @UiThread constructor() {
         return getContactAvatarModelForAddress(address).friend.name ?: SavMedUtils.getDisplayName(
             address
         )
+    }
+
+    @WorkerThread
+    fun getEmergencyContacts() {
+
+        Log.i(TAG,"in gettttttttt")
+        coroutineScope.launch {
+            try {
+                val data = RetrofitInstance.apiEmergencyContacts.getEmergencyContacts(SharedPreference.username)
+                if (data.isSuccessful) {
+                    val emrContactList = data.body() ?: emptyList()
+                    Log.i(TAG,"final dat ${data.body()}")
+                    for (cont in emrContactList) {
+                        Log.i(TAG, "Found emergency contact: ${cont.emr_contact_name}")
+                        coroutineScope.launch {
+                            setEmergencyContacts(cont)
+                        }
+                    }
+                } else {
+                    Log.e(TAG,"Could not Load Emergency Contact API Failure!!")
+                }
+            } catch (e : HttpException) {
+                Log.i(TAG,e.message().toString())
+            } catch (e: IOException) {
+                Log.i(TAG,e.message.toString())
+            }
+        }
+    }
+
+    private fun setEmergencyContacts(emrContact: EmergencyContactResponse) {
+        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)
+        if (friendList == null) {
+            Log.w(TAG,"No contacts To SET")
+        } else {
+            val friends = friendList.friends
+            for (frnd in friends) {
+                if (frnd.address?.username == emrContact.emr_contact_name) {
+                    frnd.edit()
+                    frnd.starred = true
+                    frnd.done()
+                }
+            }
+        }
     }
 
     @WorkerThread

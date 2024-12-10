@@ -155,11 +155,17 @@ class BLEServer(
         val received = String(value).split('#')
 
         Log.i(TAG,"in receuved ${received.size} ${received.lastOrNull()}")
+
+        val defaultFrom = "Unknown"
+        val defaultDist = 0.0
+        val defaultLat = 0.0
+        val defaultLon = 0.0
+
         messageReceivedFromBLE = writeMessage(
-            From = received[0],
-            dist = received[1].toDouble(),
-            lat = received[2].toDouble(),
-            lon = received[3].toDouble()
+            From = received.getOrElse(0) { defaultFrom },
+            dist = received.getOrElse(1) { defaultDist.toString() }.toDouble(),
+            lat = received.getOrElse(2) { defaultLat.toString() }.toDouble(),
+            lon = received.getOrElse(3) { defaultLon.toString() }.toDouble()
         )
 
 //        coroutineScope.launch {

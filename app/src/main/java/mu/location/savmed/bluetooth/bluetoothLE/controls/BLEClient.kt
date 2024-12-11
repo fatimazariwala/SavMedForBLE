@@ -252,9 +252,9 @@ class BLEClient(
                     val longitude = coreContext.onLocationEvent["longitude"]?.toDouble()
                     val roundedLatitude = latitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
                     val roundedLongitude = longitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
-
-                    characteristic.setValue("fatima#${device.dist?.toInt()}#${roundedLatitude}#${roundedLongitude}")
-                    Log.i(TAG,"${characteristic.value.toString()} fatima#${device.dist?.toInt()}#${roundedLatitude}#${roundedLongitude}")
+                    val distz = device.dist?.toBigDecimal()?.setScale(1, java.math.RoundingMode.HALF_UP)?.toDouble()
+                    characteristic.setValue("fatima#${distz}#${roundedLatitude}#${roundedLongitude}")
+                    Log.i(TAG,"${characteristic.value.toString()} fatima#${distz}#${roundedLatitude}#${roundedLongitude}")
                 }
                 bluetoothGatt?.writeCharacteristic(characteristic)
                 Log.i(TAG,"Found Message char $char $CHARACTERISTIC_MESSAGE_UUID")
@@ -477,6 +477,11 @@ class BLEClient(
     fun calculateDistance(rssi: Int, rssiAt1Meter: Int = -50, pathLossExponent: Double = 2.0): Double {
         val rawDistance = 10.0.pow((rssiAt1Meter - rssi) / (10 * pathLossExponent))
         return rawDistance.toBigDecimal().setScale(2, java.math.RoundingMode.HALF_UP).toDouble()
+    }
+
+    fun resetDeviceList() {
+        _scannedDevices.update { emptyList() }
+        _savMedDevices.update { emptyList() }
     }
 
 }

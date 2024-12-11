@@ -362,7 +362,7 @@ class ContactViewModel : ViewModel() {
                 picturePath.postValue(photo)
             }
 
-            fullName.postValue("${edtFriend.vcard?.givenName} ${edtFriend.vcard?.familyName}")
+            fullName.postValue("${edtFriend.vcard?.givenName ?: edtFriend.name} ${edtFriend.vcard?.familyName ?: ""}")
             Log.i(TAG,"Friends Details ${edtFriend.vcard?.givenName} ${lastName.value} ${edtFriend.vcard?.familyName}")
 
             friend = edtFriend

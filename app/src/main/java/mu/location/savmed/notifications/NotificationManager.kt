@@ -31,6 +31,7 @@ import androidx.core.content.LocusIdCompat
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.compatibility.Compatibility
 import mu.location.savmed.contacts.AvatarGenerator
 import mu.location.savmed.contacts.getAvatarBitmap
@@ -42,6 +43,7 @@ import mu.location.savmed.ui.contacts.fragments.NewOrEditContactFragmentDirectio
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.FileUtils
 import mu.location.savmed.utils.SavMedUtils
+import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.ShortCutUtils
 import org.linphone.core.Address
 import org.linphone.core.Call
@@ -68,6 +70,8 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         const val INTENT_MARK_MESSAGE_AS_READ_NOTIF_ACTION = "mu.savMed.MARK_AS_READ_ACTION"
 
         const val MISSED_CALL_NOTIFICATION_ID = "MISSED_CALL_NOTIFICATION"
+
+        const val BLE_MESSAGE_CHANNEL = "BLE_MESSAGE_NOTIFY"
 
         const val KEY_TEXT_REPLY = "key_text_reply"
         const val INTENT_LOCAL_IDENTITY = "LOCAL_IDENTITY"
@@ -363,6 +367,7 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         createIncomingCallNotificationChannel()
         createActiveCallNotificationChannel()
         createMessageChannel()
+        createBleMessageChannel()
     }
 
     @WorkerThread
@@ -387,6 +392,18 @@ class NotificationsManager @MainThread constructor(private val context: Context)
 
         val channel = NotificationChannel(id, name, NotificationManager.IMPORTANCE_LOW).apply {
             description = "Keep notification to receive incoming calls"
+        }
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    @SuppressLint("NewApi")
+    @MainThread
+    private fun createBleMessageChannel() {
+        val id = BLE_MESSAGE_CHANNEL
+        val name = "Ble Message Notification"
+
+        val channel = NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH).apply {
+            description = "Important to received Near-by users Messages in BackGround"
         }
         notificationManager.createNotificationChannel(channel)
     }
@@ -856,6 +873,40 @@ class NotificationsManager @MainThread constructor(private val context: Context)
             notificationBuilder.addPerson(person)
         }
         return notificationBuilder.build()
+    }
+
+    @SuppressLint("MissingPermission")
+    fun createBleMessageNotification(message: writeMessage){
+        Log.i(
+            "$TAG Trying to start keep alive for third party accounts foreground Service using call notification"
+        )
+
+        val channelId = BLE_MESSAGE_CHANNEL
+        val channel = notificationManager.getNotificationChannel(channelId)
+        val importance = NotificationManagerCompat.IMPORTANCE_HIGH
+
+        val intent = Intent(context,MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        val builder = NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setAutoCancel(true)
+                .setOngoing(true)
+                .setContentTitle("Needed By SOS: ${message.From}")
+                .setContentText("Approx ${message.dist} away from you!")
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setSilent(false)
+                .setContentIntent(pendingIntent)
+            val notification = builder.build()
+        if (hasPermission(Manifest.permission.POST_NOTIFICATIONS,context)) {
+            notificationManager.notify(BLE_MESSAGE_CHANNEL.hashCode(), notification)
+        } else {
+            Log.e(TAG,"SEcurity Exception Could not show NearBy permission [ALLOW POST NOTIFICATIONS PERMISSIONS]")
+        }
     }
 
     @WorkerThread

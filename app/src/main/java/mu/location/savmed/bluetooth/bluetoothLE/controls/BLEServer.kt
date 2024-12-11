@@ -62,7 +62,7 @@ class BLEServer(
         const val CHARACTERISTIC_MESSAGE_UUID = "ba987654-4321-6789-4321-000087654321"
     }
 
-    var messageReceivedFromBLE: writeMessage ?= null
+    val messageReceivedFromBLE = MutableLiveData<writeMessage>()
 
     private var coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -76,7 +76,7 @@ class BLEServer(
     val bleServerEvent: SharedFlow<ConnectionResult>
         get() = _bleServerEvent
 
-    val mesgReciwd = MutableLiveData<String>()
+   // val mesgReciwd = MutableLiveData<String>()
 
     private val _listOfMessages = MutableStateFlow<List<writeMessage>>(emptyList())
     val listOfMessages: StateFlow<List<writeMessage>>
@@ -161,51 +161,28 @@ class BLEServer(
         val defaultLat = 0.0
         val defaultLon = 0.0
 
-        messageReceivedFromBLE = writeMessage(
+        val msg = writeMessage(
             From = received.getOrElse(0) { defaultFrom },
             dist = received.getOrElse(1) { defaultDist.toString() }.toDouble(),
             lat = received.getOrElse(2) { defaultLat.toString() }.toDouble(),
             lon = received.getOrElse(3) { defaultLon.toString() }.toDouble()
         )
+        messageReceivedFromBLE.postValue(
+            msg
+        )
 
-//        coroutineScope.launch {
-//            _bleServerEvent.emit(ConnectionResult.BLETransferSucceeded(
-//                "Help Needed by ${messageReceivedFromBLE!!.From} ${messageReceivedFromBLE!!.dist}m way from you!"
-//            ))
-//        }
-
-        mesgReciwd.postValue("Help Needed by ${messageReceivedFromBLE!!.From} approx ${messageReceivedFromBLE!!.dist}m way from you!")
-        coreContext.postOnMainThread {  Log.i(TAG,"jidjewdejw ${mesgReciwd.value}") }
-
-
+        coreContext.notificationManager.createBleMessageNotification(msg)
 
         _listOfMessages.update { messages ->
-
+            Log.i(TAG,"add messageing to list ${msg.From} ${msg.dist}")
             for (message in messages) {
-                Log.i(TAG,"${message.From} : ")
+                Log.i(TAG,"${message.From} : ----ioioi")
             }
-            val existingIndex = messages.indexOfFirst { messageZ ->
-                messageZ.From == messageReceivedFromBLE!!.From
-            }
-
-            if (existingIndex == -1) {
-                messages + messageReceivedFromBLE!!
-            } else {
-                messages.toMutableList().apply {
-                    this[existingIndex] = messageReceivedFromBLE!!
-                }
-            }
-
-            messages
+            val updatedMessages = messages + msg
+            Log.i(TAG, "in am message ${updatedMessages.lastOrNull()?.From} ${updatedMessages.lastOrNull()?.From}")
+            updatedMessages
         }
 
-
-
-//        flow {
-//            emit (ConnectionResult.BLETransferSucceeded(
-//                "Help Request Received From ${message.From} -> ${message.message} 3m way"
-//            ))
-//        }
     }
 
     @SuppressLint("MissingPermission")

@@ -403,39 +403,13 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
-                  <entry key="emergency_contacts">
+                  <entry key="messageListFragment">
                     <value>
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="173" />
-                            <option name="y" value="336" />
-                          </Point>
-                        </option>
-                        <option name="myPositions">
-                          <map>
-                            <entry key="action_emergency_contacts_self">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
-                            <entry key="action_emergency_contacts_to_rippleFragment">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
-                          </map>
-                        </option>
-                      </LayoutPositions>
-                    </value>
-                  </entry>
-                  <entry key="mapsFragment">
-                    <value>
-                      <LayoutPositions>
-                        <option name="myPosition">
-                          <Point>
-                            <option name="x" value="12" />
-                            <option name="y" value="12" />
+                            <option name="x" value="136" />
+                            <option name="y" value="305" />
                           </Point>
                         </option>
                       </LayoutPositions>
@@ -473,11 +447,6 @@
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_rippleFragment_to_emergency_contacts">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
                             <entry key="action_rippleFragment_to_nearByFragment">
                               <value>
                                 <LayoutPositions />

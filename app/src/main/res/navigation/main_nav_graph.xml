@@ -12,18 +12,9 @@
         <action
             android:id="@+id/action_nearByFragment_to_rippleFragment"
             app:destination="@id/rippleFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/emergency_contacts"
-        android:name="mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactsFragment"
-        android:label="fragment_emergency_contacts"
-        tools:layout="@layout/fragment_emergency_contacts" >
         <action
-            android:id="@+id/action_emergency_contacts_self"
-            app:destination="@id/emergency_contacts" />
-        <action
-            android:id="@+id/action_emergency_contacts_to_rippleFragment"
-            app:destination="@id/rippleFragment" />
+            android:id="@+id/action_nearByFragment_to_messageListFragment"
+            app:destination="@id/messageListFragment" />
     </fragment>
     <fragment
         android:id="@+id/rippleFragment"
@@ -31,13 +22,18 @@
         android:label="fragment_ripple"
         tools:layout="@layout/fragment_ripple" >
         <action
-            android:id="@+id/action_rippleFragment_to_emergency_contacts"
-            app:destination="@id/emergency_contacts" />
-        <action
             android:id="@+id/action_rippleFragment_to_nearByFragment"
             app:destination="@id/nearByFragment" />
     </fragment>
-<!--    <fragment-->
+    <fragment
+        android:id="@+id/messageListFragment"
+        android:name="mu.location.savmed.bluetooth.bluetoothLE.MessageListFragment"
+        android:label="MessageListFragment" >
+        <action
+            android:id="@+id/action_messageListFragment_to_nearByFragment"
+            app:destination="@id/nearByFragment" />
+    </fragment>
+    <!--    <fragment-->
 <!--        android:id="@+id/mapsFragment"-->
 <!--        android:name="mu.location.savmed.ui.locationing.MapsFragment"-->
 <!--        android:label="fragment_maps"-->

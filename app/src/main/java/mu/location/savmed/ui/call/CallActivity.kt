@@ -28,6 +28,7 @@ import mu.location.savmed.ui.chat.chatNew.viewModel.AbstractConversationViewMode
 import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
 import mu.location.savmed.ui.main.SharedMainViewModel
 import mu.location.savmed.ui.medical.MedicalInfoActivity
+import mu.location.savmed.utils.DialogUtils
 
 class CallActivity : AppCompatActivity() {
 
@@ -37,6 +38,8 @@ class CallActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityCallBinding
     private lateinit var navController : NavController
+
+    private lateinit var bottomNav: BottomNavigationView
 
     private lateinit var callViewModel: CurrentCallViewModel
     private lateinit var callViewModelFactory: CurrentCallViewModelFactory
@@ -48,14 +51,13 @@ class CallActivity : AppCompatActivity() {
     var chatNotificationArgs = false
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
-        // By using switch we can easily get the
-        // selected fragment by using there id
-        var selectedFragment: Fragment? = null
+
         when (it.itemId) {
             R.id.main_home -> {
                 val i = Intent(applicationContext,MainActivity::class.java)
                 i.putExtra("frag",1)
                 startActivity(i)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.call -> {
@@ -65,20 +67,17 @@ class CallActivity : AppCompatActivity() {
                 val i = Intent(applicationContext,MainActivity::class.java)
                 i.putExtra("frag",2)
                 startActivity(i)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.medical -> {
                 startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
                 overridePendingTransition(0, 0)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
         }
-        // It will help to replace the
-        // one fragment to other.
-        if (selectedFragment != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerView, selectedFragment).commit()
-        }
+
         true
     }
 
@@ -105,9 +104,9 @@ class CallActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
         navController = navHostFragment.navController
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
-        bottomNav.id = R.id.call
+        bottomNav.selectedItemId = R.id.call
 
         chatNotificationArgs = intent.getBooleanExtra("Chat",false)
         Log.i(TAG,"From ChatNotif $chatNotificationArgs")
@@ -127,12 +126,12 @@ class CallActivity : AppCompatActivity() {
             }
         }
 
-        bleServer.mesgReciwd.observe(this){ result ->
+        bleServer.messageReceivedFromBLE.observe(this){ result ->
 
             if (!bleServer.isPrevMessage) {
                 Log.i(NearByFragment.TAG,"mesdg slpash $result")
-                showSplashDialog(result) { result ->
-                    if (result) {
+                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
+                    if (resultz) {
                         Log.i(MainActivity.TAG, "Dialog confirmed")
                     } else {
                         Log.i(MainActivity.TAG, "Dialog dismissed or canceled")
@@ -193,32 +192,9 @@ class CallActivity : AppCompatActivity() {
         })
     }
 
-    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
-        val dialogBuilder = AlertDialog.Builder(this)
-
-        dialogBuilder.setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-                callback(true) // Call the callback with true
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                callback(false) // Call the callback with false
-            }
-
-        val alert = dialogBuilder.create()
-        alert.show()
-
-        // Auto-dismiss after a certain time
-        alert.setOnShowListener {
-            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-                if (alert.isShowing) {
-                    alert.dismiss()
-                    callback(false) // Auto-dismiss and return false
-                }
-            }, 2000)
-        }
+    override fun onResume() {
+        super.onResume()
+        bottomNav.selectedItemId = R.id.call
     }
 
 }

@@ -30,6 +30,7 @@ import mu.location.savmed.SavMed.Companion.bleServer
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
+import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.NearByAdapter
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
@@ -172,21 +173,11 @@ class NearByFragment : Fragment() {
             }
         }
 
-//        lifecycleScope.launchWhenStarted {
-//            bleServer.bleServerEvent.collect { result ->
-//                if (result != null) {
-//                    Log.i(TAG, "StateFlow received: $result")
-//                    showSplashDialog(result.toString())
-//                }
-//            }
-//        }
-
         binding.messages.setOnClickListener() {
-            Toast.makeText(requireContext(),"Upcoming!!",Toast.LENGTH_SHORT).show()
-            //bluetoothLEViewModel.stopScan()
+            //Toast.makeText(requireContext(),"Upcoming!!",Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_nearByFragment_to_messageListFragment)
         }
 
-        // Inflate the layout for this fragment
         return binding.root
     }
 
@@ -235,6 +226,7 @@ class NearByFragment : Fragment() {
     }
 
     private fun startScan() {
+        bleClient.resetDeviceList()
         if (bluetoothAdapter != null) {
             if (
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -246,23 +238,10 @@ class NearByFragment : Fragment() {
                 }
             ) {
                 if (isBluetoothEnabled) {
-//
                     bluetoothLEViewModel.startScan()
-//                    ACBLE.bleClient = BLEClient(requireContext())
-
                     lifecycleScope.launch {
 
-//                        ACBLE.scannedDevices.collect() { state ->
-//                            Log.i(TAG,"Device size ${state.size}")
-//                        }
-
                         bluetoothLEViewModel.state.collect { state ->
-
-                           // Log.i(TAG,"Ui state testing $state")
-
-//                            for (device in state.scannedDevices) {
-//                                Log.i(TAG,"SCanned ${device.address}")
-//                            }
 
                             scannedDeviceAdapter.submitList(state.scannedDevices)
 
@@ -301,31 +280,4 @@ class NearByFragment : Fragment() {
         }
     }
 
-    private fun showScannedDevices() {
-
-        Log.i(TAG,"Trynna ubmit----")
-
-    }
-
-//    private fun showSplashDialog(message: String) {
-//        val dialogBuilder = AlertDialog.Builder(requireContext())
-//
-//        dialogBuilder.setMessage(message)
-//            .setCancelable(false) // Prevent dismissing the dialog by tapping outside
-//            .setPositiveButton("OK") { dialog, _ ->
-//                dialog.dismiss() // Dismiss the dialog when "OK" is pressed
-//            }
-//
-//        // Create and show the dialog
-//        val alert = dialogBuilder.create()
-//        alert.show()
-//
-//        // Optional: Auto-dismiss the dialog after a certain time
-//        alert.window?.setLayout(800, 400) // Set size of the dialog
-//        alert.setOnShowListener {
-//            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-//                alert.dismiss()
-//            }, 2000) // Dismiss after 2 seconds
-//        }
-//    }
 }

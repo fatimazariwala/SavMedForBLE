@@ -21,6 +21,7 @@ import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.ui.call.CallActivity
+import mu.location.savmed.utils.DialogUtils
 import mu.location.savmed.utils.RetroFit
 import retrofit2.Call
 import retrofit2.Callback
@@ -57,39 +58,37 @@ class MedicalInfoActivity : AppCompatActivity() {
 
     lateinit var saveBtn : Button
 
+    lateinit var bottomNav : BottomNavigationView
+
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
-        // By using switch we can easily get the
-        // selected fragment by using there id
-        var selectedFragment: Fragment? = null
+
         when (it.itemId) {
             R.id.main_home -> {
                 val i = Intent(applicationContext,MainActivity::class.java)
                 i.putExtra("frag",1)
                 startActivity(i)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.call -> {
                 startActivity(Intent(applicationContext, CallActivity::class.java))
                 overridePendingTransition(0, 0)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nearBy -> {
                 val i = Intent(applicationContext,MainActivity::class.java)
                 i.putExtra("frag",2)
                 startActivity(i)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.medical -> {
                 return@OnNavigationItemSelectedListener true
             }
         }
-        // It will help to replace the
-        // one fragment to other.
-        if (selectedFragment != null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerView, selectedFragment).commit()
-        }
+
         true
     }
 
@@ -103,22 +102,20 @@ class MedicalInfoActivity : AppCompatActivity() {
 
         usernameLogin = sharedPreferences.getString(USERNAME_KEY, "").toString()
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        bottomNav.id = R.id.medical
-//        Log.i("UserNamezzzzzzzz",usernameLogin)
+        bottomNav.selectedItemId = R.id.medical
 
-
-        bleServer.mesgReciwd.observe(this){ result ->
+        bleServer.messageReceivedFromBLE.observe(this){ result ->
 
             if (!bleServer.isPrevMessage) {
                 Log.i(TAG,"mesdg slpash $result")
-                showSplashDialog(result) { result ->
-                    if (result) {
-                        Log.i(MainActivity.TAG, "Dialog confirmed")
+                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
+                    if (resultz) {
+                        Log.i(TAG, "Dialog confirmed")
                     } else {
-                        Log.i(MainActivity.TAG, "Dialog dismissed or canceled")
+                        Log.i(TAG, "Dialog dismissed or canceled")
                     }
                 }
                 bleServer.isPrevMessage = true
@@ -245,31 +242,8 @@ class MedicalInfoActivity : AppCompatActivity() {
         })
     }
 
-    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
-        val dialogBuilder = AlertDialog.Builder(this)
-
-        dialogBuilder.setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-                callback(true) // Call the callback with true
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                callback(false) // Call the callback with false
-            }
-
-        val alert = dialogBuilder.create()
-        alert.show()
-
-        // Auto-dismiss after a certain time
-        alert.setOnShowListener {
-            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-                if (alert.isShowing) {
-                    alert.dismiss()
-                    callback(false) // Auto-dismiss and return false
-                }
-            }, 2000)
-        }
+    override fun onResume() {
+        super.onResume()
+        bottomNav.selectedItemId = R.id.medical
     }
 }

@@ -49,22 +49,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:background="@color/green_main_100_alpha_50"
                 android:layout_marginTop="70dp">
-                <ImageView
+                <TextView
                     android:id="@+id/addContacts"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="100dp"
-                    android:background="@color/blue_main_300"
-                    android:src="@drawable/circle_with_plus" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Contacts"
+                    android:textSize="15dp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="100dp" />
 
-                <ImageView
+                <TextView
                     android:id="@+id/chatListview"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="100dp"
-                    android:background="@color/blue_main_300"
-                    android:src="@drawable/chat_ephemeral_logo" />
+                    android:text="Messaging"
+                    android:textSize="15dp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -89,6 +92,7 @@
                     android:id="@+id/searchResultsRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:maxHeight="300dp" />
             </com.google.android.material.card.MaterialCardView>
 

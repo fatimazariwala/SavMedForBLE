@@ -14,7 +14,10 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.RadioButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +30,9 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.location.savmed.SavMed.Companion.bleServer
@@ -34,6 +40,8 @@ import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
+import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.RippleFragment.Companion
 import mu.location.savmed.ui.call.CallActivity
@@ -41,6 +49,7 @@ import mu.location.savmed.ui.locationing.LocationActivity
 import mu.location.savmed.ui.locationing.MapsFragment
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.ActivityHolder
+import mu.location.savmed.utils.DialogUtils
 import mu.location.savmed.utils.SettingsManager
 import mu.location.savmed.utils.SharedPreference
 
@@ -55,7 +64,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController : NavController
 
     private var permissionsChecked = false
-    var selectedFragment : Fragment ?= null
+    var currentSelectedItemId : Int = 0
+
+    lateinit var bottomNav: BottomNavigationView
 
     val backgroundLocResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (it) {
@@ -137,8 +148,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
-        // By using switch we can easily get the
-        // selected fragment by using there id
+
         when (it.itemId) {
             R.id.main_home -> {
                 navController.navigate(R.id.rippleFragment)
@@ -147,6 +157,7 @@ class MainActivity : AppCompatActivity() {
             R.id.call -> {
                 startActivity(Intent(applicationContext, CallActivity::class.java))
                 overridePendingTransition(0, 0)
+                finish()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nearBy -> {
@@ -155,6 +166,7 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.medical -> {
                 startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
+                finish()
                 overridePendingTransition(0, 0)
                 return@OnNavigationItemSelectedListener true
             }
@@ -173,51 +185,58 @@ class MainActivity : AppCompatActivity() {
         initializeViewModels()
         ActivityHolder.MainActivity = this
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
+        navController = navHostFragment.navController
+        
+        bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        //supportFragmentManager.beginTransaction().replace(R.id.fragmentContainerView, RippleFragment()).commit()
-
-//        bluetoothLEController = AndroidBluetoothLEController(this)
+        val intentExtra = intent.getIntExtra("frag",0)
+        Log.i(TAG,"value of frag $intentExtra")
+        if (intentExtra != 0) {
+            if (intentExtra == 2) {
+                Log.i(TAG,"i gett....ripple" )
+                navController.navigate(R.id.nearByFragment)
+                bottomNav.selectedItemId = R.id.nearBy
+            }
+        }
+        currentSelectedItemId = bottomNav.selectedItemId
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        bleServer.mesgReciwd.observe(this){ result ->
-
-            val message = bleServer.messageReceivedFromBLE
-
+        bleServer.messageReceivedFromBLE.observe(this){ result ->
             if (!bleServer.isPrevMessage) {
                 Log.i(NearByFragment.TAG,"mesdg slpash $result")
-                showSplashDialog(result) { resultz ->
+                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
                     if (resultz) {
                         Log.i(TAG, "Dialog confirmed")
 
-                        if (message != null) {
-                            val lat = message.lat.toDouble()
-                            val lon = message.lon
-                            val name = message.From
-                            val dist = message.dist
+//                        if (message != null) {
+//                            val lat = message.lat.toDouble()
+//                            val lon = message.lon
+//                            val name = message.From
+//                            val dist = message.dist
+//
+//                            // Create the bundle to pass the data to the MapsFragment
+//                            val bundle = Bundle().apply {
+//                                putDouble("lat", lat)
+//                                putDouble("long", lon)
+//                                putString("foundUserName", name)
+//                                putDouble("dist",dist)
+//                            }
+//
+//                            // Navigate to MapsFragment and pass the data
+//                            val mapsFragment = MapsFragment()
+//                            mapsFragment.arguments = bundle
+//
+//                            supportFragmentManager.beginTransaction()
+//                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
+//                                .addToBackStack(null) // Optional: add to back stack if needed
+//                                .commit()
 
-                            // Create the bundle to pass the data to the MapsFragment
-                            val bundle = Bundle().apply {
-                                putDouble("lat", lat)
-                                putDouble("long", lon)
-                                putString("foundUserName", name)
-                                putDouble("dist",dist)
-                            }
-
-                            // Navigate to MapsFragment and pass the data
-                            val mapsFragment = MapsFragment()
-                            mapsFragment.arguments = bundle
-
-                            supportFragmentManager.beginTransaction()
-                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
-                                .addToBackStack(null) // Optional: add to back stack if needed
-                                .commit()
-
-                        } else {
-                            Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
-                        }
+//                        } else {
+//                            Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
+//                        }
 
                     } else {
                         Log.i(TAG, "Dialog dismissed or canceled")
@@ -269,18 +288,6 @@ class MainActivity : AppCompatActivity() {
             }
         } else { corePreferences.keepServiceAlive = true }
 
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
-        navController = navHostFragment.navController
-
-        val intentExtra = intent.getIntExtra("frag",0)
-        if (intentExtra != 0) {
-            if (intentExtra == 2) {
-                Log.i(TAG,"i gett....ripple" )
-                navController.navigate(R.id.nearByFragment)
-                bottomNav.id = R.id.nearBy
-            }
-        }
-
         val locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
@@ -293,6 +300,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         observeRegistrationStatus()
+        observeMessages()
        // observeEmergencyContacts()
     }
 
@@ -302,6 +310,26 @@ class MainActivity : AppCompatActivity() {
         // Below was comente dout on 24/11/2024 at 5:30
        // bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
     }
+
+    private fun observeMessages() {
+
+        bleServer.bleServerEvent.onEach { result ->
+
+            when(result) {
+                is ConnectionResult.BLETransferSucceeded -> {
+                    Log.i(NearByFragment.TAG,"yoooooooooooo ${result.message}")
+                    Toast.makeText(this,result.message,Toast.LENGTH_SHORT).show()
+                }
+                else -> { }
+            }
+
+        }
+            .catch { throwable ->
+                Log.e(NearByFragment.TAG, "Error: $throwable")
+            }
+            .launchIn(lifecycleScope)
+    }
+
 
 
 //    private fun initializeSharedPreferences() {
@@ -364,34 +392,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSplashDialog(message: String, callback: (Boolean) -> Unit) {
-        val dialogBuilder = AlertDialog.Builder(this)
-
-        dialogBuilder.setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-                callback(true) // Call the callback with true
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                callback(false) // Call the callback with false
-            }
-
-        val alert = dialogBuilder.create()
-        alert.show()
-
-        // Auto-dismiss after a certain time
-        alert.setOnShowListener {
-            alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
-                if (alert.isShowing) {
-                    alert.dismiss()
-                    callback(false) // Auto-dismiss and return false
-                }
-            }, 2000)
-        }
+    override fun onResume() {
+        super.onResume()
+        bottomNav.selectedItemId = currentSelectedItemId
     }
-
 
 }
 

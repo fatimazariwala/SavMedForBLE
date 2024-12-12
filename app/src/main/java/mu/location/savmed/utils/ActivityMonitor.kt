@@ -85,12 +85,12 @@ class ActivityMonitor : ActivityLifecycleCallbacks {
 
     private fun onBackgroundMode() {
         Log.i("$TAG onBackgroundMode()")
-        //coreContext.onBackground()
+        coreContext.onBackground()
     }
 
     private fun onForegroundMode() {
         Log.i("$TAG onForegroundMode()")
-        //coreContext.onForeground()
+        coreContext.onForeground()
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}

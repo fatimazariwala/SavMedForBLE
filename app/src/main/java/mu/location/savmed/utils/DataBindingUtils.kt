@@ -231,9 +231,9 @@ fun ImageView.setPresenceIcon(presence: ConsolidatedPresence?) {
 }
 
 @UiThread
-@BindingAdapter("presenceIcon", "hidePresence")
+@BindingAdapter("presenceIcon", "hidePresence") //  || presence == ConsolidatedPresence.Offline (in if)
 fun ImageView.setPresenceIcon(presence: ConsolidatedPresence?, hidePresence: Boolean) {
-    visibility = if (hidePresence || presence == null || presence == ConsolidatedPresence.Offline) {
+    visibility = if (hidePresence || presence == null) {
         View.GONE
     } else {
         View.VISIBLE

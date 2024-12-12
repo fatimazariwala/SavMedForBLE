@@ -82,7 +82,7 @@ class BLEClient(
     var scanning = false
     val handler = android.os.Handler()
 
-    val SCAN_PERIOD: Long = 100000
+    val SCAN_PERIOD: Long = 10000
 
     private val bleScanCallBack: ScanCallback = object: ScanCallback() {
 
@@ -226,8 +226,9 @@ class BLEClient(
             bluetoothLeScanner?.startScan(bleScanCallBack)
         } else {
             scanStatus.postValue("Scan Completed!")
-            scanning = false
-            bluetoothLeScanner?.stopScan(bleScanCallBack)
+
+            stopBleScan()
+//            bluetoothLeScanner?.stopScan(bleScanCallBack)
         }
     }
 
@@ -244,7 +245,9 @@ class BLEClient(
 
                 if (coreContext.onLocationEvent["latitude"] == null) {
                     Log.i(TAG,"Writtingggggg not location")
-                    characteristic.setValue("fatima#${device.dist}#0.0#0.0")
+
+                    characteristic.setValue("${SharedPreference.username}#${device.dist}#0.0#0.0")
+
                 } else {
                     Log.i(TAG,"Writtingggggg yes location")
 
@@ -253,7 +256,9 @@ class BLEClient(
                     val roundedLatitude = latitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
                     val roundedLongitude = longitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
                     val distz = device.dist?.toBigDecimal()?.setScale(1, java.math.RoundingMode.HALF_UP)?.toDouble()
-                    characteristic.setValue("fatima#${distz}#${roundedLatitude}#${roundedLongitude}")
+
+                    characteristic.setValue("${SharedPreference.username}#${distz}#${roundedLatitude}#${roundedLongitude}")
+
                     Log.i(TAG,"${characteristic.value.toString()} fatima#${distz}#${roundedLatitude}#${roundedLongitude}")
                 }
                 bluetoothGatt?.writeCharacteristic(characteristic)
@@ -277,7 +282,7 @@ class BLEClient(
                 if(uuidFetched.equals(SERVICE_UUID)) {
 
                     Log.i(TAG,"----------------Found SavMed Device----------------------")
-                    stopBleScan()
+                  //  stopBleScan()
                     val isExisting = _scannedDevices.value.any { device ->
                         device.address == result.device.address
                     }
@@ -467,6 +472,7 @@ class BLEClient(
 
     fun stopBleScan() {
         if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN,context)) return
+        scanning = false
         bluetoothLeScanner?.stopScan(bleScanCallBack)
     }
 

@@ -49,7 +49,7 @@ class CorePreferences @UiThread constructor(private val context: Context){
     var publishPresence: Boolean
         get() = config.getBool("app", "publish_presence", true)
         set(value) {
-            config.setBool("app", "publish_presence", value)
+            config.setBool("app", "publish_presence", true)   // changed from value to true
         }
 
     @get:WorkerThread @set:WorkerThread

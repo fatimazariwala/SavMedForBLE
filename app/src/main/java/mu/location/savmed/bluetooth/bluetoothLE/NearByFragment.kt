@@ -128,7 +128,13 @@ class NearByFragment : Fragment() {
         Log.i(TAG, "SAV_MEDaaaa")
 
         observeEvents()
-        startScan()
+
+        if (prevConnectionState.scannedDevices.isNullOrEmpty()) {
+            startScan()
+        } else {
+            Toast.makeText(requireContext(),"Devices available from previous scan!",Toast.LENGTH_SHORT).show()
+            Log.i(TAG,"Devices available from previous scan!")
+        }
 //
 //        binding.btnHome.setOnClickListener() {
 //            findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)

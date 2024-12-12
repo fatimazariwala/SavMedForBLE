@@ -46,8 +46,8 @@ class CoreInCallService : CoreService() {
         // Do nothing, app's Notifications Manager will do the job
     }
 
-    override fun showForegroundServiceNotification() {
-        super.showForegroundServiceNotification()
+    override fun showForegroundServiceNotification(isVideoCall: Boolean) {
+        super.showForegroundServiceNotification(isVideoCall)
     }
 
     override fun hideForegroundServiceNotification() {

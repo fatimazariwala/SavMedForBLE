@@ -42,6 +42,8 @@ import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom
 import org.linphone.core.CodecPriorityPolicy
 import org.linphone.core.Config
+import org.linphone.core.ConfiguringState
+import org.linphone.core.ConsolidatedPresence
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Factory
@@ -125,18 +127,13 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
             }
         }
 
-        @WorkerThread
-        override fun onConfiguringStatus(
-            core: Core,
-            status: Config.ConfiguringState?,
-            message: String?
-        ) {
-            org.linphone.core.tools.Log.i("$TAG Configuring state changed [$status], message is [$message]")
-            if (status == Config.ConfiguringState.Successful) {
+        override fun onConfiguringStatus(core: Core, status: ConfiguringState?, message: String?) {
+            super.onConfiguringStatus(core, status, message)
+            if (status == ConfiguringState.Successful) {
                 corePreferences.firstLaunch = false
                 Log.i(TAG,"Configuration Successful")
 
-            } else if (status == Config.ConfiguringState.Failed) {
+            } else if (status == ConfiguringState.Failed) {
                 Log.i(TAG,"Configuration Failed")
             }
         }
@@ -233,6 +230,32 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                 )
             }
 
+        }
+    }
+
+    @UiThread
+    fun onForeground() {
+        postOnCoreThread {
+            // We can't rely on defaultAccount?.params?.isPublishEnabled
+            // as it will be modified by the SDK when changing the presence status
+            if (corePreferences.publishPresence) {
+                Log.i(TAG,"App is in foreground, PUBLISHING presence as Online")
+                core.consolidatedPresence = ConsolidatedPresence.Online
+            }
+        }
+    }
+
+    @UiThread
+    fun onBackground() {
+        postOnCoreThread {
+            // We can't rely on defaultAccount?.params?.isPublishEnabled
+            // as it will be modified by the SDK when changing the presence status
+            if (corePreferences.publishPresence) {
+                Log.i(TAG," App is in background, un-PUBLISHING presence info")
+                // We don't use ConsolidatedPresence.Busy but Offline to do an unsubscribe,
+                // Flexisip will handle the Busy status depending on other devices
+                core.consolidatedPresence = ConsolidatedPresence.Offline
+            }
         }
     }
 

@@ -155,19 +155,31 @@ class MainActivity : AppCompatActivity() {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.call -> {
-                startActivity(Intent(applicationContext, CallActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
+                if (SharedPreference.username != "") {
+                    startActivity(Intent(applicationContext, CallActivity::class.java))
+                    overridePendingTransition(0, 0)
+                    finish()
+                } else {
+                    Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
+                }
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nearBy -> {
-                navController.navigate(R.id.nearByFragment)
+                if (SharedPreference.username != "") {
+                    navController.navigate(R.id.nearByFragment)
+                }  else {
+                    Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
+                }
                // return@OnNavigationItemSelectedListener true
             }
             R.id.medical -> {
-                startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
-                finish()
-                overridePendingTransition(0, 0)
+                if (SharedPreference.username != "") {
+                    startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
+                    finish()
+                    overridePendingTransition(0, 0)
+                } else {
+                    Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
+                }
                 return@OnNavigationItemSelectedListener true
             }
         }

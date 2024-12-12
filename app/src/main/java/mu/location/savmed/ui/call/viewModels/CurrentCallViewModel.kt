@@ -433,7 +433,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             address = "Unable to fetch address"
         }
 
-        android.util.Log.i(TAG,"in outside for")
+        Log.i(TAG,"in outside forgggggg")
 
         val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
         for (contact in friendList ?: emptyArray()) {
@@ -476,10 +476,10 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                 )
 
             } catch (e: IOException) {
-                android.util.Log.i(ContactFragment.TAG, e.message.toString())
+                Log.i(TAG,"from clocco ${e.message.toString()}")
                 return@launch
             } catch (e: HttpException) {
-                android.util.Log.i(ContactFragment.TAG, e.message.toString())
+                Log.i(TAG,"from clocco ${e.message.toString()}")
                 return@launch
             }
 
@@ -489,14 +489,14 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                     response: Response<locationData?>
                 ) {
                     val responz = response.body()
-                    android.util.Log.i(ContactFragment.TAG,"Response : ${responz?.Latitude},${responz?.Longitude},${responz?.sqlStatus},${responz?.ReceiveruserName}")
+                    Log.i(TAG,"Response : -------${responz?.Latitude},${responz?.Longitude},${responz?.sqlStatus},${responz?.ReceiveruserName}")
                 }
 
                 override fun onFailure(
                     call: retrofit2.Call<locationData?>,
                     t: Throwable
                 ) {
-                    android.util.Log.i(ContactFragment.TAG,"Response : Failure ${t.message}")
+                    Log.i(TAG,"Response : Failure -----${t.message}")
                 }
             })
         }

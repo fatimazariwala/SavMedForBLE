@@ -127,6 +127,7 @@ class LoginActivity : AppCompatActivity() {
                                     core.isIpv6Enabled = false
                                     core.isPushNotificationEnabled = true
                                     core.loadConfigFromXml(corePreferences.savMedDefaultValuesPath)
+                                    core.presenceModel
 
                                     val authInfo = Factory.instance()
                                         .createAuthInfo(username, null, password, null, "212.38.94.76", "212.38.94.76", null)

@@ -47,7 +47,7 @@ class CoreInCallService : CoreService() {
     }
 
     override fun showForegroundServiceNotification(isVideoCall: Boolean) {
-        super.showForegroundServiceNotification(isVideoCall)
+       // super.showForegroundServiceNotification(isVideoCall)
     }
 
     override fun hideForegroundServiceNotification() {

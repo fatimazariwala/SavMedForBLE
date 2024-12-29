@@ -1,11 +1,11 @@
-package mu.location.savmed.ui.chat.chatNew.viewModel
+package mu.location.savmed.ui.chat.viewModel
 
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.ui.chat.chatNew.model.ConversationModel
+import mu.location.savmed.ui.chat.model.ConversationModel
 import mu.location.savmed.utils.SavMedUtils
 import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom

@@ -33,6 +33,7 @@ import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
 import mu.location.savmed.utils.SharedPreference
 import org.linphone.core.Address
+import org.linphone.core.Factory
 import org.linphone.core.Friend
 import org.linphone.core.FriendList
 import org.linphone.core.FriendList.Status
@@ -56,7 +57,7 @@ class ContactsManager  @UiThread constructor() {
     private var nativeContactsLoaded = false
     private lateinit var usersList: List<UsersItem>
 
-    //private val listeners = arrayListOf<ContactsListener>()
+    private val listeners = arrayListOf<ContactsListener>()
 
     private val knownContactsAvatarMap = hashMapOf<String,ContactAvatarModel>()
     private val unknownContactsAvatarsMap = hashMapOf<String, ContactAvatarModel>()
@@ -73,6 +74,27 @@ class ContactsManager  @UiThread constructor() {
         return getContactAvatarModelForAddress(address).friend.name ?: SavMedUtils.getDisplayName(
             address
         )
+    }
+
+    interface ContactsListener {
+        fun onContactsLoaded()
+    }
+
+    fun getAddressFromString(sipString: String): Address? {
+
+        return when {
+            sipString.contains('@') && sipString.startsWith("sip") -> {
+                coreContext.core.createAddress(sipString)
+            }
+
+            sipString.contains('@') && !sipString.startsWith("sip") -> {
+                coreContext.core.createAddress("sip:$sipString")
+            }
+
+            else -> {
+                coreContext.core.createAddress("sip:$sipString@212.38.94.76")
+            }
+        }
     }
 
     @WorkerThread
@@ -102,6 +124,89 @@ class ContactsManager  @UiThread constructor() {
         }
     }
 
+    @WorkerThread
+    fun notifyContactsListChanged() {
+        for (listener in listeners) {
+            listener.onContactsLoaded()
+        }
+    }
+
+    @WorkerThread
+    fun newContactAdded(friend: Friend) {
+        for (sipAddress in friend.addresses) {
+            newContactAddedWithSipUri(sipAddress.asStringUriOnly())
+        }
+
+        conferenceAvatarMap.values.forEach(ContactAvatarModel::destroy)
+        conferenceAvatarMap.clear()
+        coreContext.contactsManager.notifyContactsListChanged()
+    }
+
+    @WorkerThread
+    fun addListener(listener: ContactsListener) {
+        coreContext.postOnCoreThread {
+            try {
+                listeners.add(listener)
+            } catch (e: ConcurrentModificationException) {
+                Log.e(TAG,"Can't add Listener err: $e")
+            }
+        }
+    }
+
+    @WorkerThread
+    fun removeListener(listener: ContactsListener) {
+        if (coreContext.isReady()) {
+            coreContext.postOnCoreThread {
+                try {
+                    listeners.remove(listener)
+                } catch (e:ConcurrentModificationException) {
+                    Log.e(TAG,"Can;t Remove Listener Error: $e")
+                }
+            }
+        }
+    }
+    @WorkerThread
+    fun contactRemoved(friend: Friend) {
+        val refKey = friend.refKey.orEmpty()
+        if (refKey.isNotEmpty() && knownContactsAvatarMap.keys.contains(refKey)) {
+            Log.d("$TAG Found RefKey [$refKey] in knownContactsAvatarsMap, removing it")
+            val oldModel = knownContactsAvatarMap[refKey]
+            oldModel?.destroy()
+            knownContactsAvatarMap.remove(refKey)
+        }
+
+        for (sipAddress in friend.addresses) {
+            val sipUri = sipAddress.asStringUriOnly()
+            if (knownContactsAvatarMap.keys.contains(sipUri)) {
+                Log.d("$TAG Found SIP URI [$sipUri] in knownContactsAvatarsMap, removing it")
+                val oldModel = knownContactsAvatarMap[sipUri]
+                oldModel?.destroy()
+                knownContactsAvatarMap.remove(sipUri)
+            }
+        }
+
+        conferenceAvatarMap.values.forEach(ContactAvatarModel::destroy)
+        conferenceAvatarMap.clear()
+        coreContext.contactsManager.notifyContactsListChanged()
+    }
+
+    @WorkerThread
+    private fun newContactAddedWithSipUri(sipUri: String) {
+        if (unknownContactsAvatarsMap.keys.contains(sipUri)) {
+            Log.d("$TAG Found SIP URI [$sipUri] in unknownContactsAvatarsMap, removing it")
+            val oldModel = unknownContactsAvatarsMap[sipUri]
+            oldModel?.destroy()
+            unknownContactsAvatarsMap.remove(sipUri)
+        } else if (knownContactsAvatarMap.keys.contains(sipUri)) {
+            Log.d(
+                "$TAG Found SIP URI [$sipUri] in knownContactsAvatarsMap, forcing presence update"
+            )
+            val oldModel = knownContactsAvatarMap[sipUri]
+            val address = Factory.instance().createAddress(sipUri)
+            oldModel?.update(address)
+        }
+    }
+
     private fun setEmergencyContacts(emrContact: EmergencyContactResponse) {
         val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)
         if (friendList == null) {
@@ -116,6 +221,34 @@ class ContactsManager  @UiThread constructor() {
                 }
             }
         }
+    }
+
+    @WorkerThread
+    fun getContactAvatarModelForFriend(friend: Friend?): ContactAvatarModel {
+        if (friend == null) {
+            Log.w("$TAG Friend is null, using generic avatar model")
+            val fakeFriend = coreContext.core.createFriend()
+            return ContactAvatarModel(fakeFriend)
+        }
+
+        val address = friend.address ?: friend.addresses.firstOrNull()
+        ?: return ContactAvatarModel(friend)
+        Log.d(
+            "$TAG Looking for avatar model for friend [${friend.name}] using SIP URI  [${address.asStringUriOnly()}]"
+        )
+
+        val key = friend.refKey ?: SavMedUtils.getAddressAsCleanStringUriOnly(address)
+        val foundInMap = getAvatarModelFromCache(key)
+        if (foundInMap != null) {
+            Log.d("$TAG Found avatar model in map using SIP URI [$key]")
+            return foundInMap
+        }
+
+        Log.w("$TAG Avatar model not found in map with SIP URI [$key]")
+        val avatar = ContactAvatarModel(friend, address)
+        knownContactsAvatarMap[key] = avatar
+
+        return avatar
     }
 
     @WorkerThread
@@ -148,6 +281,7 @@ class ContactsManager  @UiThread constructor() {
                         val fl = coreContext.core.createFriendList()
                         fl.isDatabaseStorageEnabled = true // We do want to store friends created in app in DB
                         fl.displayName = SAVMED_ADDRESS_BOOK_FRIEND_LIST
+                        fl.isSubscriptionsEnabled = true
                         coreContext.core.addFriendList(fl)
                         friendList = fl
                     }
@@ -201,26 +335,26 @@ class ContactsManager  @UiThread constructor() {
         val friendList = core.getFriendListByName(
             SAVMED_ADDRESS_BOOK_FRIEND_LIST
         )
-        val fl = friendList ?: core.createFriendList()
-        if (friendList == null) {
-            fl.isDatabaseStorageEnabled = true // We do want to store friends created in app in DB
-            fl.displayName = SAVMED_ADDRESS_BOOK_FRIEND_LIST
-            core.addFriendList(fl)
-        }
-        var status = fl.addFriend(friend)
-        if (status == Status.OK) {
-            Log.i("$TAG Contact successfully created, updating subscriptions")
-            fl.updateSubscriptions()
 
-            if (fl.type == FriendList.Type.CardDAV) {
-                Log.i(
-                    "$TAG Contact successfully created into CardDAV friend list, synchronizing it"
-                )
-                fl.synchronizeFriendsFromServer()
+        if (friendList != null) {
+            var status = friendList.addFriend(friend)
+            if (status == Status.OK) {
+                Log.i("$TAG Contact successfully created, updating subscriptions")
+                friendList.updateSubscriptions()
+
+                if (friendList.type == FriendList.Type.CardDAV) {
+                    Log.i(
+                        "$TAG Contact successfully created into CardDAV friend list, synchronizing it"
+                    )
+                    friendList.synchronizeFriendsFromServer()
+                }
+            } else {
+                Log.e("$TAG Failed to add contact to friend list [${friendList.displayName}]!")
             }
         } else {
-            Log.e("$TAG Failed to add contact to friend list [${fl.displayName}]!")
+            Log.i(TAG,"friend List NOt Found !!!")
         }
+
     }
 
     @WorkerThread
@@ -275,6 +409,21 @@ class ContactsManager  @UiThread constructor() {
 
         return avatar
     }
+
+    @WorkerThread
+    fun findContactById(id: String): Friend? {
+        Log.d(TAG,"Looking for a friend with ref key [$id]")
+        for (friendList in coreContext.core.friendsLists) {
+            val found = friendList.findFriendByRefKey(id)
+            if (found != null) {
+                Log.d("$TAG Found friend [${found.name}] matching ref key [$id]")
+                return found
+            }
+        }
+        Log.w(TAG,"No friend matching ref key [$id] has been found")
+        return null
+    }
+
 
     @WorkerThread
     fun findContactByAddress(address: Address): Friend? {

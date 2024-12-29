@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew
+package mu.location.savmed.ui.chat
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -9,13 +9,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mu.location.savmed.R
 import mu.location.savmed.databinding.FragmentChatListBinding
-import mu.location.savmed.databinding.FragmentConversationBinding
-import mu.location.savmed.ui.chat.chatNew.Adapters.ConversationsListAdapter
-import mu.location.savmed.ui.chat.chatNew.model.ConversationModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.CoversationListViewModel
+import mu.location.savmed.ui.chat.Adapters.ConversationsListAdapter
+import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
+import mu.location.savmed.ui.chat.viewModel.CoversationListViewModel
 import org.linphone.core.tools.Log
 
 

@@ -1,8 +1,6 @@
-package mu.location.savmed.ui.chat.chatNew.model
+package mu.location.savmed.ui.chat.model
 
-import android.graphics.drawable.Drawable
 import androidx.annotation.WorkerThread
-import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.utils.SavMedUtils
 import org.linphone.core.EventLog
 import org.linphone.core.tools.Log

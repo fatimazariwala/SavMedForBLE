@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew
+package mu.location.savmed.ui.chat
 
 import android.Manifest
 import android.app.Activity
@@ -26,27 +26,22 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mu.location.savmed.BuildConfig
-import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.databinding.FragmentContactBinding
 import mu.location.savmed.databinding.FragmentConversationBinding
-import mu.location.savmed.ui.chat.chatNew.Adapters.ConversationEventAdapter
-import mu.location.savmed.ui.chat.chatNew.model.ConfirmationDialogModel
-import mu.location.savmed.ui.chat.chatNew.model.FileModel
-import mu.location.savmed.ui.chat.chatNew.model.MessageModel
-import mu.location.savmed.ui.chat.chatNew.view.RichEditText
-import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.SendInMessageViewModel
+import mu.location.savmed.ui.chat.Adapters.ConversationEventAdapter
+import mu.location.savmed.ui.chat.model.FileModel
+import mu.location.savmed.ui.chat.model.MessageModel
+import mu.location.savmed.ui.chat.view.RichEditText
+import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
+import mu.location.savmed.ui.chat.viewModel.SendInMessageViewModel
 import mu.location.savmed.ui.main.SharedMainViewModel
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.FileUtils
 import mu.location.savmed.utils.TimestampUtils
-import org.linphone.core.Factory
 import org.linphone.core.tools.Log
 import java.io.File
 import java.util.Objects
@@ -377,7 +372,8 @@ class ConversationFragment : Fragment() {
                     timestampInSecs = false
                 )
                 val tempFileName = "$timeStamp.jpg"
-                Log.i(TAG,
+                Log.i(
+                    TAG,
                     "Opening camera to take a picture, will be stored in file [$tempFileName]"
                 )
                 val file = FileUtils.getFileStoragePath(tempFileName)
@@ -390,7 +386,8 @@ class ConversationFragment : Fragment() {
                     pendingImageCaptureFile = file
                     startCameraCapture.launch(publicUri)
                 } catch (e: Exception) {
-                    Log.e(TAG,
+                    Log.e(
+                        TAG,
                         "Failed to get public URI for file in which to store captured image: $e"
                     )
                 }

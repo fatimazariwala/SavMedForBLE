@@ -8,7 +8,7 @@
         <import type="mu.location.savmed.ui.NotoSansFont" />
         <variable
             name="model"
-            type="mu.location.savmed.ui.chat.chatNew.model.ConversationModel" />
+            type="mu.location.savmed.ui.chat.model.ConversationModel" />
         <variable
             name="onClickListener"
             type="View.OnClickListener" />

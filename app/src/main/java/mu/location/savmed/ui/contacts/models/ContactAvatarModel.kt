@@ -63,16 +63,16 @@ class ContactAvatarModel @WorkerThread constructor(val friend: Friend,val addres
 
     fun update(address: Address?) {
 
-        Log.i(TAG,"In update... ")
+     //   Log.i(TAG,"In update... ")
 
         isEmrContact.postValue(friend.starred)
-        Log.i(TAG,"I ma isEmr ${isEmrContact.value} ${friend.starred}")
+      //  Log.i(TAG,"I ma isEmr ${isEmrContact.value} ${friend.starred}")
         initials.postValue(AppUtils.getInitials(friend.name.orEmpty()))
         showTrust.postValue(true)
         picturePath.postValue(getAvatarUri(friend).toString())
 
         name.postValue(friend.name)
-        Log.i(TAG,"in am name ${name.value} ${friend.name}")
+    //    Log.i(TAG,"in am name ${name.value} ${friend.name}")
         computePresence(address)
     }
 

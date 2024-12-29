@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.viewModel
+package mu.location.savmed.ui.chat.viewModel
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -8,9 +8,6 @@ import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.SavMedUtils
 import org.linphone.core.Address
 import org.linphone.core.ChatRoom
-import org.linphone.core.ChatRoomParams
-import org.linphone.core.Conference
-import org.linphone.core.ConferenceParams
 import org.linphone.core.Factory
 
 abstract class AbstractConversationViewModel: ViewModel() {

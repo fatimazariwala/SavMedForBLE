@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.Adapters
+package mu.location.savmed.ui.chat.Adapters
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,9 +13,8 @@ import androidx.recyclerview.widget.RecyclerView
 import mu.location.savmed.R
 import mu.location.savmed.databinding.ChatBubbleIncomingBinding
 import mu.location.savmed.databinding.ChatBubbleOutgoingBinding
-import mu.location.savmed.databinding.ChatIncomingBinding
-import mu.location.savmed.ui.chat.chatNew.model.EventLogModel
-import mu.location.savmed.ui.chat.chatNew.model.MessageModel
+import mu.location.savmed.ui.chat.model.EventLogModel
+import mu.location.savmed.ui.chat.model.MessageModel
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.startAnimatedDrawable
 

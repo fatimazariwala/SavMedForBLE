@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.model
+package mu.location.savmed.ui.chat.model
 
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -18,8 +18,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.ui.chat.chatNew.viewModel.SendInMessageViewModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.SendInMessageViewModel.Companion
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.AudioUtils
 import mu.location.savmed.utils.FileUtils
@@ -276,7 +274,8 @@ class MessageModel @WorkerThread constructor(
 
                     val originalPath = content.filePath.orEmpty()
                     val path = if (isFileEncrypted) {  // Currently we don't have Encryption
-                        Log.d(TAG,
+                        Log.d(
+                            TAG,
                             "[VFS] Content is encrypted, requesting plain file path for file [${content.filePath}]"
                         )
                         content.exportPlainFile()
@@ -285,7 +284,8 @@ class MessageModel @WorkerThread constructor(
                     }
                     val name = content.name ?: ""
                     if (path.isNotEmpty()) {
-                        Log.d(TAG,
+                        Log.d(
+                            TAG,
                             "Found file ready to be displayed [$path] with MIME [${content.type}/${content.subtype}] for message [${chatMessage.messageId}]"
                         )
 

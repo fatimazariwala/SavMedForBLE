@@ -9,7 +9,7 @@
             type="View.OnLongClickListener" />
         <variable
             name="model"
-            type="mu.location.savmed.ui.chat.chatNew.model.FileModel" />
+            type="mu.location.savmed.ui.chat.model.FileModel" />
     </data>
 
 

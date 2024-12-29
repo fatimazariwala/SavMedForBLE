@@ -15,6 +15,7 @@ import mu.location.savmed.models.CoreContext
 import mu.location.savmed.models.CorePreferences
 import mu.location.savmed.utils.ActivityMonitor
 import mu.location.savmed.utils.SharedPreference
+import org.linphone.core.ConsolidatedPresence
 import org.linphone.core.Factory
 import org.linphone.core.LogCollectionState
 import org.linphone.core.LogLevel
@@ -95,4 +96,12 @@ class SavMed : Application() {
 //        ViewModelProvider.AndroidViewModelFactory.getInstance(this)
 //            .create(CoreContext::class.java)
 //    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        Log.i(TAG,"IN Termination....")
+        coreContext.core.consolidatedPresence = ConsolidatedPresence.Offline
+    }
+
+
 }

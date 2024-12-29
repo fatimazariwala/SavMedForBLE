@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.viewModel
+package mu.location.savmed.ui.chat.viewModel
 
 import android.net.Uri
 import androidx.annotation.UiThread
@@ -9,18 +9,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mu.location.savmed.R
-import mu.location.savmed.SavMed
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.ui.chat.chatNew.model.EventLogModel
-import mu.location.savmed.ui.chat.chatNew.model.FileModel
-import mu.location.savmed.ui.chat.chatNew.model.MessageModel
+import mu.location.savmed.ui.chat.model.EventLogModel
+import mu.location.savmed.ui.chat.model.FileModel
+import mu.location.savmed.ui.chat.model.MessageModel
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.FileUtils
 import mu.location.savmed.utils.SavMedUtils
 import org.linphone.core.Address
-import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom
 import org.linphone.core.ChatRoomListenerStub
 import org.linphone.core.EventLog

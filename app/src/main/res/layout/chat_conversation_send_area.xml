@@ -13,7 +13,7 @@
             type="View.OnClickListener" />
         <variable
             name="viewModel"
-            type="mu.location.savmed.ui.chat.chatNew.viewModel.SendInMessageViewModel" />
+            type="mu.location.savmed.ui.chat.viewModel.SendInMessageViewModel" />
 
     </data>
 
@@ -151,7 +151,7 @@
             app:layout_constraintStart_toEndOf="@id/capture_image"
             app:layout_constraintTop_toTopOf="@id/message_to_send" />
 
-        <mu.location.savmed.ui.chat.chatNew.view.RichEditText
+        <mu.location.savmed.ui.chat.view.RichEditText
             android:id="@+id/message_to_send"
             style="@style/default_text_style"
             android:layout_width="0dp"

@@ -21,7 +21,7 @@
             type="View.OnClickListener" />
         <variable
             name="model"
-            type="mu.location.savmed.ui.chat.chatNew.model.MessageModel" />
+            type="mu.location.savmed.ui.chat.model.MessageModel" />
         <variable
             name="inflatedVisibility"
             type="Integer" />
@@ -185,7 +185,7 @@
                 bind:model="@{model}"
                 bind:onLongClickListener="@{onLongClickListener}" />
 
-            <mu.location.savmed.ui.chat.chatNew.view.ChatBubbleTextView
+            <mu.location.savmed.ui.chat.view.ChatBubbleTextView
                 style="@style/default_text_style"
                 android:id="@+id/text_content"
                 android:onLongClick="@{onLongClickListener}"

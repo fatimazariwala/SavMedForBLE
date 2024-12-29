@@ -14,10 +14,15 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import mu.location.savmed.MainActivity
+import mu.location.savmed.SavMed.Companion.bleClient
+import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
 import mu.location.savmed.databinding.FragmentRippleBinding
 import mu.location.savmed.ui.auth.LoginActivity
 import mu.location.savmed.ui.auth.RegistrationActivity
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.contacts.fragments.ContactFragment
 import mu.location.savmed.utils.SharedPreference
 
 class RippleFragment : Fragment() {
@@ -29,6 +34,8 @@ class RippleFragment : Fragment() {
     lateinit var binding: FragmentRippleBinding
 
     lateinit var rippleViewModel: RippleViewModel
+
+    private lateinit var callViewModel: CurrentCallViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,12 +51,20 @@ class RippleFragment : Fragment() {
             ViewModelProvider(this)[RippleViewModel::class.java]
         }
 
+        callViewModel = run {
+            ViewModelProvider(this)[CurrentCallViewModel::class.java]
+        }
+
         binding = FragmentRippleBinding.inflate(inflater, container, false)
 
         binding.content.startRippleAnimation()
 
         Log.i(TAG,"In shared pref going")
 
+        binding.sos.setOnClickListener() {
+            bleClient.startBLEScan()
+            callViewModel.informEmrContacts()
+        }
         binding.idBtnLogOut.setOnClickListener {
 
             rippleViewModel.logout()

@@ -71,7 +71,7 @@ class ContactProfilePage : Fragment() {
         }
 
         binding.editProfilepage.setOnClickListener() {
-            contactViewModel.isEdit = true
+            //contactViewModel.isEdit = true
             findNavController().navigate(R.id.action_contactProfilePage_to_newOrEditContactFragment)
         }
 
@@ -85,7 +85,7 @@ class ContactProfilePage : Fragment() {
         }
 
         if (args.freindRefKey != "") {
-            contactViewModel.displayPreviouslyAddedContact(args.freindRefKey,false)
+            //contactViewModel.displayPreviouslyAddedContact(args.freindRefKey,false)
         }
 
         binding.voiceCallIcon.setOnClickListener() {

@@ -17,10 +17,10 @@
             type="View.OnClickListener" />
         <variable
             name="viewModel"
-            type="mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel" />
+            type="mu.location.savmed.ui.chat.viewModel.ConversationViewModel" />
         <variable
             name="send_message_viewModel"
-            type="mu.location.savmed.ui.chat.chatNew.viewModel.SendInMessageViewModel" />
+            type="mu.location.savmed.ui.chat.viewModel.SendInMessageViewModel" />
 
 <!--        <variable-->
 <!--            name="backClickListener"-->

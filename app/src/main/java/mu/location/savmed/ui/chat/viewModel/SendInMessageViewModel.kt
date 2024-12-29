@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.viewModel
+package mu.location.savmed.ui.chat.viewModel
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -18,8 +18,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
-import mu.location.savmed.ui.chat.chatNew.model.FileModel
-import mu.location.savmed.ui.chat.chatNew.model.MessageModel
+import mu.location.savmed.ui.chat.model.FileModel
+import mu.location.savmed.ui.chat.model.MessageModel
 import mu.location.savmed.utils.AudioUtils
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.FileUtils
@@ -237,7 +237,8 @@ class SendInMessageViewModel @UiThread constructor(): ViewModel() {
     fun addAttachment(file: String) {
         Log.i(TAG, "Path sent by picker $file")
         if (attachments.value.orEmpty().size >= MAX_FILES_TO_ATTACH) {
-            Log.w(TAG,
+            Log.w(
+                TAG,
                 "Max number of attachments [$MAX_FILES_TO_ATTACH] reached, file [$file] won't be attached"
             )
             // Add event trigger for toast
@@ -428,7 +429,8 @@ class SendInMessageViewModel @UiThread constructor(): ViewModel() {
                 formattedVoiceRecordingDuration.postValue(formattedDuration)
 
                 if (duration >= maxVoiceRecordDuration) {
-                    Log.w(TAG,"Max duration for voice recording exceeded (${maxVoiceRecordDuration}ms), stopping."
+                    Log.w(
+                        TAG,"Max duration for voice recording exceeded (${maxVoiceRecordDuration}ms), stopping."
                     )
                     stopVoiceRecorder()
                 }

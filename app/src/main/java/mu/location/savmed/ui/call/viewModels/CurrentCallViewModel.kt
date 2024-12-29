@@ -18,7 +18,6 @@ import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.contacts.models.EndSwitchCallBack
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
-import mu.location.savmed.ui.chat.ChatTestActivity
 import mu.location.savmed.ui.locationing.locationData
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.RetrofitInstance
@@ -42,7 +41,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         private const val TAG = "[Current Call ViewModel]"
     }
 
-    val core = coreContext.core
+  //  val core = coreContext.core
     var chatRoom: ChatRoom? = null
 
     val displayedName = MutableLiveData<String>()
@@ -59,6 +58,8 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
     val isPausedByRemote = MutableLiveData<Boolean>()
 
     val isMicrophoneMuted = MutableLiveData<Boolean>()
+
+    var address = ""
 
     val goToEndedCallEvent: MutableLiveData<Event<String>> by lazy {
         MutableLiveData<Event<String>>()
@@ -379,6 +380,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
     fun createBasicChatRoom(remoteUri: String) {
 
+        val core = coreContext.core
         val account = core.defaultAccount
         if(account == null) {
             android.util.Log.e(
@@ -423,7 +425,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
         val lat = coreContext.onLocationEvent["latitude"] ?: 0.0
         val lon = coreContext.onLocationEvent["longitude"] ?: 0.0
-        var address = ""
 
         val geocoder = Geocoder(fragmentContext)
         try {
@@ -435,18 +436,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
         Log.i(TAG,"in outside forgggggg")
 
-        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
-        for (contact in friendList ?: emptyArray()) {
-
-            if (contact.starred) {
-                createBasicChatRoom(contact.address?.username.toString())
-                val message =
-                    "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
-                android.util.Log.i(ContactFragment.TAG, message)
-                val chatMessage = chatRoom!!.createMessageFromUtf8(message)
-                chatMessage.send()
-            }
-        }
+        informEmrContacts()
 
         viewModelScope.launch {
 
@@ -516,6 +506,22 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
     fun startCallActivity(context: Context) {
         val i = Intent(context, CallActivity::class.java)
         context.startActivity(i)
+    }
+
+     fun informEmrContacts() {
+        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
+        for (contact in friendList ?: emptyArray()) {
+
+            if (contact.starred) {
+                createBasicChatRoom(contact.address?.username.toString())
+                val message =
+                    "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
+                android.util.Log.i(ContactFragment.TAG, message)
+                val chatMessage = chatRoom!!.createMessageFromUtf8(message)
+                chatMessage.send()
+            }
+        }
+
     }
 
 

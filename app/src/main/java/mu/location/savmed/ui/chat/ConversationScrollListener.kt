@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew
+package mu.location.savmed.ui.chat
 
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager

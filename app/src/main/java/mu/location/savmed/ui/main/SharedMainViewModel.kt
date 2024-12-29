@@ -24,7 +24,7 @@ import android.os.Bundle
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import mu.location.savmed.ui.chat.chatNew.model.MessageModel
+import mu.location.savmed.ui.chat.model.MessageModel
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.Event
 import org.linphone.core.ChatRoom

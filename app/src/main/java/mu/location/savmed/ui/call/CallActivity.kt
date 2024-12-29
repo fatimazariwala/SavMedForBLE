@@ -1,6 +1,5 @@
 package mu.location.savmed.ui.call
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -8,24 +7,21 @@ import android.util.Log
 import android.widget.RadioButton
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import mu.location.savmed.CallNavGraphDirections
 import mu.location.savmed.MainActivity
-import mu.location.savmed.MainActivity.Companion
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ActivityCallBinding
-import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.AbstractConversationViewModel
-import mu.location.savmed.ui.chat.chatNew.viewModel.ConversationViewModel
+import mu.location.savmed.ui.chat.viewModel.AbstractConversationViewModel
+import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
 import mu.location.savmed.ui.main.SharedMainViewModel
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.DialogUtils

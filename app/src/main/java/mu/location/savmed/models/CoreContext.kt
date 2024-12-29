@@ -248,13 +248,14 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     @UiThread
     fun onBackground() {
         postOnCoreThread {
+            Log.i(TAG,"In in background......")
             // We can't rely on defaultAccount?.params?.isPublishEnabled
             // as it will be modified by the SDK when changing the presence status
             if (corePreferences.publishPresence) {
-                Log.i(TAG," App is in background, un-PUBLISHING presence info")
+                Log.i(TAG,"App is in background, un-PUBLISHING presence info")
                 // We don't use ConsolidatedPresence.Busy but Offline to do an unsubscribe,
                 // Flexisip will handle the Busy status depending on other devices
-                core.consolidatedPresence = ConsolidatedPresence.Offline
+               // core.consolidatedPresence = ConsolidatedPresence.
             }
         }
     }
@@ -397,8 +398,13 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
         }
 
         notificationManager.onCoreStarted(core,false)
-        contactsManager.getInstituteContactsFromEndpoint()
-        contactsManager.getEmergencyContacts()
+
+        if (core.defaultAccount != null) {
+            contactsManager.getInstituteContactsFromEndpoint()
+            contactsManager.getEmergencyContacts()
+        } else {
+            Log.i(TAG,"No default account Found SKipping Loading of contacts!")
+        }
         //fetchApiData()
         Log.i(TAG ,"Build Type ${BuildConfig.BUILD_TYPE}")
     }

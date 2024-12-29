@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.view
+package mu.location.savmed.ui.chat.view
 
 import android.content.Context
 import android.text.method.LinkMovementMethod

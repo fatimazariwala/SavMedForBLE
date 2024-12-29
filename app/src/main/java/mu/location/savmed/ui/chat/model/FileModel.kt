@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.model
+package mu.location.savmed.ui.chat.model
 
 import android.media.MediaMetadataRetriever
 import android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.AnyThread
-import androidx.annotation.RequiresApi
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope

@@ -1,16 +1,14 @@
-package mu.location.savmed.ui.chat.chatNew.model
+package mu.location.savmed.ui.chat.model
 
 import android.text.Spannable
 import android.util.Log
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.AppUtils
-import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.SavMedUtils
 import mu.location.savmed.utils.TimestampUtils
 import org.linphone.core.Address

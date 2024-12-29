@@ -24,7 +24,7 @@ class ContactAdapter(
     private val onCallClick: (String) -> Unit,
     private val onChatClick: (String) -> Unit,
     private val onInfoClick: (String) -> Unit,
-    private val onRemoveClick: (String) -> Unit
+    private val onRemoveClick: (ContactAvatarModel) -> Unit
 ) : ListAdapter<ContactAvatarModel, RecyclerView.ViewHolder>(ContactDiffCallback()) {
 
     companion object {
@@ -34,22 +34,25 @@ class ContactAdapter(
     init {
         Log.i(TAG,"in on innn   crearteeee bolder")
     }
+
     inner class ContactsViewHolder(
         private val binding: ContactItemLayoutBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(contactModel: ContactAvatarModel) {
-           // Log.i(TAG,"in viewMOdelssssss ${contactModel.name}")
+
             with(binding) {
                 model = contactModel
-                executePendingBindings()
+
+                Log.i(TAG,"contact viewmodelr ${contactModel.name}")
 
                 chatButton.setOnClickListener() {
                     contactModel.friend.address?.username?.let { it1 -> onChatClick(it1) }
                 }
 
                 deleteButton.setOnClickListener() {
-                    contactModel.friend.refKey?.let { it1 -> onRemoveClick(it1) }
+                    Log.i(TAG,"Delete clicked...")
+                    onRemoveClick(contactModel)
                 }
 
                 infoButton.setOnClickListener() {
@@ -68,6 +71,8 @@ class ContactAdapter(
                         expandableView.visibility = View.GONE
                     }
                 }
+
+                executePendingBindings()
             }
         }
     }
@@ -77,9 +82,11 @@ class ContactAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(emrModel: ContactAvatarModel) {
+
             with(binding) {
                 model = emrModel
-                executePendingBindings()
+
+                Log.i(TAG,"emr viewmodelr ${emrModel.name}")
                 root.setOnClickListener() {
                     emrModel.friend.refKey?.let { it1 -> onInfoClick(it1)}
                 }
@@ -88,15 +95,18 @@ class ContactAdapter(
                     emrModel.friend.address?.username?.let { it1 -> onCallClick(it1) }
                     true
                 }
+
+                executePendingBindings()
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
-      //  Log.i(TAG,"in on crearteeee bolder")
+        Log.i(TAG,"in on crearteeee bolder")
 
         if (favourite) {
+            Log.i(TAG,"Faviourtite found...")
             val binding: ChatEmergencyConatctConnectAvatarBarCellBinding = DataBindingUtil.inflate(
                 LayoutInflater.from(parent.context),
                 R.layout.chat_emergency_conatct_connect_avatar_bar_cell,
@@ -146,7 +156,7 @@ class ContactAdapter(
             oldItem: ContactAvatarModel,
             newItem: ContactAvatarModel
         ): Boolean {
-            return oldItem.friend.refKey == newItem.friend.refKey
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(

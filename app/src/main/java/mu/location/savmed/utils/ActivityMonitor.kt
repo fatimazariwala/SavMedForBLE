@@ -84,7 +84,7 @@ class ActivityMonitor : ActivityLifecycleCallbacks {
     }
 
     private fun onBackgroundMode() {
-        Log.i("$TAG onBackgroundMode()")
+        Log.i(TAG,"onBackgroundMode()")
         coreContext.onBackground()
     }
 
@@ -101,6 +101,7 @@ class ActivityMonitor : ActivityLifecycleCallbacks {
         }
 
         override fun run() {
+            Log.i(TAG,"in run.....")
             if (!isCanceled) {
                 if (mRunningActivities == 0 && mActive) {
                     mActive = false

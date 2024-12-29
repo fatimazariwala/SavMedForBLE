@@ -82,7 +82,7 @@
     </fragment>
     <fragment
         android:id="@+id/conversationFragment"
-        android:name="mu.location.savmed.ui.chat.chatNew.ConversationFragment"
+        android:name="mu.location.savmed.ui.chat.ConversationFragment"
         android:label="ConversationFragment" >
         <argument
             android:name="localSipUri"
@@ -105,7 +105,7 @@
     </fragment>
     <fragment
         android:id="@+id/chatListFragment"
-        android:name="mu.location.savmed.ui.chat.chatNew.ChatListFragment"
+        android:name="mu.location.savmed.ui.chat.ChatListFragment"
         android:label="fragment_chat_list"
         tools:layout="@layout/fragment_chat_list" >
         <action

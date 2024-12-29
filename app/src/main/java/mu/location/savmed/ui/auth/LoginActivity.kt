@@ -161,6 +161,7 @@ class LoginActivity : AppCompatActivity() {
                                     core.isKeepAliveEnabled = true
                                     core.defaultAccount = account
 
+                                    coreContext.contactsManager.getInstituteContactsFromEndpoint()
                                     for (info in core.authInfoList) {
                                         Log.i(TAG,"One info after----${info.username}")
                                     }

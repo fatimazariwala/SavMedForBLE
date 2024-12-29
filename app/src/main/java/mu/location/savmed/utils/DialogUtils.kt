@@ -12,11 +12,9 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.UiThread
-import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import mu.location.savmed.R
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
-import mu.location.savmed.ui.chat.chatNew.model.ConfirmationDialogModel
 
 class DialogUtils {
     companion object {

@@ -6,7 +6,7 @@
         <import type="android.view.View" />
         <variable
             name="model"
-            type="mu.location.savmed.ui.chat.chatNew.model.MessageModel" />
+            type="mu.location.savmed.ui.chat.model.MessageModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

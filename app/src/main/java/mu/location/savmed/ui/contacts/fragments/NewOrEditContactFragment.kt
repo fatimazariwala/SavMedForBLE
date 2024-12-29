@@ -135,7 +135,7 @@ class NewOrEditContactFragment : Fragment() {
 
         binding.buttonSubmit.setOnClickListener() {
             Log.i(TAG,"NAme,,,,, ${binding.firstName.text} [${contactViewModel.lastName.value}")
-            contactViewModel.addFriendToList()
+            contactViewModel.saveChanges()
         }
 
 //        contactViewModel.isEmr.observe(viewLifecycleOwner){ valz ->
@@ -171,7 +171,7 @@ class NewOrEditContactFragment : Fragment() {
 
         // Show the "Add Another Email" button below the new email field
         val addEmailButtonBelow = newEmailInputLayout.findViewById<Button>(R.id.addEmailButtonBelow)
-        addEmailButtonBelow.visibility = View.VISIBLE
+        addEmailButtonBelow.visibility = View.GONE
 
         // Set the button click listener to add another email
         addEmailButtonBelow.setOnClickListener {
@@ -291,7 +291,7 @@ class NewOrEditContactFragment : Fragment() {
         dialogBuilder.setMessage(message)
             .setCancelable(false)
             .setPositiveButton("OK") { dialog, _ ->
-                contactViewModel.isEdit = false
+                //contactViewModel.isEdit = false
                 findNavController().navigate(R.id.action_newOrEditContactFragment_to_contactFragment)
                 dialog.dismiss()
                 result.complete(true)

@@ -85,7 +85,7 @@
                         android:id="@+id/lastSeenText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="10 min ago"
+                        android:text="@{model.lastPresenceInfo}"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="12sp" />
                 </LinearLayout>

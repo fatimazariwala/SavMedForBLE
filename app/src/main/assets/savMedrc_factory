@@ -17,7 +17,7 @@ auto_answer_replacing_calls=1
 ping_with_options=0
 use_cpim=1
 update_presence_model_timestamp_before_publish_expires_refresh=1
-rls_uri=sip:212.38.94.76
+rls_uri=sip:rls@212.38.94.76
 
 [video]
 displaytype=MSAndroidTextureDisplay

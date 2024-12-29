@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.model
+package mu.location.savmed.ui.chat.model
 
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData

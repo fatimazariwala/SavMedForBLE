@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:bind="http://schemas.android.com/tools"
-    tools:context=".ui.chat.chatNew.ChatListFragment">
+    tools:context=".ui.chat.ChatListFragment">
 
     <data>
         <import type="android.view.View" />
@@ -16,7 +16,7 @@
 
         <variable
             name="viewModel"
-            type="mu.location.savmed.ui.chat.chatNew.viewModel.CoversationListViewModel" />
+            type="mu.location.savmed.ui.chat.viewModel.CoversationListViewModel" />
     </data>
 
     <androidx.slidingpanelayout.widget.SlidingPaneLayout

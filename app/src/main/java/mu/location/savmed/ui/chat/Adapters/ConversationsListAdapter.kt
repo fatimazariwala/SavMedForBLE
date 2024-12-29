@@ -1,4 +1,4 @@
-package mu.location.savmed.ui.chat.chatNew.Adapters
+package mu.location.savmed.ui.chat.Adapters
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mu.location.savmed.R
 import mu.location.savmed.databinding.ChatListCellBinding
-import mu.location.savmed.ui.chat.chatNew.model.ConversationModel
+import mu.location.savmed.ui.chat.model.ConversationModel
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.startAnimatedDrawable
 

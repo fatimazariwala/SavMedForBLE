@@ -223,6 +223,8 @@ class BLEServer(
         if (SharedPreference.username.isNotEmpty()) {
             Log.i(TAG,"Found ${SharedPreference.username} setting it as characteristic params")
             characteristics_username.setValue("${SharedPreference.username}#${Build.MANUFACTURER}")
+
+            Log.i(TAG,"In am shared prefValue ${SharedPreference.username}")
         } else {
             Log.i(TAG,"Could not set Username in characteristic FOUND EMPTY")
             characteristics_username.setValue("unknown_savMed_user")

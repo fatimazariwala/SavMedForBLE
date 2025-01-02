@@ -17,6 +17,7 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
@@ -27,6 +28,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.LocusIdCompat
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
@@ -89,6 +91,10 @@ class NotificationsManager @MainThread constructor(private val context: Context)
 
     private var currentlyRingingCallRemoteAddress: Address? = null
 
+    lateinit var amManager: AudioManager
+    var prevAm: Int = 0
+    var ringerState: Boolean = false
+
     private val notificationManager: NotificationManagerCompat by lazy {
         NotificationManagerCompat.from(context)
     }
@@ -119,6 +125,7 @@ class NotificationsManager @MainThread constructor(private val context: Context)
                 previousChatNotifications.add(notification.id)
             }
         }
+        amManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     private val coreListener = object : CoreListenerStub() {
@@ -848,6 +855,9 @@ class NotificationsManager @MainThread constructor(private val context: Context)
             "Conversation is ${if (style.isGroupConversation) "group" else "1-1"} with title [${style.conversationTitle}]"
         )
 
+        Log.i(TAG,"Calling Ringer Reset For Messaging")
+        ringerState = checkModeAndSet()
+
         val largeIcon = lastPersonAvatar
         val notificationBuilder = NotificationCompat.Builder(
             context,
@@ -884,6 +894,9 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         val channelId = BLE_MESSAGE_CHANNEL
         val channel = notificationManager.getNotificationChannel(channelId)
         val importance = NotificationManagerCompat.IMPORTANCE_HIGH
+
+        Log.i(TAG,"Calling Ringer Mode Set For Neaby")
+        ringerState = checkModeAndSet()
 
         val intent = Intent(context,MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -976,6 +989,9 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         Log.i(
             "Creating notification for ${if (isIncoming) "incoming" else "outgoing"} ${if (isConference) "conference" else "call"} on channel [$channel]"
         )
+
+        Log.i(TAG,"Calling Ringer Reset")
+        ringerState = checkModeAndSet()
 
         val builder = NotificationCompat.Builder(
             context,
@@ -1228,8 +1244,6 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         }
     }
 
-
-
     @MainThread
     fun onInCallServiceDestroyed() {
         Log.i("$TAG Service has been destroyed")
@@ -1242,6 +1256,26 @@ class NotificationsManager @MainThread constructor(private val context: Context)
             "$TAG Canceling notification with ID [$id] and ${if (tag == null) "without tag" else "with tag [$tag]"}"
         )
         notificationManager.cancel(tag, id)
+    }
+
+    fun checkModeAndSet(): Boolean {
+        if (prevAm != 0 || amManager.ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+            prevAm = amManager.ringerMode
+        }
+
+        if (amManager.ringerMode == AudioManager.RINGER_MODE_SILENT || amManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE) {
+            Log.i(TAG,"Changing mode to Not Silent or Not Vibrate")
+            amManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+            return true
+        } else {
+            Log.i(TAG,"No Need to Reset Ringer Mode Already on Ringer Normal Mode RETURNING [$prevAm]")
+            return prevAm != 0
+        }
+    }
+    fun resetMode() {
+        Log.i(TAG,"Resetting mode")
+        amManager.ringerMode = prevAm
+        prevAm = 0
     }
 
 }

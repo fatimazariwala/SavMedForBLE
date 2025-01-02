@@ -51,6 +51,7 @@ class ContactAvatarModel @WorkerThread constructor(val friend: Friend,val addres
             friend.addListener(friendListener)
         }
 
+        Log.i(TAG,"is Presnece Received ${friend.isPresenceReceived}")
         update(address)
     }
 
@@ -63,16 +64,12 @@ class ContactAvatarModel @WorkerThread constructor(val friend: Friend,val addres
 
     fun update(address: Address?) {
 
-     //   Log.i(TAG,"In update... ")
-
         isEmrContact.postValue(friend.starred)
-      //  Log.i(TAG,"I ma isEmr ${isEmrContact.value} ${friend.starred}")
         initials.postValue(AppUtils.getInitials(friend.name.orEmpty()))
         showTrust.postValue(true)
         picturePath.postValue(getAvatarUri(friend).toString())
 
         name.postValue(friend.name)
-    //    Log.i(TAG,"in am name ${name.value} ${friend.name}")
         computePresence(address)
     }
 
@@ -108,6 +105,9 @@ class ContactAvatarModel @WorkerThread constructor(val friend: Friend,val addres
         val presenceString = when (presence) {
             ConsolidatedPresence.Online -> {
                 "Online"
+            }
+            ConsolidatedPresence.Offline -> {
+                "Offline"
             }
             ConsolidatedPresence.Busy -> {
                 val timestamp = friend.presenceModel?.latestActivityTimestamp ?: -1L

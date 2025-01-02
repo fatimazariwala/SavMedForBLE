@@ -245,7 +245,6 @@ class MainActivity : AppCompatActivity() {
 //                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
 //                                .addToBackStack(null) // Optional: add to back stack if needed
 //                                .commit()
-
 //                        } else {
 //                            Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
 //                        }
@@ -336,22 +335,11 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
-            .catch { throwable ->
-                Log.e(NearByFragment.TAG, "Error: $throwable")
-            }
-            .launchIn(lifecycleScope)
+        .catch { throwable ->
+            Log.e(NearByFragment.TAG, "Error: $throwable")
+        }
+        .launchIn(lifecycleScope)
     }
-
-
-
-//    private fun initializeSharedPreferences() {
-//        initializeViewModels()
-//        sharedPreferences = getSharedPreferences("shared_prefs", Context.MODE_PRIVATE)
-//        usernameSIP = sharedPreferences.getString("username_key", "").orEmpty()
-//        if (usernameSIP.isNotEmpty()) {
-//            emrContactsViewModel.getEmergencyContacts(usernameSIP)
-//        }
-//    }
 
     private fun observeRegistrationStatus() {
         coreContext.registrationStatus.observe(this) { registrationStatus ->
@@ -364,20 +352,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-//    private fun observeEmergencyContacts() {
-//        emrContactsViewModel.contactsList.observe(this) { contactList ->
-//            for (contact in contactList) {
-//                if (!coreContext.emrContact.contains(contact)) {
-//                    coreContext.emrContact.add(contact) // Explicitly add the contact
-//                }
-//                Log.i(TAG,coreContext.emrContact.size.toString())
-//                for(contactz in coreContext.emrContact) {
-//                    Log.i(TAG,"EMR OCntacts= ${contactz}")
-//                }
-//            }
-//        }
-//    }
 
     private fun checkAndRequestPermissions() {
 

@@ -10,7 +10,7 @@
         <import type="android.view.View"/>
         <variable
             name ="viewModel"
-            type="mu.location.savmed.ui.contacts.viewModels.ContactViewModel"/>
+            type="mu.location.savmed.ui.contacts.viewModels.ContactProfileViewModel"/>
     </data>
 
     <ScrollView
@@ -221,10 +221,10 @@
                         android:id="@+id/contactUsername"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10sp"
+                        android:layout_marginTop="20sp"
                         android:fontFamily="@font/adlam_display"
                         android:gravity="center_vertical"
-                        android:text="@{viewModel.sipUri,default=john}"
+                        android:text="@{viewModel.sipUserName,default=john}"
                         android:textSize="12sp">
 
                     </TextView>
@@ -254,7 +254,7 @@
                             android:layout_height="match_parent"
                             android:layout_marginStart="10dp"
                             android:gravity="center_vertical"
-                            android:text="@{viewModel.sipUri,default=john}"
+                            android:text="@{viewModel.sipUserName,default=john}"
                             android:textSize="20sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="@+id/videoCallIconContctinfo"

@@ -57,7 +57,7 @@ class ContactsManager  @UiThread constructor() {
     private var nativeContactsLoaded = false
     private lateinit var usersList: List<UsersItem>
 
-    private val listeners = arrayListOf<ContactsListener>()
+    private val contactLoadListeners = arrayListOf<ContactsListener>()
 
     private val knownContactsAvatarMap = hashMapOf<String,ContactAvatarModel>()
     private val unknownContactsAvatarsMap = hashMapOf<String, ContactAvatarModel>()
@@ -126,7 +126,8 @@ class ContactsManager  @UiThread constructor() {
 
     @WorkerThread
     fun notifyContactsListChanged() {
-        for (listener in listeners) {
+        Log.i(TAG,"in notify....")
+        for (listener in contactLoadListeners) {
             listener.onContactsLoaded()
         }
     }
@@ -137,6 +138,8 @@ class ContactsManager  @UiThread constructor() {
             newContactAddedWithSipUri(sipAddress.asStringUriOnly())
         }
 
+        Log.i(TAG,"New Contact added or Edited")
+
         conferenceAvatarMap.values.forEach(ContactAvatarModel::destroy)
         conferenceAvatarMap.clear()
         coreContext.contactsManager.notifyContactsListChanged()
@@ -144,9 +147,10 @@ class ContactsManager  @UiThread constructor() {
 
     @WorkerThread
     fun addListener(listener: ContactsListener) {
+        Log.i(TAG,"in add listenre...")
         coreContext.postOnCoreThread {
             try {
-                listeners.add(listener)
+                contactLoadListeners.add(listener)
             } catch (e: ConcurrentModificationException) {
                 Log.e(TAG,"Can't add Listener err: $e")
             }
@@ -158,13 +162,14 @@ class ContactsManager  @UiThread constructor() {
         if (coreContext.isReady()) {
             coreContext.postOnCoreThread {
                 try {
-                    listeners.remove(listener)
+                    contactLoadListeners.remove(listener)
                 } catch (e:ConcurrentModificationException) {
-                    Log.e(TAG,"Can;t Remove Listener Error: $e")
+                    Log.e(TAG,"Can't Remove Listener Error: $e")
                 }
             }
         }
     }
+
     @WorkerThread
     fun contactRemoved(friend: Friend) {
         val refKey = friend.refKey.orEmpty()

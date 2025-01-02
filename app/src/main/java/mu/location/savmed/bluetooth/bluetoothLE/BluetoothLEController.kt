@@ -41,6 +41,9 @@ interface BluetoothLEController {
     // Releases the Scan Device Receiver
     //fun release()
 
+   //Send a broadcast Connection
+   fun createBroadCastConnection()
+
     // Check Permissions
     fun hasPermission(permission: String) : Boolean
 }

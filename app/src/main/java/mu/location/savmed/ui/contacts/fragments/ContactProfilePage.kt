@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -12,7 +13,11 @@ import androidx.navigation.fragment.navArgs
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.databinding.FragmentContactProfilePageBinding
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.contacts.models.ContactAvatarModel
+import mu.location.savmed.ui.contacts.viewModels.ContactProfileViewModel
 import mu.location.savmed.ui.contacts.viewModels.ContactViewModel
+import mu.location.savmed.ui.main.SharedMainViewModel
 
 class ContactProfilePage : Fragment() {
 
@@ -24,7 +29,10 @@ class ContactProfilePage : Fragment() {
 
     private val args: ContactProfilePageArgs by navArgs()
 
-    lateinit var contactViewModel: ContactViewModel
+    lateinit var contactProfileViewModel: ContactProfileViewModel
+    lateinit var sharedMainViewModel: SharedMainViewModel
+    lateinit var callViewModel: CurrentCallViewModel
+
     lateinit var localSipUri: String
     lateinit var remoteSipUri: String
 
@@ -33,20 +41,7 @@ class ContactProfilePage : Fragment() {
 
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (args.freindRefKey == "") {
-                    findNavController().navigate(R.id.action_contactProfilePage_to_contactFragment)
-                    contactViewModel.firstName.postValue("")
-                    contactViewModel.lastName.postValue("")
-                    contactViewModel.sipUri.postValue("")
-                    contactViewModel.organization.postValue("")
-                    contactViewModel.jobTitle.postValue("")
-                    contactViewModel.picturePath.postValue("")
-                } else {
-                    findNavController().navigate(ContactProfilePageDirections.actionContactProfilePageToConversationFragment(
-                        localSipUri,
-                        "sip:${remoteSipUri}212.38.94.76"
-                    ))
-                }
+                findNavController().popBackStack()
             }
         })
 
@@ -59,37 +54,45 @@ class ContactProfilePage : Fragment() {
     ): View {
         binding = FragmentContactProfilePageBinding.inflate(inflater,container,false)
 
-        contactViewModel = requireActivity().run {
-            ViewModelProvider.create(this)[ContactViewModel::class.java]
+        contactProfileViewModel = requireActivity().run {
+            ViewModelProvider.create(this)[ContactProfileViewModel::class.java]
+        }
+        sharedMainViewModel = requireActivity().run {
+            ViewModelProvider.create(this)[SharedMainViewModel::class.java]
+        }
+        callViewModel = requireActivity().run {
+            ViewModelProvider.create(this)[CurrentCallViewModel::class.java]
         }
 
         binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = contactViewModel
-
-        contactViewModel.sipUri.observe(viewLifecycleOwner){ sipUri ->
-            remoteSipUri = sipUri
-        }
+        binding.viewModel = contactProfileViewModel
 
         binding.editProfilepage.setOnClickListener() {
-            //contactViewModel.isEdit = true
-            findNavController().navigate(R.id.action_contactProfilePage_to_newOrEditContactFragment)
+            findNavController().navigate(ContactProfilePageDirections.actionContactProfilePageToNewOrEditContactFragment(
+                contactProfileViewModel.refKey
+            ))
         }
 
         binding.messageIcon.setOnClickListener() {
-            findNavController().navigate(
-                ContactProfilePageDirections.actionContactProfilePageToConversationFragment(
-                    localSipUri,
-                    contactViewModel.sipUri.value.toString()
+
+            if (contactProfileViewModel.sipUserName.value != null) {
+                findNavController().navigate(
+                    ContactProfilePageDirections.actionContactProfilePageToConversationFragment(
+                        localSipUri,
+                        contactProfileViewModel.sipUserName.value.toString()
+                    )
                 )
-            )
+            } else {
+                Toast.makeText(requireContext(),"Not UserName Mentioned Cannot Open Chat!",Toast.LENGTH_LONG).show()
+            }
         }
 
         if (args.freindRefKey != "") {
-            //contactViewModel.displayPreviouslyAddedContact(args.freindRefKey,false)
+            contactProfileViewModel.findContact(sharedMainViewModel.displayedFriend,args.freindRefKey)
         }
 
         binding.voiceCallIcon.setOnClickListener() {
-            coreContext.startCall(contactViewModel.sipUri.value.toString())
+            coreContext.startCall(contactProfileViewModel.sipUserName.value.orEmpty().trim())
         }
 
         // Inflate the layout for this fragment

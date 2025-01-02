@@ -26,6 +26,9 @@ import mu.location.savmed.ui.contacts.adapter.ContactAdapter
 import mu.location.savmed.ui.contacts.models.ContactEvent
 import mu.location.savmed.ui.contacts.models.EndSwitchCallBack
 import mu.location.savmed.ui.contacts.viewModels.ContactViewModel
+import mu.location.savmed.ui.contacts.viewModels.ContactViewModel.Companion
+import mu.location.savmed.ui.main.SharedMainViewModel
+import org.linphone.core.Friend
 import org.linphone.core.FriendList
 import org.linphone.core.MagicSearch
 
@@ -49,6 +52,8 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
     lateinit var contactAdapter: ContactAdapter
     lateinit var emrContactAdapter: ContactAdapter
 
+    lateinit var sharedMainViewModel: SharedMainViewModel
+
     private lateinit var contactCallViewModel : ContactViewModel
     private lateinit var currentCallViewModel: CurrentCallViewModel
     private val currentCallViewModelFactory: CurrentCallViewModelFactory = CurrentCallViewModelFactory(this)
@@ -62,7 +67,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
             favourite = true,
             onCallClick = { sipUri -> context?.let { currentCallViewModel.outgoingCall(sipUri, it) } },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
-            onInfoClick = { refKey -> checkOutForProfilePage(refKey) },
+            onInfoClick = { friend,refKey -> checkOutForProfilePage(friend,refKey) },
             onRemoveClick = { model -> contactCallViewModel.deleteContact(model) }
         )
 
@@ -70,14 +75,18 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
             favourite = false,
             onCallClick = { sipUri -> context?.let { currentCallViewModel.outgoingCall(sipUri, it) } },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
-            onInfoClick = {refKey -> checkOutForProfilePage(refKey)},
+            onInfoClick = {friend,refKey -> checkOutForProfilePage(friend,refKey)},
             onRemoveClick = {model -> contactCallViewModel.deleteContact(model)}
         )
 
     }
 
-    fun checkOutForProfilePage(key: String) {
-        Toast.makeText(requireContext(),"Profile Page yet to configure!",Toast.LENGTH_SHORT).show()
+    fun checkOutForProfilePage(friend: Friend, key: String) {
+        sharedMainViewModel.displayedFriend = friend
+        findNavController().navigate( ContactFragmentDirections.actionContactFragmentToContactProfilePage(
+                key
+            )
+        )
     }
 
     override fun onCreateView(
@@ -93,6 +102,18 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         currentCallViewModel = requireActivity().run {
             ViewModelProvider(this,currentCallViewModelFactory).get(CurrentCallViewModel::class.java)
+        }
+
+        sharedMainViewModel = requireActivity().run {
+            ViewModelProvider(this)[SharedMainViewModel::class.java]
+        }
+
+        val friendList = coreContext.core.getFriendListByName(ContactViewModel.SAVMED_ADDRESS_BOOK_FRIEND_LIST)
+        if (friendList != null) {
+            Log.i(TAG,"Updating friend list subscriptions!!")
+            friendList.updateSubscriptions()
+        } else {
+            Log.i(TAG,"No FriendList found!!")
         }
 
         binding.lifecycleOwner = viewLifecycleOwner
@@ -119,6 +140,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         binding.addContacts.setOnClickListener() {
             Log.i(TAG,"Add CLicked!")
+            contactCallViewModel.findFriendByRefKey("")
             findNavController().navigate(R.id.action_contactFragment_to_newOrEditContactFragment)
         }
 

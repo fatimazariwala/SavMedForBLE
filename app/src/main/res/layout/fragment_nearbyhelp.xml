@@ -100,6 +100,7 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/nearby_help"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Nearby Users"
@@ -114,7 +115,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="15dp"
                     android:layout_marginBottom="15dp"
-                    android:text="No Near-by Saviour Devices Found!"
+                    android:text="No Near-by Saviour Devices Scanned!"
                     android:textColor="@color/black" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -142,6 +143,19 @@
 <!--                    android:layout_centerInParent="true"-->
 <!--                    android:text="HomePage" />-->
 
+<!--                    <Button-->
+<!--                        android:id="@+id/send_broadcast"-->
+<!--                        android:layout_width="205dp"-->
+<!--                        android:layout_height="53dp"-->
+<!--                        android:layout_alignParentStart="true"-->
+<!--                        android:layout_alignParentTop="true"-->
+<!--                        android:layout_alignParentEnd="true"-->
+<!--                        android:layout_alignParentBottom="true"-->
+<!--                        android:layout_marginStart="118dp"-->
+<!--                        android:layout_marginTop="162dp"-->
+<!--                        android:layout_marginEnd="89dp"-->
+<!--                        android:layout_marginBottom="263dp"-->
+<!--                        android:text="BroadCast Help" />-->
                 </RelativeLayout>
 
             </LinearLayout>

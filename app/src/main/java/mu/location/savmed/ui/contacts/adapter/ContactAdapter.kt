@@ -17,13 +17,14 @@ import mu.location.savmed.databinding.ChatEmergencyConatctConnectAvatarBarCellBi
 import mu.location.savmed.databinding.ContactItemLayoutBinding
 import mu.location.savmed.databinding.EmergencyContactItemsBinding
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
+import org.linphone.core.Friend
 
 
 class ContactAdapter(
     private val favourite: Boolean = false,
     private val onCallClick: (String) -> Unit,
     private val onChatClick: (String) -> Unit,
-    private val onInfoClick: (String) -> Unit,
+    private val onInfoClick: (Friend,String) -> Unit,
     private val onRemoveClick: (ContactAvatarModel) -> Unit
 ) : ListAdapter<ContactAvatarModel, RecyclerView.ViewHolder>(ContactDiffCallback()) {
 
@@ -57,7 +58,7 @@ class ContactAdapter(
 
                 infoButton.setOnClickListener() {
                     Log.i(TAG,"I am rfekey .... ${contactModel.friend.refKey}")
-                    contactModel.friend.refKey?.let { it1 -> onInfoClick(it1)}
+                    contactModel.friend.refKey?.let { it1 -> onInfoClick(contactModel.friend,it1)}
                 }
 
                 callButton.setOnClickListener() {
@@ -88,7 +89,7 @@ class ContactAdapter(
 
                 Log.i(TAG,"emr viewmodelr ${emrModel.name}")
                 root.setOnClickListener() {
-                    emrModel.friend.refKey?.let { it1 -> onInfoClick(it1)}
+                    emrModel.friend.refKey?.let { it1 -> onInfoClick(emrModel.friend,it1)}
                 }
 
                 root.setOnLongClickListener() {

@@ -49,6 +49,7 @@ class NearByFragment : Fragment() {
 
     lateinit var binding: FragmentNearbyhelpBinding
     lateinit var scannedDeviceAdapter: NearByAdapter
+
     // Bluetooth ViewModel
     lateinit var bluetoothLEViewModel: BluetoothLEViewModel
     lateinit var callViewModel: CurrentCallViewModel
@@ -135,10 +136,6 @@ class NearByFragment : Fragment() {
             Toast.makeText(requireContext(),"Devices available from previous scan!",Toast.LENGTH_SHORT).show()
             Log.i(TAG,"Devices available from previous scan!")
         }
-//
-//        binding.btnHome.setOnClickListener() {
-//            findNavController().navigate(R.id.action_nearByFragment_to_rippleFragment)
-//        }
 
         bleClient.scanStatus.observe(viewLifecycleOwner) { stat ->
             Toast.makeText(requireContext(),stat,Toast.LENGTH_SHORT).show()
@@ -157,11 +154,6 @@ class NearByFragment : Fragment() {
                         ).show()
                     }
                 }
-//
-//                if (state.message != null) {
-//                    Log.i("Received------", state.message)
-//                    showSplashDialog(state.message)
-//                }
 
                 prevConnectionState = state
             }
@@ -178,6 +170,10 @@ class NearByFragment : Fragment() {
                 }
             }
         }
+
+//        binding.sendBroadcast.setOnClickListener() {
+//            bluetoothLEViewModel.sendBroadCastConnection()
+//        }
 
         binding.messages.setOnClickListener() {
             //Toast.makeText(requireContext(),"Upcoming!!",Toast.LENGTH_SHORT).show()
@@ -253,8 +249,10 @@ class NearByFragment : Fragment() {
 
                             if(state.scannedDevices.isEmpty()) {
                                 binding.sttTv.visibility = View.VISIBLE
+                               // binding.rvMain.visibility = View.GONE
                             } else {
                                 binding.sttTv.visibility = View.GONE
+                               // binding.rvMain.visibility = View.VISIBLE
                                 Log.i(TAG,"Trynna ubmit")
                             }
                         }

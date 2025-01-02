@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -34,6 +35,8 @@ class NewOrEditContactFragment : Fragment() {
     companion object{
         const val TAG = "[Add/Edit Fragment]"
     }
+
+    private val args: NewOrEditContactFragmentArgs by navArgs()
 
     //for email field
     private lateinit var addEmailButton: Button
@@ -98,10 +101,11 @@ class NewOrEditContactFragment : Fragment() {
         binding.viewModel = contactViewModel
 
         observeContactEvents()
-//
-//        contactViewModel.firstName.observe(viewLifecycleOwner) { it ->
-//            Toast.makeText(requireContext(),"I am changed $it",Toast.LENGTH_SHORT).show()
-//        }
+
+        val refKey = args.refKey
+        if (args.refKey != "") {
+            contactViewModel.findFriendByRefKey(refKey)
+        }
 
         // Access views using ViewBinding instead of findViewById initialise email button and its container
         addEmailButton = binding.addEmailButton
@@ -138,9 +142,6 @@ class NewOrEditContactFragment : Fragment() {
             contactViewModel.saveChanges()
         }
 
-//        contactViewModel.isEmr.observe(viewLifecycleOwner){ valz ->
-//            Toast.makeText(requireContext(),"I am isEmr $valz",Toast.LENGTH_SHORT).show()
-//        }
         // Inflate the layout for this fragment
         return binding.root
     }

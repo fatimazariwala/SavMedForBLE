@@ -92,7 +92,7 @@ class BLEServer(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startAdvertise()
             } else {
-                Log.i(TAG,"ble advertise not spported")
+                Log.i(TAG,"ble advertise not supported")
             }
         } else {
             Log.i(TAG,"Ble adv not granted...")
@@ -107,6 +107,9 @@ class BLEServer(
             super.onConnectionStateChange(device, status, newState)
             Log.i(TAG,"Device: ${device?.address}, Status: ${status}, newState: ${newState}")
 
+            if (newState == BluetoothProfile.STATE_CONNECTING) {
+                Log.i(TAG,"In connecting...")
+            }
             if(newState == BluetoothProfile.STATE_CONNECTED) {
 
                 Log.i(TAG,"Device Connected ${device?.address}")
@@ -250,6 +253,7 @@ class BLEServer(
 
         Log.i(TAG,"Creating BLE Advertising Data...")
         advertiseData = AdvertiseData.Builder()
+            //.setIncludeDeviceName(true)
             .addServiceUuid(ParcelUuid(UUID.fromString(SERVICE_UUID)))
             .build()
 
@@ -337,6 +341,5 @@ class BLEServer(
         )
         context.startActivity(intent)
     }
-
 
 }

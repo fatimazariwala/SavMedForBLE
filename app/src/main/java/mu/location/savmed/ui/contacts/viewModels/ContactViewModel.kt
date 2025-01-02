@@ -109,6 +109,7 @@ class ContactViewModel : ViewModel() {
 
 
     init {
+        val ADDRESS_BOOK_FRIEND_LIST = "ss"
         isEmr.postValue(false)
         picturePath.postValue("")
         corePreferences.showFavoriteContacts = true
@@ -127,6 +128,18 @@ class ContactViewModel : ViewModel() {
                 )
             }
         }
+
+//        viewModelScope.launch {
+//            val friendList = coreContext.core.getFriendListByName(ADDRESS_BOOK_FRIEND_LIST)
+//
+//            if (friendList != null) {
+//                for (friend in friendList.friends) {
+//                    friend.edit()
+//                    friend.isSubscribesEnabled = true
+//                    friend.done()
+//                }
+//            }
+//        }
     }
 
     @UiThread
@@ -330,6 +343,8 @@ class ContactViewModel : ViewModel() {
         val sipAddressValue = sipUri.value.orEmpty().trim()
         val isEmr = isEmr.value
 
+        Log.i(TAG,"In savChanged...")
+
         if (fn.isEmpty() && ln.isEmpty() && sipAddressValue.isEmpty()) {
             Log.e(TAG,"One of the Mandatory Field is Empty!")
             viewModelScope.launch {
@@ -382,7 +397,9 @@ class ContactViewModel : ViewModel() {
                 friend.jobTitle = jobTitle.value.orEmpty().trim()
                 friend.address = sipAddress
                 friend.vcard?.addExtendedProperty("notes",notes.value.orEmpty().trim())
-                friend.addPhoneNumber(phoneNumber.value.orEmpty().trim())
+                if (!phoneNumber.value.isNullOrEmpty()) {
+                    friend.addPhoneNumber(phoneNumber.value.orEmpty().trim())
+                }
 
                 if (isEmr == true) {
                     friend.starred = true
@@ -392,8 +409,12 @@ class ContactViewModel : ViewModel() {
                     friend.address?.username?.let { createOrDeleteEmrContact(it,false) }
                 }
 
-                updateAddresses(email,true)
-                updateAddresses(residenceAddress,false)
+                if (!email.isEmpty()) {
+                    updateAddresses(email, true)
+                }
+                if (!residenceAddress.isEmpty()) {
+                    updateAddresses(residenceAddress, false)
+                }
 
                 if (isEdit.value == false) {
                     friend.vcard?.generateUniqueId()
@@ -428,6 +449,9 @@ class ContactViewModel : ViewModel() {
                 saveChangesEvent.postValue(
                     Event(if (status == Status.OK) friend.refKey.orEmpty() else "")
                 )
+                viewModelScope.launch {
+                    _contactEvent.emit(ContactEvent.ContactCreated)
+                }
             }
         }
     }

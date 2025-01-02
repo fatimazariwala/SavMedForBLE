@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_MESSAGE_UUID
@@ -223,6 +224,8 @@ class BLEClient(
 
             scanStatus.postValue("Scanning...")
             Log.i(TAG, "Scan Start...")
+            //bluetoothGatt = null
+            bleServer.setUpBle()
             bluetoothLeScanner?.startScan(bleScanCallBack)
         } else {
             scanStatus.postValue("Scan Completed!")
@@ -348,6 +351,38 @@ class BLEClient(
                 } catch (e: IOException) {
 
                     emit(ConnectionResult.Error("Error Connecting To ${device.address}"))
+                }
+            }
+        }.onCompletion {
+
+        }.flowOn(Dispatchers.IO)
+    }
+
+    fun createBroadCastConnection(): Flow<ConnectionResult> {
+        Log.i(TAG,"In Broad BLE...")
+        return flow {
+            if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
+                throw SecurityException("Bluetooth Connect permission Not Granted!")
+            }
+            //Log.i(TAG,"Security exception passed ${bluetoothGatt?.device}")
+            bluetoothAdapter.let { adapter ->
+
+                try {
+                    Log.i(TAG,"Trying to Send Broadcast Connection request ${bluetoothGatt?.device}")
+
+                    val deviceFound = adapter?.getRemoteDevice("ff:ff:ff:ff:ff:ff")
+
+                    Log.i(TAG,"Found device ${deviceFound?.address}")
+
+                    bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
+
+                    emit(ConnectionResult.Success("Successful Connection!"))
+
+                    Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
+
+                } catch (e: IOException) {
+
+                    emit(ConnectionResult.Error("Error Connecting To [ff:ff:ff:ff:ff:ff]"))
                 }
             }
         }.onCompletion {

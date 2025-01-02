@@ -15,11 +15,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment.Companion
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
 
 class BluetoothLEViewModel constructor(): ViewModel() {
 
@@ -70,6 +72,23 @@ class BluetoothLEViewModel constructor(): ViewModel() {
 
     fun startScan() {
         bleClient.startBLEScan()
+    }
+
+    fun sendBroadCastConnection() {
+
+        viewModelScope.launch {
+            bleClient.createBroadCastConnection().collect { connectionResult ->
+                when (connectionResult) {
+                    is ConnectionResult.Success -> {
+                        Log.i(TAG, "In broadcast..Success..${connectionResult.message}")
+                    }
+                    is ConnectionResult.Error -> {
+                        Log.e(TAG, "In Broadcst Err: ${connectionResult.message}")
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 
     // AllowIncomignDevices

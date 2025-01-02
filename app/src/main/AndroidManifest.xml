@@ -32,6 +32,7 @@
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <uses-feature android:name="android.hardware.bluetooth" />
 
@@ -78,13 +79,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
-        <activity
-            android:name=".ui.chat.ChatTestActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.chat.ChatActivity"
-            android:exported="false" />
 
         <service
             android:name=".ui.call.services.CoreForeground"

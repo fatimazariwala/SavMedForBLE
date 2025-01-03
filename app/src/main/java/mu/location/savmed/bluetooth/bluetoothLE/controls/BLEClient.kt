@@ -31,9 +31,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
+import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_MESSAGE_UUID
-import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USERNAME_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_OIDENTITY_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_OLOC_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USER_LOC_UUID
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USER_NAME_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.SERVICE_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
@@ -41,7 +44,6 @@ import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.io.IOException
-import java.util.UUID
 import kotlin.math.pow
 
 @Suppress("MissingPermission")
@@ -149,16 +151,26 @@ class BLEClient(
                         Log.i(TAG, "Service Character: ${characteristic.uuid}")
                         val char_uuid = characteristic.uuid.toString()
 
-                        if (char_uuid.equals(CHARACTERISTIC_USERNAME_UUID)) {
-                            // Read the value of the characteristic
-                            Log.i(TAG, "Characteristic with UserName Found!")
+                        if (char_uuid.equals(CHARACTERISTIC_USER_NAME_UUID)) {
 
+                            Log.i(TAG, "Characteristic with UserName Found!")
                             bluetoothGatt?.readCharacteristic(characteristic)
                             discoveredCharacteristics.add(characteristic)
 
-                        } else if (char_uuid.equals(CHARACTERISTIC_MESSAGE_UUID)) {
+                        } else if (char_uuid.equals(CHARACTERISTIC_USER_LOC_UUID)) {
 
-                            Log.i(TAG, "Characteristics with Message Found!!")
+                            Log.i(TAG, "Characteristics with Location Found!!")
+                            bluetoothGatt?.readCharacteristic(characteristic)
+                            discoveredCharacteristics.add(characteristic)
+
+                        } else if (char_uuid.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
+
+                            Log.i(TAG, "Characteristics with Others Identity Found!!")
+                            discoveredCharacteristics.add(characteristic)
+
+                        } else if (char_uuid.equals(CHARACTERISTIC_OLOC_UUID)) {
+
+                            Log.i(TAG, "Characteristics with Others Location Found!!")
                             discoveredCharacteristics.add(characteristic)
                         }
                     }
@@ -185,7 +197,7 @@ class BLEClient(
                 val valueString = String(value ?: ByteArray(0)) // Convert byte array to string
                 Log.i(TAG, "Characteristic Value-----: $valueString ${characteristic.uuid}")
 
-                if (char.equals(CHARACTERISTIC_USERNAME_UUID)) {
+                if (char.equals(CHARACTERISTIC_USER_NAME_UUID)) {
                     Log.i(TAG,"In char found!!!")
                     addDeviceToSavMedDevicesList(gatt, null, valueString)
                 }
@@ -201,7 +213,14 @@ class BLEClient(
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.i(TAG, "Characteristic write successful: ${characteristic.value.toString(Charsets.UTF_8)}")
+                Log.i(
+                    TAG,
+                    "Characteristic write successful: ${characteristic.value.toString(Charsets.UTF_8)}"
+                )
+                if (characteristic.uuid.toString().equals(CHARACTERISTIC_OIDENTITY_UUID)) {
+                    Log.i(TAG,"Performing Seconf Write...")
+                    secondWriteRequest(gatt.device.address)
+                }
             } else {
                 Log.e(TAG, "Characteristic write failed with status: $status")
             }
@@ -218,54 +237,36 @@ class BLEClient(
         if (!scanning) { // Stops scanning after a pre-defined scan period.
             handler.postDelayed({
                 scanning = false
-                bluetoothLeScanner?.stopScan(bleScanCallBack)
+                stopBleScan()
             }, SCAN_PERIOD)
             scanning = true
 
             scanStatus.postValue("Scanning...")
             Log.i(TAG, "Scan Start...")
-            //bluetoothGatt = null
-            bleServer.setUpBle()
             bluetoothLeScanner?.startScan(bleScanCallBack)
         } else {
             scanStatus.postValue("Scan Completed!")
 
             stopBleScan()
-//            bluetoothLeScanner?.stopScan(bleScanCallBack)
         }
     }
 
     @SuppressLint("MissingPermission")
     fun writeCharacteristic(device: BluetoothLEScannedDevices, payload: String) {
         Log.i(TAG,"In write...")
+        val distz = device.dist?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
 
         for (characteristic in device.characteristics ?: emptyList()) {
 
             val char = characteristic.uuid.toString()
 
-            Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_MESSAGE_UUID")
-            if (char.equals(CHARACTERISTIC_MESSAGE_UUID)) {
+            Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_OLOC_UUID")
+            if (char.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
 
-                if (coreContext.onLocationEvent["latitude"] == null) {
-                    Log.i(TAG,"Writtingggggg not location")
-
-                    characteristic.setValue("${SharedPreference.username}#${device.dist}#0.0#0.0")
-
-                } else {
-                    Log.i(TAG,"Writtingggggg yes location")
-
-                    val latitude = coreContext.onLocationEvent["latitude"]?.toDouble()
-                    val longitude = coreContext.onLocationEvent["longitude"]?.toDouble()
-                    val roundedLatitude = latitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
-                    val roundedLongitude = longitude?.toBigDecimal()?.setScale(2, java.math.RoundingMode.HALF_UP)?.toDouble()
-                    val distz = device.dist?.toBigDecimal()?.setScale(1, java.math.RoundingMode.HALF_UP)?.toDouble()
-
-                    characteristic.setValue("${SharedPreference.username}#${distz}#${roundedLatitude}#${roundedLongitude}")
-
-                    Log.i(TAG,"${characteristic.value.toString()} fatima#${distz}#${roundedLatitude}#${roundedLongitude}")
-                }
+                Log.i(TAG,"Writting UserName N DIstance")
+                characteristic.setValue("${SharedPreference.username}#${distz}")
                 bluetoothGatt?.writeCharacteristic(characteristic)
-                Log.i(TAG,"Found Message char $char $CHARACTERISTIC_MESSAGE_UUID")
+
             }
             Log.i(TAG,"char data---ini: ${characteristic.value}")
         }
@@ -285,33 +286,13 @@ class BLEClient(
                 if(uuidFetched.equals(SERVICE_UUID)) {
 
                     Log.i(TAG,"----------------Found SavMed Device----------------------")
-                  //  stopBleScan()
                     val isExisting = _scannedDevices.value.any { device ->
                         device.address == result.device.address
                     }
 
                     if (!isExisting) {
                         addDeviceToScannedDeviceList(result, true)
-
-                        coroutineScope.launch {
-                            connectToDevice(result.device).collect { connectionResult ->
-                                when (connectionResult) {
-                                    is ConnectionResult.Success -> {
-                                        _bleEvent.emit(ConnectionResult.ConnectionEstablished)
-                                        Log.i(TAG, connectionResult.message)
-                                    }
-                                    is ConnectionResult.Error -> {
-                                        _bleEvent.emit(
-                                            ConnectionResult.Error("Connection Error -> ${connectionResult.message}")
-                                        )
-                                        Log.e(TAG, connectionResult.message)
-                                    }
-                                    else -> {}
-                                }
-                            }
-                        }
                     }
-                    //
 
                 } else {
                     Log.i(TAG,"SavMed uuid not found $uuid")
@@ -324,7 +305,7 @@ class BLEClient(
         }
     }
 
-    fun connectToDevice(device: BluetoothDevice ): Flow<ConnectionResult> {
+    fun connectToDevice(device: BluetoothLEScannedDevices ): Flow<ConnectionResult> {
         Log.i(TAG,"Connecting to BLE Device ${device.address}")
         return flow {
 
@@ -435,18 +416,8 @@ class BLEClient(
                     }
                 }
 
-                // Update the name if needed
                 if (name != null) {
                     val split = name.split('#')
-
-//                    val existingNAME = devices.indexOfFirst { device ->
-//                        device.name == name
-//                    }
-//                    Log.i(TAG,"Existing username of Device found! Updating details")
-//
-//                    if (existingNAME != -1) {
-//                        updatedDevices.removeAt(existingNAME)
-//                    }
 
                     val updatedDevice = updatedDevices[existingDeviceIndex].copy(
                         name = split[0],
@@ -478,8 +449,6 @@ class BLEClient(
 
     fun addDeviceToScannedDeviceList(result: ScanResult, isSavMed: Boolean) {
 
-        // Add Calculation for dist
-
         val newDevice = BluetoothLEScannedDevices(
             deviceName = result.device.name ?: "",
             address = result.device.address,
@@ -500,15 +469,50 @@ class BLEClient(
             mutableDevices
         }
 
-//        for(devices in scannedDevices.value) {
-//            Log.i(TAG,"devocezzz ${devices.address}")
-//        }
     }
 
     fun stopBleScan() {
-        if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN,context)) return
+
+        if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN,context)) return
         scanning = false
         bluetoothLeScanner?.stopScan(bleScanCallBack)
+
+        val scannedDevices = _scannedDevices.value
+        for (device in scannedDevices) {
+
+            Log.i(TAG,"In Connection Looop")
+            if (device.isSavMed == true) {
+
+                val deviceFound = bluetoothAdapter.getRemoteDevice(device.address)
+                val connectionState = bluetoothManager.getConnectionState(deviceFound,BluetoothProfile.GATT)
+
+                if (connectionState == BluetoothProfile.STATE_CONNECTED) {
+                    Log.i(TAG,"in COnnetced!!! already")
+                    bluetoothGatt?.discoverServices()
+                } else if (connectionState == BluetoothProfile.STATE_DISCONNECTED) {
+                    coroutineScope.launch {
+                        Log.i(TAG, "In COnnection Coroutine..")
+                        connectToDevice(device).collect { connectionResult ->
+                            when (connectionResult) {
+                                is ConnectionResult.Success -> {
+                                    _bleEvent.emit(ConnectionResult.ConnectionEstablished)
+                                    Log.i(TAG, connectionResult.message)
+                                }
+
+                                is ConnectionResult.Error -> {
+                                    _bleEvent.emit(
+                                        ConnectionResult.Error("Connection Error -> ${connectionResult.message}")
+                                    )
+                                    Log.e(TAG, connectionResult.message)
+                                }
+
+                                else -> {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun getSupportedGattService(): List<BluetoothGattService?>? {
@@ -523,6 +527,25 @@ class BLEClient(
     fun resetDeviceList() {
         _scannedDevices.update { emptyList() }
         _savMedDevices.update { emptyList() }
+    }
+
+    fun secondWriteRequest(deviceAddress: String) {
+        Log.i(TAG,"in sec write....")
+        val scannedDevices = _scannedDevices.value
+        for (device in scannedDevices) {
+            if (device.address == deviceAddress) {
+                for (char in device.characteristics ?: emptyList()) {
+                    if (char.uuid.toString().equals(CHARACTERISTIC_OLOC_UUID)) {
+                        Log.i(TAG,"Writting Location at ${char.uuid.toString()} ${CHARACTERISTIC_OLOC_UUID}")
+                        if (coreContext.isCoreAvailable()) {
+                            char.setValue("${coreContext.onLocationEvent["latitude"]}#${coreContext.onLocationEvent["longitude"]}")
+                            Log.i(TAG,"${bluetoothGatt?.device} in write loc...")
+                            bluetoothGatt?.writeCharacteristic(char)
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

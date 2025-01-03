@@ -87,6 +87,8 @@ class ContactProfileViewModel: ViewModel() {
 
         if (!friend.photo.isNullOrEmpty()) {
             picturePath.postValue(friend.photo)
+        } else {
+            picturePath.postValue("")
         }
     }
 }

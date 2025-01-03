@@ -58,8 +58,10 @@ class BLEServer(
     companion object {
         const val TAG = "[BLE Server]"
         const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
-        const val CHARACTERISTIC_USERNAME_UUID = "87654321-4321-6789-4321-fedcba987654"
-        const val CHARACTERISTIC_MESSAGE_UUID = "ba987654-4321-6789-4321-000087654321"
+        const val CHARACTERISTIC_USER_NAME_UUID = "87654321-4321-6789-4321-fedcba987654"
+        const val CHARACTERISTIC_USER_LOC_UUID = "ba987654-4321-6789-4321-000087654321"
+        const val CHARACTERISTIC_OIDENTITY_UUID = "46778467-4321-6789-4321-087654321000"
+        const val CHARACTERISTIC_OLOC_UUID = "98765432-4321-6789-4321-087654321000"
     }
 
     val messageReceivedFromBLE = MutableLiveData<writeMessage>()
@@ -75,6 +77,9 @@ class BLEServer(
     private val _bleServerEvent = MutableSharedFlow<ConnectionResult>()
     val bleServerEvent: SharedFlow<ConnectionResult>
         get() = _bleServerEvent
+
+    private lateinit var service: BluetoothGattService
+    private lateinit var charFrom: String
 
    // val mesgReciwd = MutableLiveData<String>()
 
@@ -141,7 +146,7 @@ class BLEServer(
                 showMessageActivity()
             }
             isPrevMessage = false
-            processWriteRequest(device,value)
+            processWriteRequest(characteristic,value)
 
             coroutineScope.launch {
                 _bleServerEvent.emit(
@@ -153,39 +158,73 @@ class BLEServer(
         }
     }
 
-    private fun processWriteRequest(device: BluetoothDevice, value: ByteArray) {
+    private fun processWriteRequest(characteristic: BluetoothGattCharacteristic, value: ByteArray) {
 
         val received = String(value).split('#')
+        val characteristicToString = characteristic.uuid.toString()
 
-        Log.i(TAG,"in receuved ${received.size} ${received.lastOrNull()}")
+        Log.i(TAG,"in received ${received.size} ${received.lastOrNull()}")
 
         val defaultFrom = "Unknown"
         val defaultDist = 0.0
         val defaultLat = 0.0
         val defaultLon = 0.0
 
-        val msg = writeMessage(
-            From = received.getOrElse(0) { defaultFrom },
-            dist = received.getOrElse(1) { defaultDist.toString() }.toDouble(),
-            lat = received.getOrElse(2) { defaultLat.toString() }.toDouble(),
-            lon = received.getOrElse(3) { defaultLon.toString() }.toDouble()
-        )
-        messageReceivedFromBLE.postValue(
-            msg
-        )
+        Log.i(TAG,"Char received $characteristicToString identity = $CHARACTERISTIC_OIDENTITY_UUID loc = $CHARACTERISTIC_OLOC_UUID")
+        if (characteristicToString.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
+            val msg = writeMessage(
+                From = received.getOrElse(0) { defaultFrom },
+                dist = received.getOrElse(1) { defaultDist.toString() }.toDouble(),
+                lat = defaultLat.toString().toDouble(),
+                lon = defaultLon.toString().toDouble()
+            )
 
-        coreContext.notificationManager.createBleMessageNotification(msg)
+            charFrom = msg.From
 
-        _listOfMessages.update { messages ->
-            Log.i(TAG,"add messageing to list ${msg.From} ${msg.dist}")
-            for (message in messages) {
-                Log.i(TAG,"${message.From} : ----ioioi")
+            _listOfMessages.update { messages ->
+                Log.i(TAG,"add messageing to list ${msg.From} ${msg.dist}")
+                for (message in messages) {
+                    Log.i(TAG,"${message.From} : ----ioioi")
+                }
+                val updatedMessages = messages + msg
+                Log.i(TAG, "in am message ${updatedMessages.lastOrNull()?.From} ${updatedMessages.lastOrNull()?.From}")
+                updatedMessages
             }
-            val updatedMessages = messages + msg
-            Log.i(TAG, "in am message ${updatedMessages.lastOrNull()?.From} ${updatedMessages.lastOrNull()?.From}")
-            updatedMessages
-        }
 
+        } else if (characteristicToString.equals(CHARACTERISTIC_OLOC_UUID)) {
+
+            Log.i(TAG,"FOund SOme uuid... OLOC")
+
+            _listOfMessages.update { messages ->
+
+                val existingIndex = messages.indexOfFirst { message ->
+                    message.From == charFrom
+                }
+
+                if (existingIndex != -1) {
+                    Log.i(TAG,"Found Device with From [${messages[existingIndex].From}] Matching [$charFrom]")
+                    val updatedMessages = messages.toMutableList()
+
+                    val updatedMessage = updatedMessages[existingIndex].copy(
+                        lat = received.getOrElse(0) {defaultLat.toString()}.toDouble(),
+                        lon = received.getOrElse(1) {defaultLon.toString()}.toDouble()
+                    )
+
+                    messageReceivedFromBLE.postValue(
+                        updatedMessage
+                    )
+
+                    coreContext.notificationManager.createBleMessageNotification(updatedMessage)
+
+                    updatedMessages[existingIndex] = updatedMessage
+
+                    updatedMessages
+                } else {
+                    Log.i(TAG,"Could not find any device Matching [$charFrom]")
+                    messages
+                }
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -212,15 +251,17 @@ class BLEServer(
 
         Log.i(TAG,"Creating BLE Service...")
         val serviceUuid = UUID.fromString(SERVICE_UUID)
-        val characteristicUuid_USER = UUID.fromString(CHARACTERISTIC_USERNAME_UUID)
-        val characteristicUuid_MESSAGE = UUID.fromString(CHARACTERISTIC_MESSAGE_UUID)
+        val characteristicUuid_USER = UUID.fromString(CHARACTERISTIC_USER_NAME_UUID)
+        val characteristicUuid_OUSER = UUID.fromString(CHARACTERISTIC_OIDENTITY_UUID)
+        val characteristicUuid_LOC = UUID.fromString(CHARACTERISTIC_USER_LOC_UUID)
+        val characteristicUuid_OLOC = UUID.fromString(CHARACTERISTIC_OLOC_UUID)
 
-        val service = BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        service = BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val characteristics_username = BluetoothGattCharacteristic(
             characteristicUuid_USER,
-            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
-            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PERMISSION_READ
         )
 
         if (SharedPreference.username.isNotEmpty()) {
@@ -233,18 +274,59 @@ class BLEServer(
             characteristics_username.setValue("unknown_savMed_user")
         }
 
-        val characteristic_message = BluetoothGattCharacteristic(
-            characteristicUuid_MESSAGE,
+        val characteristic_loc = BluetoothGattCharacteristic(
+            characteristicUuid_LOC,
+            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PERMISSION_READ
+        )
+
+        if (coreContext.isCoreAvailable()) {
+            if (!coreContext.onLocationEvent.isEmpty()) {
+                characteristic_loc.setValue("${coreContext.onLocationEvent["latitude"]}#${coreContext.onLocationEvent["longitude"]}")
+                Log.i(TAG,"Location Data Updated Empty")
+            } else {
+                characteristic_loc.setValue("")
+                Log.i(TAG,"Location Data Empty")
+            }
+        } else {
+            characteristic_loc.setValue("")
+            Log.i(TAG,"Core Not initialized!")
+        }
+
+        val characteristic_oloc = BluetoothGattCharacteristic(
+            characteristicUuid_OLOC,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
         )
 
-        characteristic_message.setValue("")
+        characteristic_oloc.setValue("")
+
+        val characteristic_oidentity = BluetoothGattCharacteristic(
+            characteristicUuid_OUSER,
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
+            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+
+        characteristic_oidentity.setValue("")
 
         service.addCharacteristic(characteristics_username)
-        service.addCharacteristic(characteristic_message)
+        service.addCharacteristic(characteristic_loc)
+        service.addCharacteristic(characteristic_oidentity)
+        service.addCharacteristic(characteristic_oloc)
 
         bluetoothGattServer.addService(service)
+    }
+
+    fun updateLocCharacteristics(lat: Double?,lon: Double?) {
+        if (::service.isInitialized) {
+            Log.i(TAG,"in init... ${service.uuid}")
+            val characteristic =
+                service.getCharacteristic(UUID.fromString(CHARACTERISTIC_USER_LOC_UUID))
+            characteristic.setValue("${lat ?: 0.0}#${lon ?: 0.0}")
+            Log.i(TAG, "Loc Characteristics Value updated!")
+        } else {
+            Log.i(TAG,"Service Variable Not initialized yet")
+        }
     }
 
     @SuppressLint("MissingPermission")

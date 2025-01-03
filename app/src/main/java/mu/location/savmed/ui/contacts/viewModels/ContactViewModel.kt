@@ -109,7 +109,7 @@ class ContactViewModel : ViewModel() {
 
 
     init {
-        val ADDRESS_BOOK_FRIEND_LIST = "ss"
+        //val ADDRESS_BOOK_FRIEND_LIST = "ss"
         isEmr.postValue(false)
         picturePath.postValue("")
         corePreferences.showFavoriteContacts = true

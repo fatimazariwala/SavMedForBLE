@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.notifications.OnDestroyBroadCastReceiver
 import mu.location.savmed.ui.locationing.DefaultLocationClient
@@ -47,8 +48,12 @@ class CoreForeground : Service() {
             .getLocationUpdates(10000L)
             .catch { e -> e.printStackTrace() }
             .onEach { location ->
-                coreContext.onLocationEvent["latitude"] = location.latitude
-                coreContext.onLocationEvent["longitude"] = location.longitude
+                if (coreContext.onLocationEvent["latitude"] != location.latitude || coreContext.onLocationEvent["longitude"] != location.longitude) {
+                    coreContext.onLocationEvent["latitude"] = location.latitude
+                    coreContext.onLocationEvent["longitude"] = location.longitude
+                    Log.i(TAG,"Updating Location Characteristics")
+                    bleServer.updateLocCharacteristics(location.latitude,location.longitude)
+                }
             }
             .launchIn(serviceScope)
     }

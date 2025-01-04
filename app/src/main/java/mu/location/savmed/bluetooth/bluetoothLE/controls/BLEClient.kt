@@ -477,6 +477,13 @@ class BLEClient(
         scanning = false
         bluetoothLeScanner?.stopScan(bleScanCallBack)
 
+        Log.i(TAG,"DATa in gattt ${bluetoothGatt?.device?.address} ${bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)}")
+
+        if (bluetoothGatt != null) {
+            Log.i(TAG,"Closing Gatttttt")
+            bluetoothGatt!!.disconnect()
+            bluetoothGatt!!.close()
+        }
         val scannedDevices = _scannedDevices.value
         for (device in scannedDevices) {
 

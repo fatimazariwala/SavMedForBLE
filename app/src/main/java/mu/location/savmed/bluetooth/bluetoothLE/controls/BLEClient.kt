@@ -6,18 +6,22 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
-import android.os.ParcelUuid
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,10 +45,13 @@ import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.SER
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+import mu.location.savmed.bluetooth.bluetoothLE.models.LocationChar
 import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.io.IOException
+import java.util.UUID
 import kotlin.math.pow
+
 
 @Suppress("MissingPermission")
 class BLEClient(
@@ -53,15 +60,13 @@ class BLEClient(
 
     companion object {
         const val TAG = "[BLE CLient]"
-        const val ACTION_GATT_CONNECTED =
-            "ACTION_GATT_CONNECTED"
-        const val ACTION_GATT_DISCONNECTED =
-            "ACTION_GATT_DISCONNECTED"
-        const val ACTION_GAT_SERVICES_DISCOVERED =
-            "ACTION_GAT_SERVICES_DISCOVERED"
+        const val ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED"
+        const val ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED"
+        const val ACTION_GAT_SERVICES_DISCOVERED = "ACTION_GAT_SERVICES_DISCOVERED"
     }
 
-    var bluetoothGatt: BluetoothGatt? = null
+    val activeGattConnections = HashMap<String, BluetoothGatt>()
+    val locationReadComplete = MutableLiveData<Boolean>()
 
     private val _bleEvent = MutableSharedFlow<ConnectionResult>()
     val bleEvent: SharedFlow<ConnectionResult>
@@ -109,6 +114,10 @@ class BLEClient(
         }
     }
 
+    init {
+        locationReadComplete.postValue(false)
+    }
+
     private val BLEgattCallBack = object: BluetoothGattCallback() {
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -116,20 +125,24 @@ class BLEClient(
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
 
-                Log.i(TAG, "Successful Connection! Requesting Service Discovery")
-                bluetoothGatt?.discoverServices()
+                Log.i(TAG, "Successful Connection! Requesting Service Discovery ${gatt?.device}")
+                gatt?.discoverServices()
 
                 coroutineScope.launch {
                     _bleEvent.emit(ConnectionResult.ConnectionEstablished)
                 }
-
-
+                locationReadComplete.postValue(false)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+
+                gatt?.device?.address?.let { address ->
+                    removeConnection(address)
+                }
 
                 Log.i(TAG, "Connection DisConnected!")
                 coroutineScope.launch {
                     _bleEvent.emit(ConnectionResult.Error("Connection Disconnected!"))
                 }
+
             }
         }
 
@@ -141,7 +154,8 @@ class BLEClient(
 
                 val discoveredCharacteristics = mutableListOf<BluetoothGattCharacteristic>()
                 Log.i(TAG, "SErvice Discovered")
-                val services = getSupportedGattService()
+
+                val services = getSupportedGattService(gatt!!)
 
                 for (service in services ?: emptyList()) {
                     Log.i(TAG, "Service UUID: ${service?.uuid}")
@@ -154,13 +168,13 @@ class BLEClient(
                         if (char_uuid.equals(CHARACTERISTIC_USER_NAME_UUID)) {
 
                             Log.i(TAG, "Characteristic with UserName Found!")
-                            bluetoothGatt?.readCharacteristic(characteristic)
+                            Log.i(TAG,"${gatt.readCharacteristic(characteristic)} - Reading CHar......")
                             discoveredCharacteristics.add(characteristic)
 
                         } else if (char_uuid.equals(CHARACTERISTIC_USER_LOC_UUID)) {
 
                             Log.i(TAG, "Characteristics with Location Found!!")
-                            bluetoothGatt?.readCharacteristic(characteristic)
+                            //gatt?.readCharacteristic(characteristic)
                             discoveredCharacteristics.add(characteristic)
 
                         } else if (char_uuid.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
@@ -200,6 +214,15 @@ class BLEClient(
                 if (char.equals(CHARACTERISTIC_USER_NAME_UUID)) {
                     Log.i(TAG,"In char found!!!")
                     addDeviceToSavMedDevicesList(gatt, null, valueString)
+
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        readLocationCharacteristic(gatt)
+                    },500)
+
+                    //readLocationCharacteristic(gatt)
+                }
+                if (char.equals(CHARACTERISTIC_USER_LOC_UUID)) {
+                    addDiscoveredLocation(gatt,valueString)
                 }
 
             } else {
@@ -212,13 +235,14 @@ class BLEClient(
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
+            Log.i(TAG,"SOmething..... $status")
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(
                     TAG,
-                    "Characteristic write successful: ${characteristic.value.toString(Charsets.UTF_8)}"
+                    "Characteristic write successful: ${characteristic.value.toString(Charsets.UTF_8)} ${characteristic.uuid}"
                 )
                 if (characteristic.uuid.toString().equals(CHARACTERISTIC_OIDENTITY_UUID)) {
-                    Log.i(TAG,"Performing Seconf Write...")
+                    Log.i(TAG,"Performing Second Write...")
                     secondWriteRequest(gatt.device.address)
                 }
             } else {
@@ -227,7 +251,7 @@ class BLEClient(
         }
     }
 
-    fun startBLEScan() {
+    suspend fun startBLEScan() {
         if(!hasPermission(android.Manifest.permission.BLUETOOTH_SCAN,context)) {
             flow {
                emit(ConnectionResult.Error("BLE Scan Security Exception"))
@@ -241,12 +265,19 @@ class BLEClient(
             }, SCAN_PERIOD)
             scanning = true
 
+            for (keys in activeGattConnections) {
+                keys.value.disconnect()
+                keys.value.close()
+            }
+
+            delay(200)
+
             scanStatus.postValue("Scanning...")
             Log.i(TAG, "Scan Start...")
+            bleServer.stopAdvertise()
             bluetoothLeScanner?.startScan(bleScanCallBack)
         } else {
             scanStatus.postValue("Scan Completed!")
-
             stopBleScan()
         }
     }
@@ -263,10 +294,10 @@ class BLEClient(
             Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_OLOC_UUID")
             if (char.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
 
-                Log.i(TAG,"Writting UserName N DIstance")
-                characteristic.setValue("${SharedPreference.username}#${distz}")
-                bluetoothGatt?.writeCharacteristic(characteristic)
+                Log.i(TAG,"Writting UserName N DIstance ${device.address}")
 
+                characteristic.setValue("${SharedPreference.username}#${distz}")
+                Log.i(TAG,"${getActiveGattConnection(device.address!!)?.writeCharacteristic(characteristic)} - Result of characteristic....")
             }
             Log.i(TAG,"char data---ini: ${characteristic.value}")
         }
@@ -286,13 +317,14 @@ class BLEClient(
                 if(uuidFetched.equals(SERVICE_UUID)) {
 
                     Log.i(TAG,"----------------Found SavMed Device----------------------")
-                    val isExisting = _scannedDevices.value.any { device ->
-                        device.address == result.device.address
-                    }
-
-                    if (!isExisting) {
-                        addDeviceToScannedDeviceList(result, true)
-                    }
+                    addDeviceToScannedDeviceList(result, true)
+//                    val isExisting = _scannedDevices.value.any { device ->
+//                        device.address == result.device.address
+//                    }
+//
+//                    if (!isExisting) {
+//                        addDeviceToScannedDeviceList(result, true)
+//                    }
 
                 } else {
                     Log.i(TAG,"SavMed uuid not found $uuid")
@@ -314,20 +346,21 @@ class BLEClient(
             }
             //Log.i(TAG,"Security exception passed ${bluetoothGatt?.device}")
             bluetoothAdapter.let { adapter ->
-
-                Log.i(TAG,"Going to tryyyyyyyyyyyyyyyy ${bluetoothGatt?.device}")
                 try {
-                    Log.i(TAG,"In tryyyyyyyyyyyy ${bluetoothGatt?.device}")
-
-                    val deviceFound = adapter?.getRemoteDevice(device.address)
+                   val deviceFound = adapter?.getRemoteDevice(device.address)
 
                     Log.i(TAG,"FOund device ${deviceFound?.address}")
 
-                    bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
+                    val newBluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
+
+                    if (newBluetoothGatt != null && device.address != null) {
+                        Log.i(TAG,"Adding Device To Active Gatt Connections!")
+                        addConnection(device.address,newBluetoothGatt)
+                    }
 
                     emit(ConnectionResult.Success("Successful Connection!"))
 
-                    Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
+                    Log.i(TAG,"AFter ConnectGatt ${device.address}")
 
                 } catch (e: IOException) {
 
@@ -338,7 +371,6 @@ class BLEClient(
 
         }.flowOn(Dispatchers.IO)
     }
-
     fun createBroadCastConnection(): Flow<ConnectionResult> {
         Log.i(TAG,"In Broad BLE...")
         return flow {
@@ -349,17 +381,17 @@ class BLEClient(
             bluetoothAdapter.let { adapter ->
 
                 try {
-                    Log.i(TAG,"Trying to Send Broadcast Connection request ${bluetoothGatt?.device}")
-
-                    val deviceFound = adapter?.getRemoteDevice("ff:ff:ff:ff:ff:ff")
-
-                    Log.i(TAG,"Found device ${deviceFound?.address}")
-
-                    bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
+//                    Log.i(TAG,"Trying to Send Broadcast Connection request ${bluetoothGatt?.device}")
+//
+//                    val deviceFound = adapter?.getRemoteDevice("ff:ff:ff:ff:ff:ff")
+//
+//                    Log.i(TAG,"Found device ${deviceFound?.address}")
+//
+//                    bluetoothGatt = deviceFound?.connectGatt(context, false, BLEgattCallBack)
 
                     emit(ConnectionResult.Success("Successful Connection!"))
 
-                    Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
+                   // Log.i(TAG,"AFter ConnectGatt ${bluetoothGatt?.device}")
 
                 } catch (e: IOException) {
 
@@ -373,6 +405,7 @@ class BLEClient(
 
     fun addDeviceToSavMedDevicesList(gatt: BluetoothGatt?, discoveredCharacteristics: List<BluetoothGattCharacteristic>?, name: String? = null) {
 
+        Log.i(TAG,"Got it.......")
         val savMedDevice = BluetoothLESavMedDevices(
             deviceName = gatt?.device?.name ?: "",
             address = gatt?.device?.address,
@@ -394,6 +427,7 @@ class BLEClient(
         }
 
         _scannedDevices.update { devices ->
+            var existingName = -1
             val existingDeviceIndex = devices.indexOfFirst { device ->
                 device.address == gatt?.device?.address
             }
@@ -417,6 +451,7 @@ class BLEClient(
                 }
 
                 if (name != null) {
+
                     val split = name.split('#')
 
                     val updatedDevice = updatedDevices[existingDeviceIndex].copy(
@@ -431,6 +466,9 @@ class BLEClient(
                 val updatedDevice = updatedDevices[existingDeviceIndex]
                 updatedDevices.removeAt(existingDeviceIndex)
                 updatedDevices.add(0, updatedDevice)
+//                if (existingName != -1) {
+//                    updatedDevices.removeAt(existingName)
+//                }
 
                 // Log the updated devices list
                 updatedDevices.forEach {
@@ -477,13 +515,18 @@ class BLEClient(
         scanning = false
         bluetoothLeScanner?.stopScan(bleScanCallBack)
 
-        Log.i(TAG,"DATa in gattt ${bluetoothGatt?.device?.address} ${bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)}")
-
-        if (bluetoothGatt != null) {
-            Log.i(TAG,"Closing Gatttttt")
-            bluetoothGatt!!.disconnect()
-            bluetoothGatt!!.close()
+        if (bleServer.advertisingState != true) {
+            Log.i(TAG,"Advertising Starting")
+            bleServer.startAdvertise()
+        } else {
+            Log.i(TAG,"Advertise ALready Started...")
         }
+
+//        if (bluetoothGatt != null) {
+//            Log.i(TAG,"Closing Gatttttt")
+//            bluetoothGatt!!.disconnect()
+//            bluetoothGatt!!.close()
+//        }
         val scannedDevices = _scannedDevices.value
         for (device in scannedDevices) {
 
@@ -495,7 +538,7 @@ class BLEClient(
 
                 if (connectionState == BluetoothProfile.STATE_CONNECTED) {
                     Log.i(TAG,"in COnnetced!!! already")
-                    bluetoothGatt?.discoverServices()
+                    getActiveGattConnection(device.address!!)?.discoverServices()
                 } else if (connectionState == BluetoothProfile.STATE_DISCONNECTED) {
                     coroutineScope.launch {
                         Log.i(TAG, "In COnnection Coroutine..")
@@ -513,7 +556,7 @@ class BLEClient(
                                     Log.e(TAG, connectionResult.message)
                                 }
 
-                                else -> {}
+                                else -> { }
                             }
                         }
                     }
@@ -522,8 +565,8 @@ class BLEClient(
         }
     }
 
-    fun getSupportedGattService(): List<BluetoothGattService?>? {
-        return bluetoothGatt?.services
+    fun getSupportedGattService(gatt: BluetoothGatt): List<BluetoothGattService?>? {
+        return gatt.services
     }
 
     fun calculateDistance(rssi: Int, rssiAt1Meter: Int = -50, pathLossExponent: Double = 2.0): Double {
@@ -537,17 +580,18 @@ class BLEClient(
     }
 
     fun secondWriteRequest(deviceAddress: String) {
+
+        val lat = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4, java.math.RoundingMode.HALF_UP)?.toDouble()
+        val lon = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4,java.math.RoundingMode.HALF_UP)?.toDouble()
         Log.i(TAG,"in sec write....")
         val scannedDevices = _scannedDevices.value
         for (device in scannedDevices) {
             if (device.address == deviceAddress) {
                 for (char in device.characteristics ?: emptyList()) {
                     if (char.uuid.toString().equals(CHARACTERISTIC_OLOC_UUID)) {
-                        Log.i(TAG,"Writting Location at ${char.uuid.toString()} ${CHARACTERISTIC_OLOC_UUID}")
                         if (coreContext.isCoreAvailable()) {
-                            char.setValue("${coreContext.onLocationEvent["latitude"]}#${coreContext.onLocationEvent["longitude"]}")
-                            Log.i(TAG,"${bluetoothGatt?.device} in write loc...")
-                            bluetoothGatt?.writeCharacteristic(char)
+                            char.setValue("${lat}#${lon}")
+                            Log.i(TAG,"I am Doing Lat Lon Write [${lat}#${lon}] [${getActiveGattConnection(deviceAddress)?.writeCharacteristic(char)}]")
                         }
                     }
                 }
@@ -555,4 +599,63 @@ class BLEClient(
         }
     }
 
+    fun BluetoothManager.disconnect(address: String) {
+        val device = bluetoothAdapter.getRemoteDevice(address)
+
+        if (device != null) {
+            val connectionState = getConnectionState(device,BluetoothProfile.GATT)
+            if (connectionState == BluetoothProfile.STATE_CONNECTED) {
+                val gatt = getActiveGattConnection(device.address)
+                if (gatt != null) {
+                    gatt.disconnect()
+                    gatt.close()
+                }
+            }
+        }
+    }
+
+    fun readLocationCharacteristic(gatt: BluetoothGatt) {
+        val char = gatt.getService(UUID.fromString(SERVICE_UUID))
+            .getCharacteristic(UUID.fromString(CHARACTERISTIC_USER_LOC_UUID))
+
+        Log.i(TAG,"is char null? ${char.uuid} ${CHARACTERISTIC_USER_LOC_UUID} ${char.properties}")
+        Log.i(TAG,"Performing Location Read: -> [${gatt.readCharacteristic(char)}]")
+    }
+
+    fun addDiscoveredLocation(gatt: BluetoothGatt,loc: String) {
+
+        Log.i(TAG,"in loc disxxxx")
+
+        val data = loc.split('#')
+        _scannedDevices.update { devices ->
+
+            val updatedDevices = devices.toMutableList()
+
+            val existing = updatedDevices.indexOfFirst { device ->
+                device.address == gatt.device.address
+            }
+
+            val updatedDevice = updatedDevices[existing].copy(
+                latLon = LocationChar(
+                    lat = data[0].toDouble(),
+                    lon = data[1].toDouble()
+                )
+            )
+            locationReadComplete.postValue(true)
+            updatedDevices[existing] = updatedDevice
+            updatedDevices
+        }
+    }
+
+    fun addConnection(device: String,gatt: BluetoothGatt) {
+        activeGattConnections[device] = gatt
+    }
+
+    fun removeConnection(device: String) {
+        activeGattConnections.remove(device)
+    }
+
+    fun getActiveGattConnection(device: String): BluetoothGatt? {
+        return activeGattConnections.get(device)
+    }
 }

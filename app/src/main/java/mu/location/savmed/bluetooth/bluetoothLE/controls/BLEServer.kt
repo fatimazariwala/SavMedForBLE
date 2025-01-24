@@ -2,6 +2,7 @@ package mu.location.savmed.bluetooth.bluetoothLE.controls
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
@@ -18,11 +19,13 @@ import android.bluetooth.le.AdvertisingSetParameters
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.annotation.UiThread
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +44,9 @@ import mu.location.savmed.MainActivity
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.BroadCast.BluetoothBroadcastReceiver
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+import mu.location.savmed.bluetooth.bluetoothLE.models.LocationChar
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.models.CoreContext
 import mu.location.savmed.models.CoreContext.Companion
@@ -50,7 +55,7 @@ import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
 import java.util.UUID
 
-//@SuppressLint("MissingPermission")
+@SuppressLint("MissingPermission")
 class BLEServer(
    val context: Context
 ) {
@@ -64,12 +69,25 @@ class BLEServer(
         const val CHARACTERISTIC_OLOC_UUID = "98765432-4321-6789-4321-087654321000"
     }
 
+    val advertiser = bluetoothAdapter?.bluetoothLeAdvertiser
+
     val messageReceivedFromBLE = MutableLiveData<writeMessage>()
+
+    var advertisingState = false
 
     private var coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var advertiseData: AdvertiseData ?= null
+    private var extraAdvertiseData: AdvertiseData ?= null
     var isPrevMessage = true
+
+    val bluetoothBroadcastReceiver = BluetoothBroadcastReceiver { isBluetoothON ->
+        if (advertisingState == false) {
+            Log.i(TAG,"Starting Advertise again...")
+            setUpBle()
+            startAdvertise()
+        }
+    }
 
     lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
     lateinit var bluetoothGattServer: BluetoothGattServer
@@ -79,7 +97,7 @@ class BLEServer(
         get() = _bleServerEvent
 
     private lateinit var service: BluetoothGattService
-    private lateinit var charFrom: String
+    var charFrom: String ?= ""
 
    // val mesgReciwd = MutableLiveData<String>()
 
@@ -87,23 +105,55 @@ class BLEServer(
     val listOfMessages: StateFlow<List<writeMessage>>
         get() = _listOfMessages.asStateFlow()
 
-    init {
-        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE,context)) {
-            if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
-                setUpBle()
-            } else {
-                Log.e(TAG,"Could not SETup BLE Server Permission Issues!!")
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startAdvertise()
-            } else {
-                Log.i(TAG,"ble advertise not supported")
-            }
-        } else {
-            Log.i(TAG,"Ble adv not granted...")
+
+    val AdvertiseSetCallback = @RequiresApi(Build.VERSION_CODES.O)
+    object : AdvertisingSetCallback() {
+
+        override fun onAdvertisingSetStarted(
+            advertisingSet: AdvertisingSet,
+            txPower: Int,
+            status: Int
+        ) {
+            Log.i(
+                TAG, "onAdvertisingSetStarted(): txPower:" + txPower + " , status: "
+                        + status + advertisingSet.setPeriodicAdvertisingData(extraAdvertiseData)
+            )
+
+            advertisingState = true
+            //advertisingSet.setAdvertisingData(extraAdvertiseData)
         }
 
+        override fun onAdvertisingDataSet(advertisingSet: AdvertisingSet, status: Int) {
+            Log.i(
+                TAG,
+                "onAdvertisingDataSet() :status:$status"
+            )
+        }
+
+        override fun onScanResponseDataSet(advertisingSet: AdvertisingSet, status: Int) {
+            Log.i(
+                TAG,
+                "onScanResponseDataSet(): status:$status"
+            )
+        }
+
+        override fun onAdvertisingSetStopped(advertisingSet: AdvertisingSet) {
+            Log.i(TAG, "onAdvertisingSetStopped():")
+            advertisingState = false
+        }
     }
+
+    val AdvertiseCallback = object : AdvertiseCallback() {
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+            Log.i(TAG, "Advertising started successfully")
+        }
+
+
+        override fun onStartFailure(errorCode: Int) {
+            Log.e(TAG, "Advertising failed to start: $errorCode")
+        }
+    }
+
 
     @SuppressLint("MissingPermission")
     private val gattServerCallback = object : BluetoothGattServerCallback() {
@@ -141,6 +191,7 @@ class BLEServer(
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
             characteristic.setValue(value)
             Log.i(TAG, "Characteristic write request: ${characteristic.uuid} ${String(characteristic.value ?: ByteArray(0))}")
+            Log.i(TAG,"Sending Response to Client ${device.address} [${bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)}]")
 
             coreContext.postOnMainThread {
                 showMessageActivity()
@@ -153,9 +204,31 @@ class BLEServer(
                     ConnectionResult.Success("BLE Write Message Received!")
                 )
             }
-
-            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
         }
+    }
+
+    init {
+        if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE,context)) {
+            if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
+                setUpBle()
+            } else {
+                Log.e(TAG,"Could not SETup BLE Server Permission Issues!!")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startAdvertise()
+            } else {
+                Log.i(TAG,"ble advertise not supported")
+            }
+        } else {
+            Log.i(TAG,"Ble adv not granted...")
+        }
+
+        val filter = IntentFilter().apply {
+            addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        }
+
+        context.registerReceiver(bluetoothBroadcastReceiver,filter)
     }
 
     private fun processWriteRequest(characteristic: BluetoothGattCharacteristic, value: ByteArray) {
@@ -175,8 +248,10 @@ class BLEServer(
             val msg = writeMessage(
                 From = received.getOrElse(0) { defaultFrom },
                 dist = received.getOrElse(1) { defaultDist.toString() }.toDouble(),
-                lat = defaultLat.toString().toDouble(),
-                lon = defaultLon.toString().toDouble()
+                location = LocationChar(
+                    defaultLat,
+                    defaultLon
+                )
             )
 
             charFrom = msg.From
@@ -206,8 +281,10 @@ class BLEServer(
                     val updatedMessages = messages.toMutableList()
 
                     val updatedMessage = updatedMessages[existingIndex].copy(
-                        lat = received.getOrElse(0) {defaultLat.toString()}.toDouble(),
-                        lon = received.getOrElse(1) {defaultLon.toString()}.toDouble()
+                        location = LocationChar(
+                            received.getOrElse(0) {defaultLat.toString()}.toDouble(),
+                            received.getOrElse(1) {defaultLon.toString()}.toDouble()
+                        ),
                     )
 
                     messageReceivedFromBLE.postValue(
@@ -230,7 +307,7 @@ class BLEServer(
     @SuppressLint("MissingPermission")
     fun setUpBle() {
         if (bluetoothAdapter?.bluetoothLeAdvertiser != null) {
-            bluetoothAdapter?.name = "${Build.MODEL},${Build.MANUFACTURER}"
+            bluetoothAdapter?.name = Build.MODEL
             bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser!!
             try {
                 Handler(Looper.getMainLooper()).post {
@@ -267,22 +344,22 @@ class BLEServer(
         if (SharedPreference.username.isNotEmpty()) {
             Log.i(TAG,"Found ${SharedPreference.username} setting it as characteristic params")
             characteristics_username.setValue("${SharedPreference.username}#${Build.MANUFACTURER}")
-
             Log.i(TAG,"In am shared prefValue ${SharedPreference.username}")
+
         } else {
             Log.i(TAG,"Could not set Username in characteristic FOUND EMPTY")
-            characteristics_username.setValue("unknown_savMed_user")
+            characteristics_username.setValue("Saviour#${Build.MANUFACTURER}")
         }
 
         val characteristic_loc = BluetoothGattCharacteristic(
             characteristicUuid_LOC,
-            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
 
         if (coreContext.isCoreAvailable()) {
-            if (!coreContext.onLocationEvent.isEmpty()) {
-                characteristic_loc.setValue("${coreContext.onLocationEvent["latitude"]}#${coreContext.onLocationEvent["longitude"]}")
+            if (!coreContext.onLocationEvent.value.isNullOrEmpty()) {
+                characteristic_loc.setValue("${coreContext.onLocationEvent.value?.get("latitude")}#${coreContext.onLocationEvent.value?.get("longitude")}")
                 Log.i(TAG,"Location Data Updated Empty")
             } else {
                 characteristic_loc.setValue("")
@@ -318,12 +395,16 @@ class BLEServer(
     }
 
     fun updateLocCharacteristics(lat: Double?,lon: Double?) {
+
+        val latRounded = lat?.toBigDecimal()?.setScale(4, java.math.RoundingMode.HALF_UP)?.toDouble()
+        val lonRounded = lon?.toBigDecimal()?.setScale(4,java.math.RoundingMode.HALF_UP)?.toDouble()
+
         if (::service.isInitialized) {
             Log.i(TAG,"in init... ${service.uuid}")
             val characteristic =
                 service.getCharacteristic(UUID.fromString(CHARACTERISTIC_USER_LOC_UUID))
-            characteristic.setValue("${lat ?: 0.0}#${lon ?: 0.0}")
-            Log.i(TAG, "Loc Characteristics Value updated!")
+            characteristic.setValue("${latRounded ?: 0.0}#${lonRounded ?: 0.0}")
+            Log.i(TAG, "Loc Characteristics Value updated! [${String(characteristic.value ?: ByteArray(0))}]")
         } else {
             Log.i(TAG,"Service Variable Not initialized yet")
         }
@@ -331,7 +412,7 @@ class BLEServer(
 
     @SuppressLint("MissingPermission")
     fun startAdvertise() {
-        val advertiser = bluetoothAdapter?.bluetoothLeAdvertiser
+
 
         Log.i(TAG,"Creating BLE Advertising Data...")
         advertiseData = AdvertiseData.Builder()
@@ -339,7 +420,7 @@ class BLEServer(
             .addServiceUuid(ParcelUuid(UUID.fromString(SERVICE_UUID)))
             .build()
 
-        val extraAdvertiseData = AdvertiseData.Builder()
+        extraAdvertiseData = AdvertiseData.Builder()
             .setIncludeDeviceName(true)
             .addServiceUuid(ParcelUuid(UUID.fromString(SERVICE_UUID)))
             .build()
@@ -353,43 +434,11 @@ class BLEServer(
                     .setScannable(true)
                     .setLegacyMode(true)
                     .setConnectable(true)// True by default, but set here as a reminder.
-                    .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+                    .setInterval(AdvertisingSetParameters.INTERVAL_LOW)
                     .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
                     .build()
 
-            val AdvertiseCallback = object : AdvertisingSetCallback() {
-                override fun onAdvertisingSetStarted(
-                    advertisingSet: AdvertisingSet,
-                    txPower: Int,
-                    status: Int
-                ) {
-                    Log.i(
-                        TAG, "onAdvertisingSetStarted(): txPower:" + txPower + " , status: "
-                                + status + advertisingSet.setPeriodicAdvertisingData(extraAdvertiseData)
-                    )
-                   // advertisingSet.setAdvertisingData(extraAdvertiseData)
-
-                }
-
-                override fun onAdvertisingDataSet(advertisingSet: AdvertisingSet, status: Int) {
-                    Log.i(
-                        TAG,
-                        "onAdvertisingDataSet() :status:$status"
-                    )
-                }
-
-                override fun onScanResponseDataSet(advertisingSet: AdvertisingSet, status: Int) {
-                    Log.i(
-                        TAG,
-                        "onScanResponseDataSet(): status:$status"
-                    )
-                }
-
-                override fun onAdvertisingSetStopped(advertisingSet: AdvertisingSet) {
-                    Log.i(TAG, "onAdvertisingSetStopped():")
-                }
-            }
-            advertiser?.startAdvertisingSet(parameters, advertiseData, null, null, null, AdvertiseCallback)
+            advertiser?.startAdvertisingSet(parameters, advertiseData, null, null, null, AdvertiseSetCallback)
         } else {
 
             val settings = AdvertiseSettings.Builder()
@@ -398,18 +447,15 @@ class BLEServer(
                 .setConnectable(true) // True by default
                 .build()
 
-            val AdvertiseCallback = object : AdvertiseCallback() {
-                override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                    Log.i(TAG, "Advertising started successfully")
-                }
-
-
-                override fun onStartFailure(errorCode: Int) {
-                    Log.e(TAG, "Advertising failed to start: $errorCode")
-                }
-            }
-
             advertiser?.startAdvertising(settings, advertiseData,AdvertiseCallback)
+        }
+    }
+
+    fun stopAdvertise() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            advertiser?.stopAdvertisingSet(AdvertiseSetCallback)
+        } else {
+            advertiser?.stopAdvertising(AdvertiseCallback)
         }
     }
 
@@ -424,4 +470,12 @@ class BLEServer(
         context.startActivity(intent)
     }
 
+    fun release() {
+        context.unregisterReceiver(bluetoothBroadcastReceiver)
+    }
+
+    fun refreshAdvertisingState() {
+        stopAdvertise()
+        startAdvertise()
+    }
 }

@@ -84,7 +84,7 @@ class MedicalInfoActivity : AppCompatActivity() {
                 finish()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.medical -> {
+            R.id.locationMap -> {
                 return@OnNavigationItemSelectedListener true
             }
         }
@@ -105,7 +105,7 @@ class MedicalInfoActivity : AppCompatActivity() {
         bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        bottomNav.selectedItemId = R.id.medical
+        bottomNav.selectedItemId = R.id.locationMap
 
         bleServer.messageReceivedFromBLE.observe(this){ result ->
 
@@ -244,6 +244,6 @@ class MedicalInfoActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        bottomNav.selectedItemId = R.id.medical
+        bottomNav.selectedItemId = R.id.locationMap
     }
 }

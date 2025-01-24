@@ -5,17 +5,24 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import mu.location.savmed.CallNavGraphDirections
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ActivityCallBinding
 import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
@@ -31,6 +38,8 @@ class CallActivity : AppCompatActivity() {
     companion object {
         const val TAG = "[Call Activity]"
     }
+
+    val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private lateinit var binding : ActivityCallBinding
     private lateinit var navController : NavController
@@ -66,8 +75,8 @@ class CallActivity : AppCompatActivity() {
                 finish()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.medical -> {
-                startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
+            R.id.locationMap -> {
+                startActivity(Intent(applicationContext, MainActivity::class.java))
                 overridePendingTransition(0, 0)
                 finish()
                 return@OnNavigationItemSelectedListener true
@@ -97,6 +106,12 @@ class CallActivity : AppCompatActivity() {
             ViewModelProvider(this)[ConversationViewModel::class.java]
         }
 
+        bleClient.locationReadComplete.observe(this) { locationRead ->
+            if (locationRead) {
+                    callViewModel.sendNearByUsers()
+            }
+        }
+
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
         navController = navHostFragment.navController
 
@@ -119,6 +134,38 @@ class CallActivity : AppCompatActivity() {
                         remoteSipUri
                     )
                 )
+            }
+        }
+
+        webSocket.join_key.observe(this) { value ->
+            Log.i(TAG,"In join_key libe $value ${callViewModel.enableOutgoingCall}")
+            if (callViewModel.enableOutgoingCall) {
+                Log.i(TAG,"Join Key value: $value")
+                callViewModel.outgoingCall(value)
+            } else {
+                Log.i(TAG,"Outgoing Call NOt Enabled: ${callViewModel.enableOutgoingCall}")
+            }
+        }
+
+        // Websocket initialized in APP class
+        webSocket.isConnected.observe(this) { value ->
+            if (value) {
+                Toast.makeText(this, "Websocket Connection Successfull!", Toast.LENGTH_SHORT).show()
+            }
+//            } else {
+//
+//            }
+
+
+            if (callViewModel.enableOutgoingCall) {
+                Log.i(TAG,"Outgoing call Enabled!")
+                if (value) {
+                    webSocket.initiate()
+                } else {
+                    Toast.makeText(this,"Websocket Connection Failed!",Toast.LENGTH_SHORT).show()
+                    Log.i(TAG,"Websocket Connection Failed Initiating Outgoing Call")
+                    callViewModel.outgoingCall("")
+                }
             }
         }
 

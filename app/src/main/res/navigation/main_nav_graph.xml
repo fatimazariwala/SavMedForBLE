@@ -24,6 +24,9 @@
         <action
             android:id="@+id/action_rippleFragment_to_nearByFragment"
             app:destination="@id/nearByFragment" />
+        <action
+            android:id="@+id/action_rippleFragment_to_mapsFragment"
+            app:destination="@id/mapsFragment" />
     </fragment>
     <fragment
         android:id="@+id/messageListFragment"
@@ -33,6 +36,10 @@
             android:id="@+id/action_messageListFragment_to_nearByFragment"
             app:destination="@id/nearByFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/mapsFragment"
+        android:name="mu.location.savmed.ui.locationing.MapsFragment"
+        android:label="MapsFragment" />
     <!--    <fragment-->
 <!--        android:id="@+id/mapsFragment"-->
 <!--        android:name="mu.location.savmed.ui.locationing.MapsFragment"-->

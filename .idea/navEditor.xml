@@ -403,6 +403,18 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
+                  <entry key="mapsFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="-89" />
+                            <option name="y" value="-82" />
+                          </Point>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
                   <entry key="messageListFragment">
                     <value>
                       <LayoutPositions>
@@ -411,6 +423,15 @@
                             <option name="x" value="136" />
                             <option name="y" value="305" />
                           </Point>
+                        </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_messageListFragment_to_nearByFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
                         </option>
                       </LayoutPositions>
                     </value>
@@ -426,6 +447,11 @@
                         </option>
                         <option name="myPositions">
                           <map>
+                            <entry key="action_nearByFragment_to_messageListFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_nearByFragment_to_rippleFragment">
                               <value>
                                 <LayoutPositions />

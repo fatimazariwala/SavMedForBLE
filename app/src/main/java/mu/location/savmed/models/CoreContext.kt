@@ -21,6 +21,7 @@ import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.corePreferences
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.contacts.ContactsDB
 import mu.location.savmed.contacts.ContactsManager
 import mu.location.savmed.notifications.NotificationsManager
@@ -28,6 +29,8 @@ import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.call.CallActivity
 //import mu.location.savmed.sip.SipActivity
 import mu.location.savmed.ui.call.services.CoreForeground
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel.Companion
 import mu.location.savmed.utils.ActivityMonitor
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.Event
@@ -72,7 +75,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     var isConnectedToAndroidAuto: Boolean = false
 
     val emrContact: MutableList<EmergencyContact> = mutableListOf()
-    val onLocationEvent: HashMap<String, Double> = HashMap()
+    val onLocationEvent = MutableLiveData<HashMap<String, Double>>()
 
     private val activityMonitor = ActivityMonitor()
 
@@ -501,12 +504,27 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
             return
         }
         call.acceptWithParams(params)
+        try {
+            val join_key = params.getCustomHeader("ws_join_key")
+            Log.i(TAG,"Fethced --Join key ${join_key}")
+            if (!join_key.isNullOrEmpty()) {
+                Log.i(TAG,"Fetched Join Key: $join_key")
+                webSocket.join_key.postValue(join_key)
+                webSocket.enableJoin = true
+                webSocket.connect()
+            } else {
+                Log.i(TAG,"Unable to Fetch Join Key")
+            }
+        } catch (e: Exception) {
+            Log.i(TAG,"Error Fetching ws_join_key: ${e.message}")
+        }
     }
 
 
     @WorkerThread
     fun startCall(
-        remoteUri : String
+        remoteUri : String,
+        joinKey: String = ""
     ) {
 
         Log.i("In start call","Call initiation to $remoteUri")
@@ -531,14 +549,17 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
         }
 
-        Log.i("Location fetch","${onLocationEvent["latitude"]},${onLocationEvent["longitude"]}")
+        Log.i("Location fetch","${onLocationEvent.value?.get("latitude")},${onLocationEvent.value?.get("longitude")}")
 
         // We also need a CallParams object
         // Create call params expects a Call object for incoming calls, but for outgoing we must use null safely
         val params = core.createCallParams(null)
         params ?: return // Same for params
-
-        params.addCustomHeader("Emergency","none")
+        Log.i(TAG,"Yooo joinKey: ${joinKey}")
+        if (joinKey != "") {
+            params.addCustomHeader("ws_join_key",joinKey)
+        }
+        //params.addCustomHeader("Emergency","none")
         // We can now configure it
         // Here we ask for no encryption but we could ask for ZRTP/SRTP/DTLS
         params.mediaEncryption = MediaEncryption.None

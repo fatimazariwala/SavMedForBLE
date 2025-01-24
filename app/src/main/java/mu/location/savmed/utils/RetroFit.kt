@@ -1,11 +1,13 @@
 package mu.location.savmed.utils
 
+import mu.location.savmed.bluetooth.bluetoothLE.models.NearByForAPI
 import mu.location.savmed.ui.auth.LoginRequest
 import mu.location.savmed.ui.auth.registrationDetails
 import mu.location.savmed.ui.medical.MedicalInfo
 import mu.location.savmed.models.Users
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
+import mu.location.savmed.ui.locationing.getLiveLocationData
 import mu.location.savmed.ui.locationing.liveLocationData
 import mu.location.savmed.ui.locationing.locationData
 import retrofit2.Call
@@ -25,6 +27,9 @@ interface RetroFit {
     @Headers("Content-Type: application/json")
     @POST("post")
     fun postLiveLocationData(@Body liveLocationData: liveLocationData?) : Call<liveLocationData?>?
+
+    @GET("get")
+    suspend fun getLiveLocForNearBy(@Query("userName") userName: String): Response<List<getLiveLocationData?>>?
 
     @Headers("Content-Type: application/json")
     @POST("posts")
@@ -48,6 +53,13 @@ interface RetroFit {
 
     @GET("get")
     suspend fun getcallUsers(): Response<Users>
+
+    @Headers("Content-Type: application/json")
+    @POST("post")
+    fun postNearByUsers(@Body NearByUsers: NearByForAPI): Call<NearByForAPI?>?
+
+    @GET("get")
+    suspend fun getNearByUsers(@Query("userName") userName: String): Response<List<NearByForAPI>>
 
     @GET("get")
     suspend fun getEmergencyContacts(@Query("userName") userName: String): Response<List<EmergencyContactResponse>>

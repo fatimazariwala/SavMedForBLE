@@ -9,6 +9,9 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
@@ -59,6 +62,8 @@ class ContactViewModel : ViewModel() {
     val saveChangesEvent: MutableLiveData<Event<String>> by lazy {
         MutableLiveData<Event<String>>()
     }
+
+    val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val firstName = MutableLiveData<String>()
     val lastName = MutableLiveData<String>()
@@ -129,17 +134,18 @@ class ContactViewModel : ViewModel() {
             }
         }
 
-//        viewModelScope.launch {
-//            val friendList = coreContext.core.getFriendListByName(ADDRESS_BOOK_FRIEND_LIST)
+//        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)
 //
-//            if (friendList != null) {
-//                for (friend in friendList.friends) {
+//        if (friendList != null) {
+//            for (friend in friendList.friends) {
+//                coroutineScope.launch {
 //                    friend.edit()
 //                    friend.isSubscribesEnabled = true
 //                    friend.done()
 //                }
 //            }
 //        }
+
     }
 
     @UiThread

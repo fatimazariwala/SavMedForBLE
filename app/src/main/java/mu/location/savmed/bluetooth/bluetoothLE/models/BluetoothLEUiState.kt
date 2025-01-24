@@ -1,6 +1,7 @@
 package mu.location.savmed.bluetooth.bluetoothLE.models
 
 import android.bluetooth.BluetoothGattCharacteristic
+import java.sql.Timestamp
 
 data class BluetoothLEScannedDevices(
     var name: String ?= null,
@@ -9,6 +10,7 @@ data class BluetoothLEScannedDevices(
     val address: String ?= null,
     val rssi: String ?= null,
     val dist: Double ?= null,
+    val latLon: LocationChar ?= null,
     var characteristics: List<BluetoothGattCharacteristic>? = null
 )
 
@@ -30,6 +32,17 @@ data class BluetoothLEUiState(
 data class writeMessage(
     val From: String,
     val dist :Double,
-    val lat : Double,
-    val lon : Double
+    val location: LocationChar
+)
+
+data class LocationChar (
+    val lat: Double,
+    val lon: Double
+)
+
+data class NearByForAPI (
+    val em_caller: String,
+    val em_responder: String,
+    val em_responder_location: LocationChar,
+    val event_timestamp: String
 )

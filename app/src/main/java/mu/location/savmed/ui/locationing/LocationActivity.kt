@@ -67,8 +67,8 @@ class LocationActivity : AppCompatActivity() {
 
     fun updateUIVALUES() {
 
-        lat = (coreContext.onLocationEvent["latitude"] ?: 0.0)
-        lon = (coreContext.onLocationEvent["longitude"] ?: 0.0)
+        lat = coreContext.onLocationEvent.value?.get("latitude") ?: 0.0
+        lon = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0
 
         binding.tvLat.text = lat.toString()
         binding.tvLon.text = lon.toString()

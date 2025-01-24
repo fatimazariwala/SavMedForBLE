@@ -15,8 +15,8 @@
         android:icon="@drawable/phone_call"
         android:id="@+id/call" />
     <item
-        android:title="Medical data"
-        android:icon="@drawable/medicaldata"
-        android:id="@+id/medical" />
+        android:title="Maps"
+        android:icon="@drawable/location"
+        android:id="@+id/locationMap" />
 
 </menu>

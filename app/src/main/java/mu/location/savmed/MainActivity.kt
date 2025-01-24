@@ -172,11 +172,9 @@ class MainActivity : AppCompatActivity() {
                 }
                // return@OnNavigationItemSelectedListener true
             }
-            R.id.medical -> {
+            R.id.locationMap -> {
                 if (SharedPreference.username != "") {
-                    startActivity(Intent(applicationContext, MedicalInfoActivity::class.java))
-                    finish()
-                    overridePendingTransition(0, 0)
+                   navController.navigate(R.id.mapsFragment)
                 } else {
                     Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
                 }
@@ -222,6 +220,7 @@ class MainActivity : AppCompatActivity() {
                 DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
                     if (resultz) {
                         Log.i(TAG, "Dialog confirmed")
+                        navController.navigate(R.id.action_rippleFragment_to_mapsFragment)
 
 //                        if (message != null) {
 //                            val lat = message.lat.toDouble()

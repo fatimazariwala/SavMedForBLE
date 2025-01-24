@@ -13,13 +13,17 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.isWebSocketInitialized
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.utils.RetrofitInstance
 import retrofit2.Call
 import retrofit2.Callback
@@ -33,6 +37,11 @@ class DefaultLocationClient(
     private val context: Context,
     private val client: FusedLocationProviderClient
     )  {
+
+    companion object {
+        const val TAG = "[Default Location Client]"
+    }
+    val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @SuppressLint("SimpleDateFormat")
     fun getDateTime() : String {
@@ -71,52 +80,72 @@ class DefaultLocationClient(
                         super.onLocationResult(result)
                         result.locations.lastOrNull()?.let { location ->
                             launch {
-                                coreContext.core.defaultAccount?.setCustomHeader("latitude",location.latitude.toString())
-                                coreContext.core.defaultAccount?.setCustomHeader("longitude",location.longitude.toString())
+//                                coreContext.core.defaultAccount?.setCustomHeader("latitude",location.latitude.toString())
+//                                coreContext.core.defaultAccount?.setCustomHeader("longitude",location.longitude.toString())
+                                Log.i(TAG,"Value of OnLocation Event: ${coreContext.onLocationEvent.value?.get("latitude")}")
+                                if (coreContext.onLocationEvent.value?.get("latitude") != location.longitude || coreContext.onLocationEvent.value?.get("longitude") != location.latitude) {
+                                    if (isWebSocketInitialized() && webSocket.isConnected.value == true) {
+                                        webSocket.sendLocationMessage(
+                                            lat = location.latitude,
+                                            lon = location.longitude
+                                        )
+                                    } else {
+                                        if (!isWebSocketInitialized()) {
+                                            Log.i(
+                                                TAG,
+                                                "Skipping WebSocket SEnd, Websocket not init: ${isWebSocketInitialized()}"
+                                            )
+                                        } else if (webSocket.isConnected.value != true) {
+                                            Log.i(TAG, "Websocket Not connected: ${webSocket.isConnected.value}")
+                                        }
 
-                                GlobalScope.launch(Dispatchers.IO) {
-                                    val gson = Gson();
-                                    val LocJson = gson.toJson(liveLocationData(
-                                        location.latitude, location.longitude,
-                                        0, "", "live", getDateTime(),
-                                        coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
-                                    ));
-                                    Log.i("[Location Client]", LocJson);
-
-                                    val call: Call<liveLocationData?>? = try {
-
-                                        RetrofitInstance.apiLiveLocation.postLiveLocationData(liveLocationData(
+                                    }
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        val gson = Gson();
+                                        val LocJson = gson.toJson(liveLocationData(
                                             location.latitude, location.longitude,
                                             0, "", "live", getDateTime(),
                                             coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
-                                        ))
+                                        ));
+                                        Log.i("[Location Client]", LocJson);
 
-                                    } catch (e: IOException) {
-                                        Log.i("[Location Client]", e.message.toString())
-                                        return@launch
-                                    } catch (e: HttpException) {
-                                        Log.i("[Location Client]", e.message.toString())
-                                        return@launch
+                                        val call: Call<liveLocationData?>? = try {
+
+                                            RetrofitInstance.apiLiveLocation.postLiveLocationData(liveLocationData(
+                                                location.latitude, location.longitude,
+                                                0, "", "live", getDateTime(),
+                                                coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
+                                            ))
+
+                                        } catch (e: IOException) {
+                                            Log.i("[Location Client]", e.message.toString())
+                                            return@launch
+                                        } catch (e: HttpException) {
+                                            Log.i("[Location Client]", e.message.toString())
+                                            return@launch
+                                        }
+
+                                        call?.enqueue(object: Callback<liveLocationData?> {
+                                            override fun onResponse(
+                                                call: Call<liveLocationData?>,
+                                                response: Response<liveLocationData?>
+                                            ) {
+                                                val responz = response.body()
+                                                Log.i("[Location Client]","Response : ${responz?.lat},${responz?.userName},${responz?.sqlStatus}")
+                                            }
+
+                                            override fun onFailure(
+                                                call: Call<liveLocationData?>,
+                                                t: Throwable
+                                            ) {
+                                                Log.i("[Location Client]","Response : Failure ${t.message}")
+                                            }
+                                        })
                                     }
-
-                                    call?.enqueue(object: Callback<liveLocationData?> {
-                                        override fun onResponse(
-                                            call: Call<liveLocationData?>,
-                                            response: Response<liveLocationData?>
-                                        ) {
-                                            val responz = response.body()
-                                            Log.i("[Location Client]","Response : ${responz?.lat},${responz?.userName},${responz?.sqlStatus}")
-                                        }
-
-                                        override fun onFailure(
-                                            call: Call<liveLocationData?>,
-                                            t: Throwable
-                                        ) {
-                                            Log.i("[Location Client]","Response : Failure ${t.message}")
-                                        }
-                                    })
+                                    send(location)
+                                } else {
+                                    Log.i(TAG,"Location Value Not Changed!")
                                 }
-                                send(location)
                             }
                         }
                     }

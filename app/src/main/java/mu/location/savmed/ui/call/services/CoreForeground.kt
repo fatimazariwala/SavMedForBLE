@@ -19,6 +19,7 @@ import org.linphone.core.tools.Log
 
 class CoreForeground : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val latLonHashMap: HashMap<String,Double> = HashMap()
 
     companion object {
         private const val TAG = "[Core Keep Alive Third Party Accounts Service]"
@@ -48,9 +49,12 @@ class CoreForeground : Service() {
             .getLocationUpdates(10000L)
             .catch { e -> e.printStackTrace() }
             .onEach { location ->
-                if (coreContext.onLocationEvent["latitude"] != location.latitude || coreContext.onLocationEvent["longitude"] != location.longitude) {
-                    coreContext.onLocationEvent["latitude"] = location.latitude
-                    coreContext.onLocationEvent["longitude"] = location.longitude
+                if (coreContext.onLocationEvent.value?.get("latitude") != location.latitude || coreContext.onLocationEvent.value?.get("longitude") != location.longitude) {
+                    latLonHashMap["latitude"] = location.latitude
+                    latLonHashMap["longitude"] = location.longitude
+
+                    coreContext.onLocationEvent.postValue(latLonHashMap)
+
                     Log.i(TAG,"Updating Location Characteristics")
                     bleServer.updateLocCharacteristics(location.latitude,location.longitude)
                 }

@@ -65,7 +65,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         emrContactAdapter =  ContactAdapter(
             favourite = true,
-            onCallClick = { sipUri -> context?.let { currentCallViewModel.outgoingCall(sipUri, it) } },
+            onCallClick = { sipUri -> context?.let { currentCallViewModel.initializeWebSocket(sipUri, it) } },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
             onInfoClick = { friend,refKey -> checkOutForProfilePage(friend,refKey) },
             onRemoveClick = { model -> contactCallViewModel.deleteContact(model) }
@@ -73,7 +73,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         contactAdapter = ContactAdapter(
             favourite = false,
-            onCallClick = { sipUri -> context?.let { currentCallViewModel.outgoingCall(sipUri, it) } },
+            onCallClick = { sipUri -> context?.let { currentCallViewModel.initializeWebSocket(sipUri, it) } },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
             onInfoClick = {friend,refKey -> checkOutForProfilePage(friend,refKey)},
             onRemoveClick = {model -> contactCallViewModel.deleteContact(model)}
@@ -140,17 +140,19 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         binding.addContacts.setOnClickListener() {
             Log.i(TAG,"Add CLicked!")
-            contactCallViewModel.findFriendByRefKey("")
-            findNavController().navigate(R.id.action_contactFragment_to_newOrEditContactFragment)
+//            contactCallViewModel.findFriendByRefKey("")
+            findNavController().navigate(ContactFragmentDirections.actionContactFragmentToNewOrEditContactFragment(
+                ""
+            ))
         }
 
         contactCallViewModel.listz.observe(viewLifecycleOwner) {
             contactAdapter.submitList(it)
 
-            if (binding.contactsRecyclerView.adapter != contactAdapter) {
-                Log.i(TAG,"in bind adapter to contact...")
+//            if (binding.contactsRecyclerView.adapter != contactAdapter) {
+//                Log.i(TAG,"in bind adapter to contact...")
                 binding.contactsRecyclerView.adapter = contactAdapter
-            }
+            //}
 
             Log.i(TAG,"Contacts List Updated with [${it.size}] [${contactAdapter.itemCount}] data")
             contactCallViewModel.fetchInProgress.value = false

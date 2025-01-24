@@ -22,7 +22,9 @@ dependencyResolutionManagement {
             content {
                 includeGroup("org.linphone")
             }
+            //url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
         }
+
     }
 }
 

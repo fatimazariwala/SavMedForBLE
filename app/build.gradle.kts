@@ -8,9 +8,15 @@ plugins {
     //alias(libs.android-extensions)
 }
 
+//kotlin {
+//    sourceSets.all {
+//        languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+//    }
+//}
+
 android {
     namespace = "mu.location.savmed"
-    compileSdk = 34
+    compileSdk = 35
 
     viewBinding {
         enable = true
@@ -89,6 +95,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.emoji2.emojipicker)
    implementation(libs.play.services.maps)
+    implementation(libs.androidx.coordinatorlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -100,6 +107,7 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.coil.svg)
     implementation(libs.coil.video)
+    implementation ("com.google.maps.android:android-maps-utils:3.4.0")
 
     implementation ("androidx.databinding:databinding-runtime:7.3.1")
     //implementation("com.nbsp:library:1.8")
@@ -119,6 +127,8 @@ dependencies {
     implementation (libs.circleimageview)
     implementation(libs.google.flexbox)
     implementation(libs.linphone)
+//    implementation(libs.anko.sdk15)
+    implementation(libs.klaxon)
     // Testing Navigation
     androidTestImplementation ("androidx.navigation:navigation-testing:2.8.3")
 

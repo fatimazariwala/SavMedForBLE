@@ -94,9 +94,9 @@ class ChatListFragment : Fragment() {
 
             // Wait for adapter to have items before setting it in the RecyclerView,
             // otherwise scroll position isn't retained
-            if (binding.conversationsList.adapter != adapter) {
-                binding.conversationsList.adapter = adapter
-            }
+           // if (binding.conversationsList.adapter != adapter) {
+            binding.conversationsList.adapter = adapter
+          //  }
 
             Log.i("$TAG Conversations list ready with [${it.size}] items")
             listViewModel.fetchInProgress.value = false

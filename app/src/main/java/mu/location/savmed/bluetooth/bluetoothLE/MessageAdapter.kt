@@ -25,7 +25,7 @@ class MessageAdapter(private val messages: List<writeMessage>) :
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val message = messages[position]
         holder.fromText.text = "${message.From}"
-        holder.messageText.text = "SOS Indication approx ${message.dist}m away\nCoordinates: [${message.lat},${message.lon}]"
+        holder.messageText.text = "SOS Indication approx ${message.dist}m away\nCoordinates: [${message.location.lat},${message.location.lat}]"
     }
 
     override fun getItemCount(): Int = messages.size

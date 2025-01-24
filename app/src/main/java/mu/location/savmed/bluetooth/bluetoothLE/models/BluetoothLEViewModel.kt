@@ -71,7 +71,9 @@ class BluetoothLEViewModel constructor(): ViewModel() {
 
 
     fun startScan() {
-        bleClient.startBLEScan()
+        viewModelScope.launch {
+            bleClient.startBLEScan()
+        }
     }
 
     fun sendBroadCastConnection() {

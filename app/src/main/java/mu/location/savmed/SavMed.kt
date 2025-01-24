@@ -15,6 +15,7 @@ import mu.location.savmed.models.CoreContext
 import mu.location.savmed.models.CorePreferences
 import mu.location.savmed.utils.ActivityMonitor
 import mu.location.savmed.utils.SharedPreference
+import mu.location.savmed.websocket.WsDetails
 import org.linphone.core.ConsolidatedPresence
 import org.linphone.core.Factory
 import org.linphone.core.LogCollectionState
@@ -32,8 +33,7 @@ class SavMed : Application() {
         @SuppressLint("StaticFieldLeak")
         lateinit var coreContext: CoreContext
 
-//        lateinit var bluetoothController: BluetoothController
-//        lateinit var bluetoothLEController: BluetoothLEController
+        lateinit var webSocket: WsDetails
 
         @SuppressLint("StaticFieldLeak")
         lateinit var bleServer: BLEServer
@@ -46,7 +46,10 @@ class SavMed : Application() {
             bluetoothManager.adapter
         }
 
-       // lateinit var sharedMainViewModel: SharedMainViewModel
+        fun isWebSocketInitialized(): Boolean {
+            return ::webSocket.isInitialized
+        }
+
     }
 
     private val activityMonitor = ActivityMonitor()
@@ -77,25 +80,18 @@ class SavMed : Application() {
 
         Log.i("$TAG Report Core preferences initialized")
 
+        webSocket = WsDetails(context)
+
         bluetoothManager = getSystemService(BluetoothManager::class.java)
         bleServer = BLEServer(context)
         bleClient = BLEClient(context)
 //        Compatibility.setupAppStartupListener(context)
-//
-//        bluetoothController = AndroidBluetoothController(applicationContext)
 
-        //Below lin eis comented out on 24/11/2024 at 5:22
-        //Error was getBluetoothLeAdvertiser(...) must not be null
-       // bluetoothLEController = BLEControllerFactory.createBluetoothController(applicationContext)
         coreContext = CoreContext(context)
         coreContext.start()
 
         DynamicColors.applyToActivitiesIfAvailable(this)
     }
-//    val coreContext: CoreContext by lazy {
-//        ViewModelProvider.AndroidViewModelFactory.getInstance(this)
-//            .create(CoreContext::class.java)
-//    }
 
     override fun onTerminate() {
         super.onTerminate()

@@ -17,6 +17,7 @@ import mu.location.savmed.MainActivity
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
 import mu.location.savmed.databinding.FragmentRippleBinding
 import mu.location.savmed.ui.auth.LoginActivity
@@ -62,8 +63,12 @@ class RippleFragment : Fragment() {
         Log.i(TAG,"In shared pref going")
 
         binding.sos.setOnClickListener() {
-            bleClient.startBLEScan()
-            callViewModel.informEmrContacts()
+//            bleServer.stopAdvertise()
+//            bleServer.startAdvertise()
+            webSocket.enableJoin = true
+            webSocket.join_key.postValue("KXt1UyfT5J_40omg")
+            webSocket.connect()
+            //callViewModel.informEmrContacts()
         }
         binding.idBtnLogOut.setOnClickListener {
 
@@ -116,9 +121,8 @@ class RippleFragment : Fragment() {
     }
 
     fun getLocation(context: Context) {
-        val lat = coreContext.onLocationEvent["latitude"]
-        val lon = coreContext.onLocationEvent["longitude"]
-
+        val lat = coreContext.onLocationEvent.value?.get("latitude")
+        val lon = coreContext.onLocationEvent.value?.get("longitude")
         Log.i(TAG,"I am in setLoc $lat $lon")
 
         if (lon != null && lat != null) {

@@ -12,8 +12,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
+import mu.location.savmed.bluetooth.bluetoothLE.models.LocationChar
+import mu.location.savmed.bluetooth.bluetoothLE.models.NearByForAPI
 import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.contacts.models.EndSwitchCallBack
@@ -22,6 +27,8 @@ import mu.location.savmed.ui.locationing.locationData
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
+import mu.location.savmed.utils.SharedPreference
+import mu.location.savmed.websocket.WsDetails
 import org.linphone.core.AudioDevice
 import org.linphone.core.Call
 import org.linphone.core.CallListenerStub
@@ -34,6 +41,9 @@ import retrofit2.Callback
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitchCallBack?=  null) : ViewModel() {
 
@@ -41,8 +51,11 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         private const val TAG = "[Current Call ViewModel]"
     }
 
-  //  val core = coreContext.core
+    var outGoingCallDetails: OutGoingCallDetails? = null
+    var enableOutgoingCall = false
+
     var chatRoom: ChatRoom? = null
+    var lastNearByAddress: String ?= null
 
     val displayedName = MutableLiveData<String>()
 
@@ -421,12 +434,29 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         }
     }
 
-    fun outgoingCall(remoteUri: String,fragmentContext: Context,frag: String?=null) {
+    fun initializeWebSocket(remoteUri: String,fragmentContext: Context,frag: String?=null) {
+        enableOutgoingCall = true
+        webSocket.connect()
+        outGoingCallDetails = OutGoingCallDetails(
+            remoteUri = remoteUri,
+            fragmentContext = fragmentContext,
+            frag = frag
+        )
+    }
 
-        val lat = coreContext.onLocationEvent["latitude"] ?: 0.0
-        val lon = coreContext.onLocationEvent["longitude"] ?: 0.0
+    fun outgoingCall(join_key: String) {
+        Log.i(TAG,"Receibed Jin_key: ${join_key}")
+        enableOutgoingCall = false
 
-        val geocoder = Geocoder(fragmentContext)
+        val remoteUri = outGoingCallDetails?.remoteUri
+        val fragmentContext = outGoingCallDetails?.fragmentContext
+        val frag = outGoingCallDetails?.frag
+        outGoingCallDetails = null
+
+        val lat = coreContext.onLocationEvent.value?.get("latitude")?: 0.0
+        val lon = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0
+        lastNearByAddress = null
+        val geocoder = Geocoder(fragmentContext!!)
         try {
             val addresses = geocoder.getFromLocation(lat, lon, 1)
             address = addresses!![0].getAddressLine(0)
@@ -437,6 +467,10 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         Log.i(TAG,"in outside forgggggg")
 
         informEmrContacts()
+       // sendNearByUsers()
+        viewModelScope.launch {
+            bleClient.startBLEScan()
+        }
 
         viewModelScope.launch {
 
@@ -446,9 +480,14 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                     lat,
                     lon,
                     0,
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                        Locale("en", "IN")
+                    ).format(
+                        Date()
+                    ),
                     address,
                     coreContext.core.defaultAccount?.params?.identityAddress?.username.toString(),
-                    remoteUri.trim(),
+                    remoteUri!!.trim(),
                 )
             );
             android.util.Log.i(ContactFragment.TAG, LocJson);
@@ -457,11 +496,16 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
                 RetrofitInstance.apiLocation.postLocationData(
                     locationData(
-                        coreContext.onLocationEvent["latitude"] ?: 0.0,
-                        coreContext.onLocationEvent["longitude"] ?: 0.0,
-                        0, address,
-                        coreContext.core.defaultAccount?.params?.identityAddress?.username.toString(),
-                        remoteUri.trim(),
+                        Latitude = coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,
+                        Longitude = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0,
+                        sqlStatus = 0,Address = address,
+                        CalleruserName = coreContext.core.defaultAccount?.params?.identityAddress?.username.toString(),
+                        ReceiveruserName = remoteUri!!.trim(),
+                        timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                            Locale("en", "IN")
+                        ).format(
+                            Date()
+                        )
                     )
                 )
 
@@ -491,9 +535,12 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             })
         }
         coreContext.postOnCoreThread {
-            coreContext.startCall(remoteUri.trim())
+            coreContext.startCall(
+                remoteUri!!.trim(),
+                if (join_key != "") join_key else ""
+            )
         }
-        displayedName.postValue(remoteUri.trim())
+        displayedName.postValue(remoteUri!!.trim())
 
         if (frag == "nearByFrag") {
             startCallActivity(context = fragmentContext)
@@ -521,7 +568,66 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                 chatMessage.send()
             }
         }
+    }
 
+    fun sendNearByUsers() {
+
+        val nearBySavMedUsers = bleClient.scannedDevices.value
+        val user = nearBySavMedUsers.findLast { device ->
+            device.isSavMed
+        }
+        if (user != null && user.address != lastNearByAddress) {
+            Log.i(TAG,"User Not Null ${user.address}")
+               // if (user.isSavMed) {
+                    Log.i(TAG,"Jsnskjwjiowejio... [${user.name}]..[${user.latLon?.lat}]. [${user.latLon?.lon}].")
+                    val call: retrofit2.Call<NearByForAPI?>? = try {
+
+                        Log.i(TAG,"Sending Request....")
+                        RetrofitInstance.apiNearBy.postNearByUsers(
+                            NearByForAPI (
+                                em_responder = user.name ?: "Saved_User",
+                                em_caller = SharedPreference.username,
+                                em_responder_location = user.latLon ?: LocationChar(0.0,0.0),
+                                event_timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                                    Locale("en", "IN")
+                                ).format(
+                                    Date()
+                                )
+                            )
+                        )
+
+                    } catch (e: IOException) {
+                        Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
+                        return
+                    } catch (e: HttpException) {
+                        Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
+                        return
+                    }
+
+                    call?.enqueue(object: Callback<NearByForAPI?> {
+                        override fun onResponse(
+                            call: retrofit2.Call<NearByForAPI?>,
+                            response: Response<NearByForAPI?>
+                        ) {
+                            Log.i(TAG,"Response From NearBy: [${response.body()}] [${response.code()}]")
+                            if (response.code() == 200 && response.isSuccessful) {
+                                lastNearByAddress = user.address
+                            } else {
+                                Log.i(TAG,"Response Failure")
+                            }
+                        }
+
+                        override fun onFailure(
+                            call: retrofit2.Call<NearByForAPI?>,
+                            t: Throwable
+                        ) {
+                            Log.i(TAG,"Response : Failure -----${t.message}")
+                        }
+                    })
+               // }
+        } else {
+            Log.i(TAG,"User Already Present... [${user?.address}] [$lastNearByAddress]")
+        }
     }
 
 

@@ -106,7 +106,7 @@ class NearByFragment : Fragment() {
 
         scannedDeviceAdapter = NearByAdapter(
             recyclerView = binding.rvMain,
-            onCallCLick = { sipUri -> callViewModel.outgoingCall(sipUri,requireContext(),"nearByFrag") },
+            onCallCLick = { sipUri -> callViewModel.initializeWebSocket(sipUri,requireContext(),"nearByFrag") },
             onMessageClick = { device -> bluetoothLEViewModel.SendMessage(device) }
         )
 
@@ -197,9 +197,7 @@ class NearByFragment : Fragment() {
                 is ConnectionResult.Error -> {
                     Toast.makeText(requireContext(),result.message,Toast.LENGTH_LONG).show()
                 }
-                else -> {
-
-                }
+                else -> { }
             }
         }
         .catch { throwable ->
@@ -259,8 +257,9 @@ class NearByFragment : Fragment() {
                     }
 
                 } else {
-                    Toast.makeText(requireContext(), "Already Scanning...", Toast.LENGTH_SHORT)
-                        .show()
+                    enableBluetoothLauncher.launch(
+                        Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    )
                 }
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

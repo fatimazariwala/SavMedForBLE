@@ -32,7 +32,7 @@ data class BluetoothLEUiState(
 data class writeMessage(
     val From: String,
     val dist :Double,
-    val location: LocationChar
+    val joinKey: String
 )
 
 data class LocationChar (

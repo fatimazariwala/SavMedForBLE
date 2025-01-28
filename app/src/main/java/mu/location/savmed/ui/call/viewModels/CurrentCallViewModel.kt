@@ -199,6 +199,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                 Log.i("$TAG No Calls Found")
             }
         }
+        enableOutgoingCall = false
     }
 
     @UiThread
@@ -214,6 +215,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                 Log.e("$TAG No call found in incoming state, can't answer any!")
             }
         }
+
     }
 
     @UiThread
@@ -436,12 +438,17 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
     fun initializeWebSocket(remoteUri: String,fragmentContext: Context,frag: String?=null) {
         enableOutgoingCall = true
-        webSocket.connect()
         outGoingCallDetails = OutGoingCallDetails(
             remoteUri = remoteUri,
             fragmentContext = fragmentContext,
             frag = frag
         )
+        if (webSocket.isConnected.value != true) {
+            webSocket.connect()
+        } else {
+            outgoingCall("")
+        }
+
     }
 
     fun outgoingCall(join_key: String) {

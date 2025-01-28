@@ -39,6 +39,7 @@ import mu.location.savmed.SavMed.Companion.bleServer
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
@@ -220,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                 DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
                     if (resultz) {
                         Log.i(TAG, "Dialog confirmed")
-                        navController.navigate(R.id.action_rippleFragment_to_mapsFragment)
+                        navController.navigate(R.id.mapsFragment)
 
 //                        if (message != null) {
 //                            val lat = message.lat.toDouble()
@@ -322,6 +323,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeMessages() {
+
+        webSocket.errorMessage.observe(this) { msg ->
+            if (msg == "KEY_NOT_FOUND") {
+                Toast.makeText(this,"Invalid Rejoin Key!",Toast.LENGTH_SHORT).show()
+            }
+        }
 
         bleServer.bleServerEvent.onEach { result ->
 

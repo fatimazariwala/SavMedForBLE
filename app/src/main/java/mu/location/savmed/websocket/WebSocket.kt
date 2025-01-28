@@ -11,3 +11,8 @@ data class peerDetails (
     var longitude: Double,
 )
 
+data class error (
+    val type: String,
+    val message : String,
+)
+

@@ -11,7 +11,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.WorkerThread
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.ColorUtils
@@ -86,6 +89,8 @@ class MapsFragment : Fragment() {
     lateinit var nearByUserLoc: LatLng
     var nearByUserMarker: Marker ?= null
     var nearByUserCircle: Circle?= null
+
+    lateinit var manualJoinKey: EditText
 
     private val callback = OnMapReadyCallback { googleMap ->
 
@@ -208,6 +213,7 @@ class MapsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         mapFragment = (childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?)!!
 
+        manualJoinKey = view.findViewById(R.id.join_key_manul)
         currentUserBitMap = vectorToBitmap(requireContext(),R.drawable.map_current_user_marker)
         zoomLevel = 3f
 
@@ -220,6 +226,42 @@ class MapsFragment : Fragment() {
 //            }
 //        }
 
+        webSocket.isConnected.observe(viewLifecycleOwner) { stat ->
+            if (stat) {
+                view.findViewById<TextView>(R.id.ws_conn_text).text = "Live Locationing at Key: ${webSocket.join_key.value}"
+                view.findViewById<Button>(R.id.ws_diconn_stat).visibility = View.VISIBLE
+                view.findViewById<Button>(R.id.ws_conn_stat).visibility = View.GONE
+                manualJoinKey.visibility = View.GONE
+            } else {
+                view.findViewById<TextView>(R.id.ws_conn_text).text = "Connect Using Key if you are a responder:"
+                view.findViewById<Button>(R.id.ws_conn_stat).visibility = View.VISIBLE
+                view.findViewById<Button>(R.id.ws_diconn_stat).visibility = View.GONE
+                manualJoinKey.visibility = View.VISIBLE
+                Toast.makeText(requireContext(),"Live Locationing Stopped!",Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        view.findViewById<Button>(R.id.ws_diconn_stat).setOnClickListener() {
+            Toast.makeText(requireContext(),"Live Locationing Stopping...!",Toast.LENGTH_SHORT).show()
+            webSocket.disConnect()
+        }
+
+        view.findViewById<Button>(R.id.ws_conn_stat).setOnClickListener() {
+
+            if (!manualJoinKey.text.isNullOrEmpty()) {
+                webSocket.join_key.postValue(manualJoinKey.text.toString())
+                webSocket.enableJoin = true
+                webSocket.connect()
+            } else {
+                Toast.makeText(requireContext(),"Please Provide Join Key!",Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        webSocket.join_key.observe(viewLifecycleOwner) { key ->
+            if (!key.isNullOrEmpty()) {
+                view.findViewById<TextView>(R.id.ws_conn_text).text = "Live Locationing at Key: ${key}"
+            }
+        }
         coreContext.onLocationEvent.observe(viewLifecycleOwner) { location ->
             if (
                 location.get("latitude") != 0.0 && location.get("longitude") != 0.0 &&
@@ -261,6 +303,11 @@ class MapsFragment : Fragment() {
             } else {
                 Log.i(TAG,"Peer data not chaned!!!!")
             }
+        }
+
+        view.findViewById<Button>(R.id.direct).setOnClickListener() {
+            val url = getURL(currentUserLoc, nearByUserLoc)
+            GetDirection(url).execute()
         }
 
         toggleProgressLayoutVisibility(view)
@@ -406,13 +453,13 @@ class MapsFragment : Fragment() {
                 val respObj = Gson().fromJson(data,MapData::class.java)
                 val path =  ArrayList<LatLng>()
 
-                coreContext.postOnMainThread {
-                    view?.findViewById<TextView>(R.id.direction)?.text = respObj.routes[0].legs[0].steps[0].maneuver
-                    view?.findViewById<TextView>(R.id.stepCount)?.text = respObj.routes[0].legs[0].steps.size.toString()
-                    view?.findViewById<TextView>(R.id.endDest)?.text = respObj.routes[0].legs[0].distance.text
-
-                    Log.i(TAG,"Direction: ${respObj.routes[0].legs[0].steps[0].maneuver},StepCount: ${respObj.routes[0].legs[0].steps.size.toString()},EndDest: ${respObj.routes[0].legs[0].distance.text}")
-                }
+//                coreContext.postOnMainThread {
+////                    view?.findViewById<TextView>(R.id.direction)?.text = respObj.routes[0].legs[0].steps[0].maneuver
+////                    view?.findViewById<TextView>(R.id.stepCount)?.text = respObj.routes[0].legs[0].steps.size.toString()
+//                   // view?.findViewById<TextView>(R.id.endDest)?.text = respObj.routes[0].legs[0].distance.text
+//
+//                    Log.i(TAG,"Direction: ${respObj.routes[0].legs[0].steps[0].maneuver},StepCount: ${respObj.routes[0].legs[0].steps.size.toString()},EndDest: ${respObj.routes[0].legs[0].distance.text}")
+//                }
 
                 for (data in respObj.routes) {
                     Log.i(TAG,"ResObj: ${data.legs}")
@@ -450,7 +497,8 @@ class MapsFragment : Fragment() {
     }
 
 
-    private fun toggleProgressLayoutVisibility (view: View){
+    private fun toggleProgressLayoutVisibility (view: View) {
+
 //        if (latitudezz == 0.0 && longitudezz == 0.0) {
 //            view.findViewById<TextView>(R.id.content_text).visibility = View.VISIBLE
 //            view.findViewById<View>(R.id.dim_overlay).visibility = View.VISIBLE
@@ -460,5 +508,6 @@ class MapsFragment : Fragment() {
 //            view.findViewById<View>(R.id.dim_overlay).visibility = View.GONE
 //            view.findViewById<ProgressBar>(R.id.loading_spinner).visibility = View.GONE
 //        }
+
     }
 }

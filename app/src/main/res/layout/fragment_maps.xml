@@ -14,6 +14,7 @@
         tools:context="mu.location.savmed.ui.locationing.MapsFragment" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="#EDEAEA">
@@ -42,15 +43,76 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.512" />
 
-        <TextView
-            android:id="@+id/endDest"
+        <Button
+            android:id="@+id/direct"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="End Destination"
+            android:text="Directions"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/stepCount"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_below="@+id/constraintLayout"
+        android:layout_marginTop="3dp"
+        android:background="@color/green_main_300">
+
+        <TextView
+            android:id="@+id/ws_conn_text"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:text="Connect With Join Key:"
+            android:textSize="15dp"
+            android:textStyle="bold"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/ws_conn_stat"
+            app:layout_constraintHorizontal_bias="0.029"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.466" />
+
+        <Button
+            android:id="@+id/ws_diconn_stat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Diconnect"
+            android:textSize="10dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/ws_conn_stat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect"
+            android:textSize="10dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <EditText
+            android:id="@+id/join_key_manul"
+            android:background="@color/white"
+            android:layout_width="150dp"
+            android:layout_height="18dp"
+            android:textSize="15dp"
+            android:ems="10"
+            android:inputType="text"
+            android:textColor="@color/black"
+            android:text=""
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/ws_conn_stat"
+            app:layout_constraintStart_toEndOf="@+id/ws_conn_text"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </RelativeLayout>

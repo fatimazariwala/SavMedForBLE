@@ -66,7 +66,7 @@ class RippleFragment : Fragment() {
 //            bleServer.stopAdvertise()
 //            bleServer.startAdvertise()
             webSocket.enableJoin = true
-            webSocket.join_key.postValue("KXt1UyfT5J_40omg")
+            webSocket.join_key.postValue("8qkWUHanqiPrlK1Q")
             webSocket.connect()
             //callViewModel.informEmrContacts()
         }

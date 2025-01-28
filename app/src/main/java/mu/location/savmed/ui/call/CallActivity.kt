@@ -153,7 +153,7 @@ class CallActivity : AppCompatActivity() {
                 Toast.makeText(this, "Websocket Connection Successfull!", Toast.LENGTH_SHORT).show()
             }
 //            } else {
-//
+//                Toast.makeText(this,"Websocket Connection Disconnected!",Toast.LENGTH_SHORT).show()
 //            }
 
 

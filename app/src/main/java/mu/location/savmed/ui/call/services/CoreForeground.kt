@@ -56,7 +56,7 @@ class CoreForeground : Service() {
                     coreContext.onLocationEvent.postValue(latLonHashMap)
 
                     Log.i(TAG,"Updating Location Characteristics")
-                    bleServer.updateLocCharacteristics(location.latitude,location.longitude)
+                   // bleServer.updateLocCharacteristics(location.latitude,location.longitude)
                 }
             }
             .launchIn(serviceScope)

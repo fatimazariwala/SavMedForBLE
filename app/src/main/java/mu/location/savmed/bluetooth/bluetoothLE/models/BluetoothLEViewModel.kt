@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment.Companion
@@ -99,8 +100,11 @@ class BluetoothLEViewModel constructor(): ViewModel() {
     }
 
     fun SendMessage(device: BluetoothLEScannedDevices) {
-        Log.i(TAG,"Tryynnaa sneddd....")
+        Log.i(TAG,"Tryynnaa sneddd..${webSocket.isConnected.value}..")
         bleClient.writeCharacteristic(device,"")
+        if (webSocket.isConnected.value == false) {
+            webSocket.connect()
+        }
     }
 
     private fun Flow<ConnectionResult>.listen(): Job {

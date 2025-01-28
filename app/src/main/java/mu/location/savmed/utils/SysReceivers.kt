@@ -19,3 +19,10 @@ class BootCompletedReceiver : BroadcastReceiver() {
         }
     }
 }
+
+//class NetworkChangeReceiver: BroadcastReceiver() {
+//
+//    override fun onReceive(context: Context?, intent: Intent?) {
+//        if (intent?.action == Intent. android.net.conn.CONNECTIVITY_CHANGE)
+//    }
+//}

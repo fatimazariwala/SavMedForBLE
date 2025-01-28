@@ -18,9 +18,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
+import mu.location.savmed.SavMed
 import mu.location.savmed.SavMed.Companion.coreContext
 //import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.corePreferences
+import mu.location.savmed.SavMed.Companion.isWebSocketInitialized
 import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.contacts.ContactsDB
 import mu.location.savmed.contacts.ContactsManager
@@ -128,6 +130,17 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                 // in RC file if Core isn't ON
                 onCoreStarted()
             }
+        }
+
+        override fun onNetworkReachable(core: Core, reachable: Boolean) {
+            super.onNetworkReachable(core, reachable)
+            if (isWebSocketInitialized()) {
+                if (webSocket.isDisconnectDueToNetworkChange) {
+                    SavMed.Companion.webSocket.connect()
+                }
+            }
+            Log.i(TAG,"Network State: ${reachable}")
+
         }
 
         override fun onConfiguringStatus(core: Core, status: ConfiguringState?, message: String?) {
@@ -497,19 +510,15 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     fun answerCall(call: Call) {
         org.linphone.core.tools.Log.i("$TAG Answering call ${call.remoteAddress}")
         val params = core.createCallParams(call)
-        call.accept()
-        if (params == null) {
-            org.linphone.core.tools.Log.w("$TAG Answering call without params!")
-            call.accept()
-            return
-        }
-        call.acceptWithParams(params)
         try {
-            val join_key = params.getCustomHeader("ws_join_key")
-            Log.i(TAG,"Fethced --Join key ${join_key}")
-            if (!join_key.isNullOrEmpty()) {
-                Log.i(TAG,"Fetched Join Key: $join_key")
-                webSocket.join_key.postValue(join_key)
+            val joinKey = call.remoteParams?.getCustomHeader("ws_join_key")
+            Log.i(TAG,"Fethced --Join key ${call.remoteAddress.asStringUriOnly()} ${joinKey}")
+            for (cu in params?.customContents?.toList() ?: emptyList()) {
+                Log.i(TAG,"CUSSSS ${cu.getCustomHeader("ws_join_key")}")
+            }
+            if (!joinKey.isNullOrEmpty()) {
+                Log.i(TAG,"Fetched Join Key: $joinKey")
+                webSocket.join_key.postValue(joinKey)
                 webSocket.enableJoin = true
                 webSocket.connect()
             } else {
@@ -518,6 +527,13 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
         } catch (e: Exception) {
             Log.i(TAG,"Error Fetching ws_join_key: ${e.message}")
         }
+        call.accept()
+        if (params == null) {
+            org.linphone.core.tools.Log.w("$TAG Answering call without params!")
+            call.accept()
+            return
+        }
+        call.acceptWithParams(params)
     }
 
 

@@ -13,9 +13,11 @@ import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
@@ -37,9 +39,8 @@ import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_JOIN_KEY_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_OIDENTITY_UUID
-import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_OLOC_UUID
-import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USER_LOC_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USER_NAME_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.SERVICE_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
@@ -171,20 +172,14 @@ class BLEClient(
                             Log.i(TAG,"${gatt.readCharacteristic(characteristic)} - Reading CHar......")
                             discoveredCharacteristics.add(characteristic)
 
-                        } else if (char_uuid.equals(CHARACTERISTIC_USER_LOC_UUID)) {
-
-                            Log.i(TAG, "Characteristics with Location Found!!")
-                            //gatt?.readCharacteristic(characteristic)
-                            discoveredCharacteristics.add(characteristic)
-
                         } else if (char_uuid.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
 
                             Log.i(TAG, "Characteristics with Others Identity Found!!")
                             discoveredCharacteristics.add(characteristic)
 
-                        } else if (char_uuid.equals(CHARACTERISTIC_OLOC_UUID)) {
+                        } else if (char_uuid.equals(CHARACTERISTIC_JOIN_KEY_UUID)) {
 
-                            Log.i(TAG, "Characteristics with Others Location Found!!")
+                            Log.i(TAG, "Characteristics with Join Found!!")
                             discoveredCharacteristics.add(characteristic)
                         }
                     }
@@ -215,14 +210,7 @@ class BLEClient(
                     Log.i(TAG,"In char found!!!")
                     addDeviceToSavMedDevicesList(gatt, null, valueString)
 
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        readLocationCharacteristic(gatt)
-                    },500)
-
                     //readLocationCharacteristic(gatt)
-                }
-                if (char.equals(CHARACTERISTIC_USER_LOC_UUID)) {
-                    addDiscoveredLocation(gatt,valueString)
                 }
 
             } else {
@@ -243,7 +231,7 @@ class BLEClient(
                 )
                 if (characteristic.uuid.toString().equals(CHARACTERISTIC_OIDENTITY_UUID)) {
                     Log.i(TAG,"Performing Second Write...")
-                    secondWriteRequest(gatt.device.address)
+                    //secondWriteRequest(gatt.device.address)
                 }
             } else {
                 Log.e(TAG, "Characteristic write failed with status: $status")
@@ -291,7 +279,7 @@ class BLEClient(
 
             val char = characteristic.uuid.toString()
 
-            Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_OLOC_UUID")
+            Log.i(TAG,"CAHrxxxx $char $CHARACTERISTIC_JOIN_KEY_UUID")
             if (char.equals(CHARACTERISTIC_OIDENTITY_UUID)) {
 
                 Log.i(TAG,"Writting UserName N DIstance ${device.address}")
@@ -579,21 +567,40 @@ class BLEClient(
         _savMedDevices.update { emptyList() }
     }
 
-    fun secondWriteRequest(deviceAddress: String) {
+//    fun secondWriteRequest(deviceAddress: String) {
+//
+//        val lat = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4, java.math.RoundingMode.HALF_UP)?.toDouble()
+//        val lon = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4,java.math.RoundingMode.HALF_UP)?.toDouble()
+//        Log.i(TAG,"in sec write....")
+//        val scannedDevices = _scannedDevices.value
+//        for (device in scannedDevices) {
+//            if (device.address == deviceAddress) {
+//                for (char in device.characteristics ?: emptyList()) {
+//                    if (char.uuid.toString().equals(CHARACTERISTIC_OLOC_UUID)) {
+//                        if (coreContext.isCoreAvailable()) {
+//                            char.setValue("${lat}#${lon}")
+//                            Log.i(TAG,"I am Doing Lat Lon Write [${lat}#${lon}] [${getActiveGattConnection(deviceAddress)?.writeCharacteristic(char)}]")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-        val lat = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4, java.math.RoundingMode.HALF_UP)?.toDouble()
-        val lon = coreContext.onLocationEvent.value?.get("latitude")?.toBigDecimal()?.setScale(4,java.math.RoundingMode.HALF_UP)?.toDouble()
-        Log.i(TAG,"in sec write....")
+    fun sendJoinKey(joinKey: String) {
+        Log.i(TAG,"Sending JOin key ${joinKey}")
         val scannedDevices = _scannedDevices.value
-        for (device in scannedDevices) {
-            if (device.address == deviceAddress) {
-                for (char in device.characteristics ?: emptyList()) {
-                    if (char.uuid.toString().equals(CHARACTERISTIC_OLOC_UUID)) {
-                        if (coreContext.isCoreAvailable()) {
-                            char.setValue("${lat}#${lon}")
-                            Log.i(TAG,"I am Doing Lat Lon Write [${lat}#${lon}] [${getActiveGattConnection(deviceAddress)?.writeCharacteristic(char)}]")
-                        }
-                    }
+        for (conn in activeGattConnections) {
+            val found = scannedDevices.find { bluetoothLEScannedDevices ->
+                bluetoothLEScannedDevices.address == conn.key
+            }
+
+            for (char in found?.characteristics ?: emptyList()) {
+                if (char.uuid.toString() == CHARACTERISTIC_JOIN_KEY_UUID) {
+                    char.setValue(joinKey)
+
+                    Log.i(TAG,"Performing Write: ${conn.value.writeCharacteristic(char)} ")
+
                 }
             }
         }
@@ -613,14 +620,14 @@ class BLEClient(
             }
         }
     }
-
-    fun readLocationCharacteristic(gatt: BluetoothGatt) {
-        val char = gatt.getService(UUID.fromString(SERVICE_UUID))
-            .getCharacteristic(UUID.fromString(CHARACTERISTIC_USER_LOC_UUID))
-
-        Log.i(TAG,"is char null? ${char.uuid} ${CHARACTERISTIC_USER_LOC_UUID} ${char.properties}")
-        Log.i(TAG,"Performing Location Read: -> [${gatt.readCharacteristic(char)}]")
-    }
+//
+//    fun readLocationCharacteristic(gatt: BluetoothGatt) {
+//        val char = gatt.getService(UUID.fromString(SERVICE_UUID))
+//            .getCharacteristic(UUID.fromString(CHARACTERISTIC_USER_LOC_UUID))
+//
+//        Log.i(TAG,"is char null? ${char.uuid} ${CHARACTERISTIC_USER_LOC_UUID} ${char.properties}")
+//        Log.i(TAG,"Performing Location Read: -> [${gatt.readCharacteristic(char)}]")
+//    }
 
     fun addDiscoveredLocation(gatt: BluetoothGatt,loc: String) {
 

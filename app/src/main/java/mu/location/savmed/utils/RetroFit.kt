@@ -7,13 +7,12 @@ import mu.location.savmed.ui.medical.MedicalInfo
 import mu.location.savmed.models.Users
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
-import mu.location.savmed.ui.locationing.getLiveLocationData
-import mu.location.savmed.ui.locationing.liveLocationData
-import mu.location.savmed.ui.locationing.locationData
+import mu.location.savmed.ui.locationing.models.getLiveLocationData
+import mu.location.savmed.ui.locationing.models.liveLocationData
+import mu.location.savmed.ui.locationing.models.locationData
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST

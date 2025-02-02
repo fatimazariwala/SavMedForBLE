@@ -12,7 +12,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.coreContext
@@ -23,12 +22,11 @@ import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.contacts.models.EndSwitchCallBack
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
-import mu.location.savmed.ui.locationing.locationData
+import mu.location.savmed.ui.locationing.models.locationData
 import mu.location.savmed.utils.Event
 import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
 import mu.location.savmed.utils.SharedPreference
-import mu.location.savmed.websocket.WsDetails
 import org.linphone.core.AudioDevice
 import org.linphone.core.Call
 import org.linphone.core.CallListenerStub
@@ -448,7 +446,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         } else {
             outgoingCall("")
         }
-
     }
 
     fun outgoingCall(join_key: String) {
@@ -473,7 +470,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
         Log.i(TAG,"in outside forgggggg")
 
-        informEmrContacts()
+        //informEmrContacts()
        // sendNearByUsers()
         viewModelScope.launch {
             bleClient.startBLEScan()
@@ -507,7 +504,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                         Longitude = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0,
                         sqlStatus = 0,Address = address,
                         CalleruserName = coreContext.core.defaultAccount?.params?.identityAddress?.username.toString(),
-                        ReceiveruserName = remoteUri!!.trim(),
+                        ReceiveruserName = remoteUri.trim(),
                         timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
                             Locale("en", "IN")
                         ).format(
@@ -565,7 +562,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
      fun informEmrContacts() {
         val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
         for (contact in friendList ?: emptyArray()) {
-
             if (contact.starred) {
                 createBasicChatRoom(contact.address?.username.toString())
                 val message =
@@ -602,7 +598,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                                 )
                             )
                         )
-
                     } catch (e: IOException) {
                         Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
                         return

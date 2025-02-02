@@ -510,6 +510,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     fun answerCall(call: Call) {
         org.linphone.core.tools.Log.i("$TAG Answering call ${call.remoteAddress}")
         val params = core.createCallParams(call)
+        webSocket.disConnect()
         try {
             val joinKey = call.remoteParams?.getCustomHeader("ws_join_key")
             Log.i(TAG,"Fethced --Join key ${call.remoteAddress.asStringUriOnly()} ${joinKey}")

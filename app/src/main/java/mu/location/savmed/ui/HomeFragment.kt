@@ -30,7 +30,6 @@ import mu.location.savmed.databinding.FragmentHomeBinding
 import mu.location.savmed.ui.auth.LoginActivity
 import mu.location.savmed.ui.auth.RegistrationActivity
 import mu.location.savmed.ui.call.CallActivity
-import mu.location.savmed.ui.locationing.LocationActivity
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.ActivityHolder
 import mu.location.savmed.utils.SharedPreference
@@ -129,11 +128,11 @@ class HomeFragment : Fragment() {
         }
 
         // Location Activity Button
-        binding.locationBtn.setOnClickListener() {
-            val intent = Intent(requireActivity(), LocationActivity::class.java)
-            startActivity(intent)
-            requireActivity().finish();
-        }
+//        binding.locationBtn.setOnClickListener() {
+//            val intent = Intent(requireActivity(), LocationActivity::class.java)
+//            startActivity(intent)
+//            requireActivity().finish();
+//        }
 
         // Logout Button
         binding.idBtnLogOut.setOnClickListener {

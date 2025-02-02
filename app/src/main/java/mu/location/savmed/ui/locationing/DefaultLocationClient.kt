@@ -15,7 +15,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +23,7 @@ import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.isWebSocketInitialized
 import mu.location.savmed.SavMed.Companion.webSocket
+import mu.location.savmed.ui.locationing.models.liveLocationData
 import mu.location.savmed.utils.RetrofitInstance
 import retrofit2.Call
 import retrofit2.Callback
@@ -102,20 +102,24 @@ class DefaultLocationClient(
                                     }
                                     coroutineScope.launch(Dispatchers.IO) {
                                         val gson = Gson();
-                                        val LocJson = gson.toJson(liveLocationData(
+                                        val LocJson = gson.toJson(
+                                            liveLocationData(
                                             location.latitude, location.longitude,
                                             0, "", "live", getDateTime(),
                                             coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
-                                        ));
+                                        )
+                                        );
                                         Log.i("[Location Client]", LocJson);
 
                                         val call: Call<liveLocationData?>? = try {
 
-                                            RetrofitInstance.apiLiveLocation.postLiveLocationData(liveLocationData(
+                                            RetrofitInstance.apiLiveLocation.postLiveLocationData(
+                                                liveLocationData(
                                                 location.latitude, location.longitude,
                                                 0, "", "live", getDateTime(),
                                                 coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
-                                            ))
+                                            )
+                                            )
 
                                         } catch (e: IOException) {
                                             Log.i("[Location Client]", e.message.toString())

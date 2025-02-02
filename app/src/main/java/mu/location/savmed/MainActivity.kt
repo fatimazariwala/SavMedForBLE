@@ -46,7 +46,7 @@ import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.RippleFragment.Companion
 import mu.location.savmed.ui.call.CallActivity
-import mu.location.savmed.ui.locationing.LocationActivity
+import mu.location.savmed.ui.locationing.DataProcessing.TaskLoadedCallback
 import mu.location.savmed.ui.locationing.MapsFragment
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.ActivityHolder
@@ -54,7 +54,7 @@ import mu.location.savmed.utils.DialogUtils
 import mu.location.savmed.utils.SettingsManager
 import mu.location.savmed.utils.SharedPreference
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
 
     companion object {
         const val TAG = "[Main Activity]"

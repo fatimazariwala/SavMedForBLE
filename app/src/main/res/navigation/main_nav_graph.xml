@@ -40,7 +40,74 @@
         android:id="@+id/mapsFragment"
         android:name="mu.location.savmed.ui.locationing.MapsFragment"
         android:label="MapsFragment" />
-    <!--    <fragment-->
+    <fragment
+        android:id="@+id/contactFragment"
+        android:name="mu.location.savmed.ui.contacts.fragments.ContactFragment"
+        android:label="ContactFragment" >
+        <action
+            android:id="@+id/action_contactFragment_to_contactProfilePage"
+            app:destination="@id/contactProfilePage" />
+        <action
+            android:id="@+id/action_contactFragment_to_chatListFragment"
+            app:destination="@id/chatListFragment" />
+        <action
+            android:id="@+id/action_contactFragment_to_newOrEditContactFragment"
+            app:destination="@id/newOrEditContactFragment" />
+        <action
+            android:id="@+id/action_contactFragment_to_conversationFragment"
+            app:destination="@id/conversationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/newOrEditContactFragment"
+        android:name="mu.location.savmed.ui.contacts.fragments.NewOrEditContactFragment"
+        android:label="NewOrEditContactFragment" >
+    <argument
+        android:name="friendRefKey"
+        app:argType="string"/>
+        <action
+            android:id="@+id/action_newOrEditContactFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/conversationFragment"
+        android:name="mu.location.savmed.ui.chat.ConversationFragment"
+        android:label="ConversationFragment">
+    <argument
+        android:name="localSipUri"
+        app:argType="string"/>
+    <argument
+        android:name="remoteSipUri"
+        app:argType="string"/>
+        <action
+            android:id="@+id/action_conversationFragment_to_contactProfilePage"
+            app:destination="@id/contactProfilePage" />
+        <action
+            android:id="@+id/action_conversationFragment_to_chatListFragment"
+            app:destination="@id/chatListFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/contactProfilePage"
+        android:name="mu.location.savmed.ui.contacts.fragments.ContactProfilePage"
+        android:label="ContactProfilePage" >
+    <argument
+        android:name="friendRefKey"
+        app:argType="string"/>
+    <action
+        android:id="@+id/action_contactProfilePage_to_newOrEditContactFragment"
+        app:destination="@id/newOrEditContactFragment" />
+    <action
+        android:id="@+id/action_contactProfilePage_to_conversationFragment"
+        app:destination="@id/conversationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/chatListFragment"
+        android:name="mu.location.savmed.ui.chat.ChatListFragment"
+        android:label="ChatListPage" >
+        <action
+            android:id="@+id/action_chatListFragment_to_conversationFragment"
+            app:destination="@id/conversationFragment" />
+    </fragment>
+        <!--    <fragment-->
 <!--        android:id="@+id/mapsFragment"-->
 <!--        android:name="mu.location.savmed.ui.locationing.MapsFragment"-->
 <!--        android:label="fragment_maps"-->

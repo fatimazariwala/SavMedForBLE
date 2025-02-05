@@ -46,8 +46,13 @@ import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.ui.RippleFragment
 import mu.location.savmed.ui.RippleFragment.Companion
 import mu.location.savmed.ui.call.CallActivity
+import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.chat.viewModel.AbstractConversationViewModel
+import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
 import mu.location.savmed.ui.locationing.DataProcessing.TaskLoadedCallback
 import mu.location.savmed.ui.locationing.MapsFragment
+import mu.location.savmed.ui.main.SharedMainViewModel
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.ActivityHolder
 import mu.location.savmed.utils.DialogUtils
@@ -66,6 +71,13 @@ class MainActivity : AppCompatActivity(){
 
     private var permissionsChecked = false
     var currentSelectedItemId : Int = 0
+
+    private lateinit var callViewModel: CurrentCallViewModel
+    private lateinit var callViewModelFactory: CurrentCallViewModelFactory
+
+    private lateinit var conversationViewModel: AbstractConversationViewModel
+
+    private lateinit var sharedMainViewModel: SharedMainViewModel
 
     lateinit var bottomNav: BottomNavigationView
 
@@ -157,9 +169,7 @@ class MainActivity : AppCompatActivity(){
             }
             R.id.call -> {
                 if (SharedPreference.username != "") {
-                    startActivity(Intent(applicationContext, CallActivity::class.java))
-                    overridePendingTransition(0, 0)
-                    finish()
+                    navController.navigate(R.id.contactFragment)
                 } else {
                     Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
                 }
@@ -171,7 +181,7 @@ class MainActivity : AppCompatActivity(){
                 }  else {
                     Toast.makeText(this,"Please Login!",Toast.LENGTH_SHORT).show()
                 }
-               // return@OnNavigationItemSelectedListener true
+                return@OnNavigationItemSelectedListener true
             }
             R.id.locationMap -> {
                 if (SharedPreference.username != "") {
@@ -318,6 +328,17 @@ class MainActivity : AppCompatActivity(){
 
     private fun initializeViewModels() {
 
+        callViewModel = run {
+            ViewModelProvider(this)[CurrentCallViewModel::class.java]
+        }
+
+        sharedMainViewModel = run {
+            ViewModelProvider(this)[SharedMainViewModel::class.java]
+        }
+
+        conversationViewModel = run {
+            ViewModelProvider(this)[ConversationViewModel::class.java]
+        }
         // Below was comente dout on 24/11/2024 at 5:30
        // bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
     }

@@ -102,8 +102,8 @@ class NewOrEditContactFragment : Fragment() {
 
         observeContactEvents()
 
-        val refKey = args.refKey
-        if (args.refKey != "") {
+        val refKey = args.friendRefKey
+        if (args.friendRefKey != "") {
             contactViewModel.findFriendByRefKey(refKey)
         }
 

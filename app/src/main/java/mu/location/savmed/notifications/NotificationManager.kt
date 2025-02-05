@@ -41,7 +41,6 @@ import mu.location.savmed.contacts.getPerson
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.call.services.CoreForeground
 import mu.location.savmed.ui.call.services.CoreInCallService
-import mu.location.savmed.ui.contacts.fragments.NewOrEditContactFragmentDirections
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.FileUtils
 import mu.location.savmed.utils.SavMedUtils

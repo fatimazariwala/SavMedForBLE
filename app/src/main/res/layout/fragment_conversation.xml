@@ -21,10 +21,9 @@
         <variable
             name="send_message_viewModel"
             type="mu.location.savmed.ui.chat.viewModel.SendInMessageViewModel" />
-
-<!--        <variable-->
-<!--            name="backClickListener"-->
-<!--            type="View.OnClickListener" />-->
+        <variable
+            name="backClickListener"
+            type="View.OnClickListener" />
 <!--        <variable-->
 <!--            name="goToInfoClickListener"-->
 <!--            type="View.OnClickListener" />-->
@@ -101,6 +100,7 @@
                     android:visibility="visible"
                     android:src="@drawable/caret_left"
                     android:contentDescription="@string/content_description_go_back_icon"
+                    android:onClick="@{backClickListener}"
                     app:tint="?attr/color_main1_500"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"/>

@@ -16,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import mu.location.savmed.CallNavGraphDirections
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.bleClient
@@ -55,37 +54,6 @@ class CallActivity : AppCompatActivity() {
 
     var chatNotificationArgs = false
 
-    private val navListener = BottomNavigationView.OnNavigationItemSelectedListener {
-
-        when (it.itemId) {
-            R.id.main_home -> {
-                val i = Intent(applicationContext,MainActivity::class.java)
-                i.putExtra("frag",1)
-                startActivity(i)
-                finish()
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.call -> {
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.nearBy -> {
-                val i = Intent(applicationContext,MainActivity::class.java)
-                i.putExtra("frag",2)
-                startActivity(i)
-                finish()
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.locationMap -> {
-                startActivity(Intent(applicationContext, MainActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
-                return@OnNavigationItemSelectedListener true
-            }
-        }
-
-        true
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -115,27 +83,23 @@ class CallActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
         navController = navHostFragment.navController
 
-        bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
-        bottomNav.setOnNavigationItemSelectedListener(navListener)
-        bottomNav.selectedItemId = R.id.call
-
-        chatNotificationArgs = intent.getBooleanExtra("Chat",false)
-        Log.i(TAG,"From ChatNotif $chatNotificationArgs")
-        if (chatNotificationArgs == true) {
-            val localSipUri = intent.getStringExtra("LocalSipUri")
-            val remoteSipUri = intent.getStringExtra("RemoteSipUri")
-
-            Log.i(TAG,"Notification Found LocalSipUri: [${localSipUri}] RemoteSipUri: [${remoteSipUri}]")
-
-            if (localSipUri != null && remoteSipUri != null) {
-                navController.navigate(
-                    CallNavGraphDirections.actionGlobalConversationFragment(
-                        localSipUri,
-                        remoteSipUri
-                    )
-                )
-            }
-        }
+//        chatNotificationArgs = intent.getBooleanExtra("Chat",false)
+//        Log.i(TAG,"From ChatNotif $chatNotificationArgs")
+//        if (chatNotificationArgs == true) {
+//            val localSipUri = intent.getStringExtra("LocalSipUri")
+//            val remoteSipUri = intent.getStringExtra("RemoteSipUri")
+//
+//            Log.i(TAG,"Notification Found LocalSipUri: [${localSipUri}] RemoteSipUri: [${remoteSipUri}]")
+//
+//            if (localSipUri != null && remoteSipUri != null) {
+//                navController.navigate(
+//                    CallNavGraphDirections.actionGlobalConversationFragment(
+//                        localSipUri,
+//                        remoteSipUri
+//                    )
+//                )
+//            }
+//        }
 
         webSocket.join_key.observe(this) { value ->
             Log.i(TAG,"In join_key libe $value ${callViewModel.enableOutgoingCall}")
@@ -233,11 +197,6 @@ class CallActivity : AppCompatActivity() {
                 finish()
             }
         })
-    }
-
-    override fun onResume() {
-        super.onResume()
-        bottomNav.selectedItemId = R.id.call
     }
 
 }

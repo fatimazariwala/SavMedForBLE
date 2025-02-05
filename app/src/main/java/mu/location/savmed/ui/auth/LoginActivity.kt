@@ -152,7 +152,7 @@ class LoginActivity : AppCompatActivity() {
                                     }
 
                                     val account = core.createAccount(params)
-                                    params.pushNotificationAllowed = true
+                                    params.pushNotificationAllowed = false
                                     params.isRtpBundleEnabled = false
 
                                     core.addAuthInfo(authInfo)

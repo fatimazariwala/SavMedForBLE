@@ -48,11 +48,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SavMed"
         tools:targetApi="31" >
-        <service
-            android:name=".websocket.WebSocket"
-            android:enabled="true"
-            android:exported="true" >
-        </service>
+
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 

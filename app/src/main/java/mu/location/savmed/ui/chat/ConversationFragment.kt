@@ -239,7 +239,6 @@ class ConversationFragment : Fragment() {
             localSipUri = localeSipUri,
             remoteSipUri = remoteSipUri
         )
-
        // Log.i(TAG,"outaaa ----")
 
         sendInMessageViewModel.textToSend.observe(viewLifecycleOwner) { text ->
@@ -340,6 +339,10 @@ class ConversationFragment : Fragment() {
 
         binding.setScrollToBottomClickListener {
             scrollToFirstUnreadMessageOrBottom()
+        }
+
+        binding.setBackClickListener {
+            findNavController().popBackStack()
         }
 
         binding.setOpenFilePickerClickListener {

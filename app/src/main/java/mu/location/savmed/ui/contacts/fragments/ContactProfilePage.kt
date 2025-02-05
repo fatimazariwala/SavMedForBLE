@@ -87,8 +87,8 @@ class ContactProfilePage : Fragment() {
             }
         }
 
-        if (args.freindRefKey != "") {
-            contactProfileViewModel.findContact(sharedMainViewModel.displayedFriend,args.freindRefKey)
+        if (args.friendRefKey != "") {
+            contactProfileViewModel.findContact(sharedMainViewModel.displayedFriend,args.friendRefKey)
         }
 
         binding.voiceCallIcon.setOnClickListener() {

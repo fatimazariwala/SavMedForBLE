@@ -16,11 +16,13 @@ object SettingsManager {
 object SharedPreference {
 
     lateinit var username: String
+    lateinit var priKey: String
     lateinit var sharedPreferences: SharedPreferences
 
     fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences("shared_prefs", Context.MODE_PRIVATE)
         username = sharedPreferences.getString("username_key", "").orEmpty()
+        priKey = sharedPreferences.getString("pri_key","").orEmpty()
     }
 
     fun clear() {

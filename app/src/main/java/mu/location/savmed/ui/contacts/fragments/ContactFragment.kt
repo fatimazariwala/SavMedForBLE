@@ -65,7 +65,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         emrContactAdapter =  ContactAdapter(
             favourite = true,
-            onCallClick = { sipUri -> context?.let { currentCallViewModel.initializeWebSocket(sipUri, it) } },
+            onCallClick = { sipUri -> currentCallViewModel.initializeWebSocket(sipUri, requireContext()) },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
             onInfoClick = { friend,refKey -> checkOutForProfilePage(friend,refKey) },
             onRemoveClick = { model -> contactCallViewModel.deleteContact(model) }
@@ -73,7 +73,7 @@ class ContactFragment : Fragment(), EndSwitchCallBack {
 
         contactAdapter = ContactAdapter(
             favourite = false,
-            onCallClick = { sipUri -> context?.let { currentCallViewModel.initializeWebSocket(sipUri, it) } },
+            onCallClick = { sipUri -> currentCallViewModel.initializeWebSocket(sipUri, requireContext()) },
             onChatClick = { sipUri -> startChatFragment(sipUri) },
             onInfoClick = {friend,refKey -> checkOutForProfilePage(friend,refKey)},
             onRemoveClick = {model -> contactCallViewModel.deleteContact(model)}

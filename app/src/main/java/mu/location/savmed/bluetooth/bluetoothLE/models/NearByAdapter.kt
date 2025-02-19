@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.flow
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.databinding.ItemNearbyuserBinding
 import mu.location.savmed.databinding.SearchresultItemLayoutBinding
@@ -75,8 +76,20 @@ class NearByAdapter(
                     root.setBackgroundColor(ContextCompat.getColor(root.context, R.color.white))
                 }
                 callBtn.setOnClickListener() {
+                    var userToCall = ""
                     if (device.name != null) {
-                        onCallCLick(device.name!!)
+                        if (!webSocket.onPeerLocationEvent.value.isNullOrEmpty()) {
+                            for ((key, value) in webSocket.onPeerLocationEvent.value!!) {
+                                if (key.contains(device.name!!)) {
+                                    userToCall = key
+                                }
+                            }
+                            if (userToCall.isNotEmpty()) {
+                                onCallCLick(userToCall)
+                            } else {
+                                coreContext.showPopUP.postValue("USER_TO_CALL_NOT_FOUND")
+                            }
+                        }
                     } else {
                         flow {
                             emit(ConnectionResult.Error("Cannot Call, Empty UserName!"))

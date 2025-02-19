@@ -9,3 +9,7 @@ data class location(
     var lat: Double,
     var lon: Double
 )
+
+class Users : ArrayList<UsersItem> () {
+}
+

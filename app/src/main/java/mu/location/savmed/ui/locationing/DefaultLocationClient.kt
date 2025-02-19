@@ -25,6 +25,7 @@ import mu.location.savmed.SavMed.Companion.isWebSocketInitialized
 import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.ui.locationing.models.liveLocationData
 import mu.location.savmed.utils.RetrofitInstance
+import mu.location.savmed.utils.SharedPreference
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.HttpException
@@ -106,7 +107,7 @@ class DefaultLocationClient(
                                             liveLocationData(
                                             location.latitude, location.longitude,
                                             0, "", "live", getDateTime(),
-                                            coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
+                                            SharedPreference.username
                                         )
                                         );
                                         Log.i("[Location Client]", LocJson);
@@ -117,7 +118,7 @@ class DefaultLocationClient(
                                                 liveLocationData(
                                                 location.latitude, location.longitude,
                                                 0, "", "live", getDateTime(),
-                                                coreContext.core.defaultAccount?.params?.identityAddress?.username.toString()
+                                                SharedPreference.username
                                             )
                                             )
 

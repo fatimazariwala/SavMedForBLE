@@ -84,8 +84,14 @@ class BLEServer(
     val bluetoothBroadcastReceiver = BluetoothBroadcastReceiver { isBluetoothON ->
         if (advertisingState == false) {
             Log.i(TAG,"Starting Advertise again...")
-            setUpBle()
-            startAdvertise()
+
+            try {
+                setUpBle()
+                startAdvertise()
+            } catch (e: Exception) {
+                Log.i(TAG,"Advertising ALreday there")
+            }
+
         }
     }
 
@@ -171,13 +177,16 @@ class BLEServer(
                 flow {
                     emit(ConnectionResult.ConnectionEstablished)
                 }
+                stopAdvertise()
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
-                Log.i(TAG,"Device Disconnected ${device?.address}")
+                Log.i(TAG,"Device Disconnected ${device?.address} Bluetooth LE Advertisinser: ${advertiser}")
+
                 flow {
                     emit(ConnectionResult.Error("Connection DIsConnected: $status"))
                 }
+                startAdvertise()
             }
         }
 
@@ -208,6 +217,7 @@ class BLEServer(
     }
 
     init {
+        Log.i(TAG,"in int setting up ble")
         if(hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE,context)) {
             if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT,context)) {
                 setUpBle()
@@ -282,9 +292,13 @@ class BLEServer(
 
             Log.i(TAG,"FOund SOme uuid... OLOC $recv")
 
-            webSocket.enableJoin = true
-            webSocket.join_key.postValue(recv)
-            webSocket.connect()
+            coreContext.performLiveLocJOIN(recv)
+
+            if (webSocket.join_key.value != recv || !webSocket.join_key.value.isNullOrEmpty()) {
+                Log.i(TAG,"JoinKey Value ${webSocket.join_key.value}")
+                coreContext.showPopUP.postValue("live_location_check")
+                coreContext.fetchedJoinKey = recv
+            }
 
             _listOfMessages.update { messages ->
 
@@ -328,6 +342,7 @@ class BLEServer(
     @SuppressLint("MissingPermission")
     fun setUpBle() {
         if (bluetoothAdapter?.bluetoothLeAdvertiser != null) {
+            Log.i(TAG,"in setup BLE")
             bluetoothAdapter?.name = Build.MODEL
             bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser!!
             try {
@@ -363,12 +378,17 @@ class BLEServer(
 
         if (SharedPreference.username.isNotEmpty()) {
             Log.i(TAG,"Found ${SharedPreference.username} setting it as characteristic params")
-            characteristics_username.setValue("${SharedPreference.username}#${Build.MANUFACTURER}")
-            Log.i(TAG,"In am shared prefValue ${SharedPreference.username}")
+            val userName = if (SharedPreference.username.contains('.')) {
+                SharedPreference.username.split('.')[0]
+            } else {
+                SharedPreference.username
+            }
+            characteristics_username.setValue("${userName}#${SharedPreference.priKey}")  // Removed Build.MANUFACTURER.take(7)
+            Log.i(TAG,"In am shared prefValue ${userName}#${SharedPreference.priKey}")
 
         } else {
             Log.i(TAG,"Could not set Username in characteristic FOUND EMPTY")
-            characteristics_username.setValue("Saviour#${Build.MANUFACTURER}")
+            characteristics_username.setValue("Saviour#000")
         }
 
         val characteristic_join = BluetoothGattCharacteristic(
@@ -417,8 +437,6 @@ class BLEServer(
 
     @SuppressLint("MissingPermission")
     fun startAdvertise() {
-
-
         Log.i(TAG,"Creating BLE Advertising Data...")
         advertiseData = AdvertiseData.Builder()
             //.setIncludeDeviceName(true)

@@ -102,8 +102,15 @@ class BluetoothLEViewModel constructor(): ViewModel() {
     fun SendMessage(device: BluetoothLEScannedDevices) {
         Log.i(TAG,"Tryynnaa sneddd..${webSocket.isConnected.value}..")
         bleClient.writeCharacteristic(device,"")
+
         if (webSocket.isConnected.value == false) {
             webSocket.connect()
+        } else {
+            if (!webSocket.join_key.value.isNullOrEmpty()) {
+                bleClient.enableJoinKeyWrite = true
+            } else {
+                webSocket.initiate()
+            }
         }
     }
 

@@ -100,56 +100,6 @@ class CallActivity : AppCompatActivity() {
 //                )
 //            }
 //        }
-
-        webSocket.join_key.observe(this) { value ->
-            Log.i(TAG,"In join_key libe $value ${callViewModel.enableOutgoingCall}")
-            if (callViewModel.enableOutgoingCall) {
-                Log.i(TAG,"Join Key value: $value")
-                callViewModel.outgoingCall(value)
-            } else {
-                Log.i(TAG,"Outgoing Call NOt Enabled: ${callViewModel.enableOutgoingCall}")
-            }
-        }
-
-        // Websocket initialized in APP class
-        webSocket.isConnected.observe(this) { value ->
-            if (value) {
-                Toast.makeText(this, "Websocket Connection Successfull!", Toast.LENGTH_SHORT).show()
-            }
-//            } else {
-//                Toast.makeText(this,"Websocket Connection Disconnected!",Toast.LENGTH_SHORT).show()
-//            }
-
-
-            if (callViewModel.enableOutgoingCall) {
-                Log.i(TAG,"Outgoing call Enabled!")
-                if (value) {
-                    webSocket.initiate()
-                } else {
-                    Toast.makeText(this,"Websocket Connection Failed!",Toast.LENGTH_SHORT).show()
-                    Log.i(TAG,"Websocket Connection Failed Initiating Outgoing Call")
-                    callViewModel.outgoingCall("")
-                }
-            }
-        }
-
-        bleServer.messageReceivedFromBLE.observe(this){ result ->
-
-            if (!bleServer.isPrevMessage) {
-                Log.i(NearByFragment.TAG,"mesdg slpash $result")
-                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
-                    if (resultz) {
-                        Log.i(MainActivity.TAG, "Dialog confirmed")
-                    } else {
-                        Log.i(MainActivity.TAG, "Dialog dismissed or canceled")
-                    }
-                }
-                bleServer.isPrevMessage = true
-            } else {
-                Log.i(NearByFragment.TAG,"message already displayed")
-            }
-        }
-
         coreContext.isOutgoingCall.observe(this) { isOutgoingCall ->
             Log.i("outgoing callll","calllll$isOutgoingCall")
             if(isOutgoingCall) {
@@ -177,15 +127,10 @@ class CallActivity : AppCompatActivity() {
                 findViewById<RadioButton>(R.id.connectStatus).isChecked = true
             }
         }
-        coreContext.isCallEnded.observe(this) { isCallEnded ->
-            if(isCallEnded) {
-                val i = Intent(this,MainActivity::class.java)
-                startActivity(i)
-                finish()
-            }
-        }
         callViewModel.goToEndedCallEvent.observe(this) {
-            navController.navigate(R.id.contactFragment)
+            val i = Intent(this,MainActivity::class.java)
+            startActivity(i)
+            finish()
         }
     }
 

@@ -22,16 +22,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.models.Users
 import mu.location.savmed.models.UsersItem
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
+import mu.location.savmed.ui.auth.pri
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
 import mu.location.savmed.utils.AppUtils
 import mu.location.savmed.utils.ImageUtils
 import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
 import mu.location.savmed.utils.SharedPreference
+import mu.location.savmed.websocket.peerLatLon
 import org.linphone.core.Address
 import org.linphone.core.Factory
 import org.linphone.core.Friend
@@ -93,6 +96,45 @@ class ContactsManager  @UiThread constructor() {
 
             else -> {
                 coreContext.core.createAddress("sip:$sipString@212.38.94.76")
+            }
+        }
+    }
+
+    fun getUserNameFromPrimaryKey(key: String) {
+        Log.i(TAG,"PriKey, ${key}")
+        coroutineScope.launch {
+            try {
+                val data = RetrofitInstance.apiRegistration.getUserNameFromPri(key)
+                if (data.isSuccessful) {
+                    val userNAme: pri = data.body() ?: pri("")
+
+                    Log.i(TAG,"userName Fetched!!! ${userNAme}")
+                    if (!userNAme.equals("Fail") && !userNAme.equals("Wrong Format!")) {
+                        if (userNAme.pri.isNotEmpty()) {
+                            val sockHash = webSocket.onPeerLocationEvent.value ?: HashMap()
+                            if (!sockHash.containsKey(userNAme.pri)) {
+
+                                sockHash[userNAme.pri] = peerLatLon(
+                                    0.0, 0.0
+                                )
+                                webSocket.onPeerLocationEvent.postValue(
+                                    sockHash
+                                )
+                                Log.i(TAG, "Posted Sock Hash ${userNAme}")
+                            }
+                        } else {
+                            Log.i(TAG, "UserName is Empty to given Primary Key!!!")
+                        }
+                    } else {
+                        Log.e(TAG,"Could not find NearBy-user's Name")
+                    }
+                } else {
+                    Log.e(TAG,"Could not get UserName From api Key API Failure!!")
+                }
+            } catch (e : HttpException) {
+                Log.i(TAG,e.message().toString())
+            } catch (e: IOException) {
+                Log.i(TAG,e.message.toString())
             }
         }
     }

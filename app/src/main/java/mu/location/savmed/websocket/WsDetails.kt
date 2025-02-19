@@ -13,11 +13,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
+import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.utils.SharedPreference
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocketListener
+import java.util.concurrent.TimeUnit
 
 // Will be initializied using Application Context
 class WsDetails (context: Context) {
@@ -29,7 +31,11 @@ class WsDetails (context: Context) {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private lateinit var webSocket: okhttp3.WebSocket
-    private val client: OkHttpClient = OkHttpClient()
+
+    val client = OkHttpClient.Builder()
+        .pingInterval(30, TimeUnit.SECONDS) // Enable automatic pings every 30 seconds
+        .build()
+
     private val gson = Gson()
     val isConnected = MutableLiveData<Boolean>()
     var isDisconnectDueToNetworkChange = false
@@ -39,10 +45,13 @@ class WsDetails (context: Context) {
     var enableJoin = false
     val errorMessage = MutableLiveData<String>()
 
-    val onPeerLocationEvent = MutableLiveData<peerDetails>()
+    var destoryCurrent = false
+
+    val onPeerLocationEvent = MutableLiveData<HashMap<String,peerLatLon>>()
 
     init {
-        isConnected.value = false
+        isConnected.postValue(false)
+        join_key.postValue("")
     }
 
     fun connect() {
@@ -134,12 +143,13 @@ class WsDetails (context: Context) {
                 bleClient.sendJoinKey(join.join)
             }
             initEstablished = true
+            sendLocationMessage(coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,coreContext.onLocationEvent.value?.get("longitude") ?: 0.0)
 
         } else if (text.contains("Location Data")) {
 
             val peerDetails: peerDetails = Gson().fromJson(text,peerDetails::class.java)
             Log.i(TAG,"Peer Data: $peerDetails")
-            onPeerLocationEvent.postValue(peerDetails)
+            checkNaddToHashMap(peerDetails)
 
         } else if (text.contains("error")) {
 
@@ -161,11 +171,17 @@ class WsDetails (context: Context) {
     }
 
     fun join() {
-        Log.i(TAG,"COnnected VAl duting join: ${isConnected.value},JOinkey: ${join_key.value}")
+        Log.i(TAG,"Connected val duting join: ${isConnected.value},JOinkey: ${join_key.value}")
         if (join_key.value != null) {
             val message = mapOf("type" to "init", "join" to join_key.value,"person" to SharedPreference.username)
             webSocket.send(gson.toJson(message))
             initEstablished = true
+
+            coroutineScope.launch {
+                delay(500)
+                sendLocationMessage(coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,coreContext.onLocationEvent.value?.get("longitude") ?: 0.0)
+            }
+
         } else {
             Log.i(TAG,"Join Key Value NUll: ${join_key.value}")
         }
@@ -190,7 +206,29 @@ class WsDetails (context: Context) {
         enableJoin = false
         initEstablished = false
         isDisconnectDueToNetworkChange = false
-        webSocket.cancel()
+        if (isConnected.value == true) {
+            webSocket.cancel()
+        }
+        isConnected.value = false
+    }
+
+    fun checkNaddToHashMap(peerDetails: peerDetails) {
+        val hashMap = onPeerLocationEvent.value ?: HashMap()
+
+        if (!hashMap.containsKey(peerDetails.person)) {
+            hashMap[peerDetails.person] = peerLatLon(
+                peerDetails.latitude,
+                peerDetails.longitude
+            )
+        } else {
+            val data = hashMap[peerDetails.person]
+            if (data != null) {
+                data.latitude = peerDetails.latitude
+                data.longitude = peerDetails.longitude
+            }
+        }
+
+        onPeerLocationEvent.postValue(hashMap)
     }
 
 }

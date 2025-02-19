@@ -9,7 +9,9 @@ import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +28,11 @@ class MapsViewModel: ViewModel() {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     var isDirectionsClicked = false
+
+    lateinit var userAtPolyLine: LatLng
+    var userMarkerAtPolyLine: Marker?= null
+    var userCircleAtPolyLine: Circle?= null
+
     val manualJoinKey = MutableLiveData<String>()
 
     init {

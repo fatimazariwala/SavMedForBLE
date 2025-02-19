@@ -34,6 +34,7 @@ import mu.location.savmed.databinding.FragmentMapsBinding
 import mu.location.savmed.ui.locationing.DataProcessing.FetchURL
 import mu.location.savmed.ui.locationing.DataProcessing.TaskLoadedCallback
 import mu.location.savmed.ui.locationing.models.MapsViewModel
+import mu.location.savmed.websocket.peerLatLon
 
 
 class MapsFragment : Fragment(),TaskLoadedCallback {
@@ -52,11 +53,11 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
     var latitudezz: Double = 0.0
     var longitudezz: Double = 0.0
 
-    var nearBy_lat: Double = 0.0//19.0216176
-    var nearBy_lon: Double = 0.0//72.8704915
+//    var nearBy_lat: Double = 0.0//19.0216176
+//    var nearBy_lon: Double = 0.0//72.8704915
 
     var dist: Int ?= 0
-    lateinit var foundUserName: String
+//    lateinit var foundUserName: String
     lateinit var currentUserBitMap: Bitmap
 
     var zoomLevel: Float = 0.0f
@@ -66,9 +67,15 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
     var currentUserMarker: Marker?= null
     var currentUserCircle: Circle?= null
 
-    lateinit var nearByUserLoc: LatLng
-    var nearByUserMarker: Marker?= null
-    var nearByUserCircle: Circle?= null
+    var addNearUserMarker = false
+//
+//    lateinit var nearByUserLoc: List<LatLng>
+//    var nearByUserMarker: List<Marker>?= null
+//    var nearByUserCircle: List<Circle>?= null
+
+    private val nearByUserMarkers: MutableMap<String, Marker> = mutableMapOf()
+    private val nearByUserCircles: MutableMap<String, Circle> = mutableMapOf()
+
 
     lateinit var currentPolyline: Polyline
     lateinit var startPolyLine: Polyline
@@ -81,76 +88,14 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
 
         map = googleMap
 
-//        map.setOnMarkerDragListener(object : OnMarkerDragListener {
-//            override fun onMarkerDragStart(arg0: Marker) {
-//                Log.d(
-//                    "System out",
-//                    "onMarkerDragStart..." + arg0.position.latitude + "..." + arg0.position.longitude
-//                )
-//            }
-//
-//            @SuppressLint("PotentialBehaviorOverride")
-//            override fun onMarkerDragEnd(arg0: Marker) {
-//                Log.d(
-//                    "System out",
-//                    "onMarkerDragEnd..." + arg0.position.latitude + "..." + arg0.position.longitude
-//                )
-//                if (currentUserMarker != null) {
-//                    Log.i(TAG,"Setting postion of current user marker!")
-//                    currentUserLoc = LatLng(arg0.position.latitude,arg0.position.longitude)
-//                }
-//                map.animateCamera(CameraUpdateFactory.newLatLng(arg0.position))
-//            }
-//
-//            override fun onMarkerDrag(arg0: Marker) {
-//                // TODO Auto-generated method stub
-//                Log.i("System out", "onMarkerDrag...")
-//            }
-//        })
         val options = PolylineOptions()
         options.color(Color.RED)
         options.width(5f)
   //       Coordinates for the marker
         currentUserLoc = LatLng(latitudezz ?: 0.0,longitudezz ?: 0.0)
 
-        if (nearBy_lat != 0.0 && nearBy_lon != 0.0) {
-            Log.i(TAG,"Nearby data ${nearBy_lat} ${nearBy_lon}")
-
-            nearByUserLoc = LatLng(nearBy_lat,nearBy_lon)
-
-            nearByUserMarker = googleMap.addMarker(
-                MarkerOptions()
-                    .position(nearByUserLoc)
-                    .title("${if (::foundUserName.isInitialized) foundUserName else "Aditya's"} Current Location.")
-            )
-
-            nearByUserMarker?.let {
-                mapsViewModel.fetchAddressFromLatLng(nearByUserLoc,requireContext()) { address ->
-                    it.snippet = address
-                    it.showInfoWindow()
-                }
-            }
-
-            nearByUserMarker?.position?.let { builder.include(it) }
-
-
-            nearByUserCircle = googleMap.addCircle(
-                CircleOptions()
-                    .center(nearByUserLoc)
-                    .radius(200.0) // Circle radius in meters
-                    .strokeColor(resources.getColor(R.color.red, null))
-                    .fillColor(Color.argb(128, 255, 0, 0)) // Adjust transparency
-                    .strokeWidth(2f)
-            )
-
-            Log.i(TAG,"I am val of nearBy_loc: ${nearByUserLoc},loc: ${currentUserLoc}")
-            val dist = SphericalUtil.computeDistanceBetween(nearByUserLoc,currentUserLoc)
-            val circleRad = (dist/2)
-            Log.i(TAG,"I am val of dist: ${dist},circleRad: ${circleRad}")
-            zoomLevel = mapsViewModel.getZoomLevel(circleRad).toFloat()
-            Log.i(TAG,"setting to zoom level $zoomLevel")
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(nearByUserLoc,zoomLevel))
-
+        if (addNearUserMarker) {
+            addPeerData (webSocket.onPeerLocationEvent.value!!)
         }
 
         // Add a marker at the specified location
@@ -190,15 +135,18 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
         googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
 
         googleMap.setOnCameraIdleListener {
+            zoomLevel = map.cameraPosition.zoom
             val adjustedRadii = (Math.pow(0.5,zoomLevel.toDouble()))*Math.pow(10.0,7.0)
             if (currentUserCircle != null) {
                 currentUserCircle!!.radius = adjustedRadii
             }
-            if (nearByUserCircle != null) {
-                nearByUserCircle!!.radius = adjustedRadii
+            for (rad in nearByUserCircles) {
+                rad.value.radius = adjustedRadii
             }
+//            if (nearByUserCircle != null) {
+//                nearByUserCircle!!.radius = adjustedRadii
+//            }
         }
-
 //        // Set a listener for info window click (optional)
 //        googleMap.setOnInfoWindowClickListener { clickedMarker ->
 //            // Handle info window click
@@ -270,15 +218,15 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
                 longitudezz = location.get("longitude")!!
                 currentUserLoc = LatLng(latitudezz,longitudezz)
 
-                if (mapsViewModel.isDirectionsClicked == true && nearByUserLoc != LatLng(0.0,0.0) && ::nearByUserLoc.isInitialized ) {
-                    FetchURL(this).execute(
-                        mapsViewModel.getUrl(
-                            currentUserLoc,
-                            nearByUserLoc,
-                            "walking"
-                        ), "walking"
-                    );
-                }
+//                if (mapsViewModel.isDirectionsClicked == true && nearByUserLoc != LatLng(0.0,0.0) && ::nearByUserLoc.isInitialized ) {
+//                    FetchURL(this).execute(
+//                        mapsViewModel.getUrl(
+//                            currentUserLoc,
+//                            nearByUserLoc,
+//                            "walking"
+//                        ), "walking"
+//                    );
+//                }
 
                 if (::map.isInitialized && currentUserMarker != null) {
                     currentUserMarker?.position = LatLng(latitudezz!!,longitudezz!!)
@@ -289,59 +237,27 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
             }
         }
 
-        webSocket.onPeerLocationEvent.observe(viewLifecycleOwner) { peerDetails ->
-            Log.i(TAG,"Received Peer data $peerDetails")
-            if (
-                peerDetails.latitude != 0.0 && peerDetails.longitude != 0.0 &&
-                peerDetails.latitude != nearBy_lat && peerDetails.longitude != nearBy_lon
-            ) {
-                nearBy_lat = peerDetails.latitude
-                nearBy_lon = peerDetails.longitude
-                nearByUserLoc = LatLng(nearBy_lat,nearBy_lon)
-                foundUserName = peerDetails.person
-
-                if (mapsViewModel.isDirectionsClicked == true && currentUserLoc != LatLng(0.0,0.0) && ::currentUserLoc.isInitialized ) {
-                    FetchURL(this).execute(
-                        mapsViewModel.getUrl(
-                            currentUserLoc,
-                            nearByUserLoc,
-                            "walking"
-                        ), "walking"
-                    );
-                }
-
-                Log.i(TAG,"map ${::map.isInitialized} ${nearByUserMarker}")
-                if (nearByUserMarker != null) {
-                    Log.i(TAG,"uoiiipoop")
-                    nearByUserMarker?.position = LatLng(nearBy_lat,nearBy_lon)
-                    nearByUserCircle?.center = LatLng(nearBy_lat,nearBy_lon)
-                    nearByUserMarker?.title = "${foundUserName} Current Location"
-                } else {
-                    if (::map.isInitialized) {
-                        map.clear()
-                        mapFragment.getMapAsync(callback)
-                    }
-                }
-            } else {
-                Log.i(TAG,"Peer data not chaned!!!!")
-            }
+        webSocket.onPeerLocationEvent.observe(viewLifecycleOwner) { peerMap ->
+            Log.i(TAG, "Received Peer data $peerMap")
+            addPeerData (peerMap)
         }
 
-        binding.direct.setOnClickListener() {
 
-            Log.i(TAG,"in direct click!!")
-            mapsViewModel.isDirectionsClicked = true
-            if (nearByUserMarker != null && currentUserMarker != null) {
-                Log.i(TAG,"Nearby Marker position: [${nearByUserMarker!!.position.latitude},${nearByUserMarker!!.position.longitude}], Current Market postion: [${currentUserMarker!!.position.latitude},${currentUserMarker!!.position.longitude}]")
-                FetchURL(this).execute(
-                    mapsViewModel.getUrl(
-                        currentUserLoc,
-                        nearByUserLoc,
-                        "walking"
-                    ), "walking"
-                );
-            }
-        }
+//        binding.direct.setOnClickListener() {
+//
+//            Log.i(TAG,"in direct click!!")
+//            mapsViewModel.isDirectionsClicked = true
+//            if (nearByUserMarkers != null && currentUserMarker != null) {
+//                Log.i(TAG,"Nearby Marker position: [${nearByUserMarker!!.position.latitude},${nearByUserMarker!!.position.longitude}], Current Market postion: [${currentUserMarker!!.position.latitude},${currentUserMarker!!.position.longitude}]")
+//                FetchURL(this).execute(
+//                    mapsViewModel.getUrl(
+//                        currentUserLoc,
+//                        nearByUserLoc,
+//                        "walking"
+//                    ), "walking"
+//                );
+//            }
+//        }
 
        // toggleProgressLayoutVisibility(view)
     }
@@ -357,217 +273,77 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
         createNewPolyLine(startPoint, endPoint)
     }
 
-    fun createNewPolyLine(startPoint: LatLng?, endPoint: LatLng?) {
-        if (::startPolyLine.isInitialized) {
-            Log.i(TAG, "In start polyLine Remove!!!")
-            startPolyLine.remove()
-        }
-        if (::endPolyLine.isInitialized) {
-            Log.i(TAG, "In end polyLine Remove!!!")
-            endPolyLine.remove()
-        }
-        val startPolylineArray = ArrayList<LatLng?>()
-        val endPolylineArray = ArrayList<LatLng?>()
-        val startPolyOps = PolylineOptions()
-        val endPolyOps = PolylineOptions()
+    fun addPeerData(peerMap:  HashMap<String, peerLatLon>) {
+        val adjustedRadii = (Math.pow(0.5,zoomLevel.toDouble()))*Math.pow(10.0,7.0)
 
-        startPolylineArray.add(startPoint)
-        startPolylineArray.add(currentUserMarker!!.position)
-        startPolyOps.addAll(startPolylineArray)
-        startPolyOps.color(Color.LTGRAY)
-        startPolyLine = map.addPolyline(startPolyOps)
+        for ((userId, location) in peerMap) {
+            Log.i(TAG, "Processing peer: $userId")
 
-        endPolylineArray.add(endPoint)
-        endPolylineArray.add(nearByUserMarker!!.position)
-        endPolyOps.addAll(endPolylineArray)
-        endPolyOps.color(Color.LTGRAY)
-        endPolyLine = map.addPolyline(endPolyOps)
+            if (location.latitude != 0.0 && location.longitude != 0.0) {
+                val userLocation = LatLng(location.latitude, location.longitude)
+
+                // If marker exists, update position
+                if (nearByUserMarkers.containsKey(userId)) {
+                    nearByUserMarkers[userId]?.position = userLocation
+                    nearByUserCircles[userId]?.center = userLocation
+                } else {
+
+                    if (::map.isInitialized) {
+                        Log.i(TAG,"in map initjjjsjs")
+                        val marker = map.addMarker(
+                            MarkerOptions()
+                                .position(userLocation)
+                                .title("$userId's Location")
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                        )
+
+                        // Create a circle around the user
+                        val circle = map.addCircle(
+                            CircleOptions()
+                                .center(userLocation)
+                                .radius(adjustedRadii) // Adjust radius as needed
+                                .strokeColor(resources.getColor(R.color.red, null))
+                                .fillColor(Color.argb(128, 255, 0, 0))
+                                .strokeWidth(2f)
+                        )
+
+                        // Store marker and circle in HashMaps
+                        nearByUserMarkers[userId] = marker!!
+                        nearByUserCircles[userId] = circle
+                    } else {
+                        Log.i(TAG,"initialize map...")
+                        addNearUserMarker = true
+                    }
+
+                }
+            }
+        }
     }
-
-
-    // Function to fetch an address from latitude and longitude
-//    private fun fetchAddressFromLatLng(latLng: LatLng, callback: (String) -> Unit) {
-//        val geocoder = Geocoder(requireContext(), Locale.getDefault())
-//        try {
-//            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-//            if (addresses != null) {
-//                if (addresses.isNotEmpty()) {
-//                    val address = addresses[0].getAddressLine(0)
-//                    callback(address)
-//                } else {
-//                    callback("No address found")
-//                }
-//            } else {
-//                callback("No address found")
-//            }
-//        } catch (e: Exception) {
-//            callback("Unable to fetch address")
+    fun createNewPolyLine(startPoint: LatLng?, endPoint: LatLng?) {
+//        if (::startPolyLine.isInitialized) {
+//            Log.i(TAG, "In start polyLine Remove!!!")
+//            startPolyLine.remove()
 //        }
-//    }
-
-//    fun vectorToBitmap(context: Context, drawableId: Int): Bitmap {
-//        val drawable = AppCompatResources.getDrawable(context, drawableId) ?: throw IllegalArgumentException("Invalid drawable ID")
-//        val bitmap = Bitmap.createBitmap(
-//            drawable.intrinsicWidth,
-//            drawable.intrinsicHeight,
-//            Bitmap.Config.ARGB_8888
-//        )
-//        val canvas = Canvas(bitmap)
-//        drawable.setBounds(0, 0, canvas.width, canvas.height)
-//        drawable.draw(canvas)
-//        return bitmap
-//    }
-
-//    @WorkerThread
-//    fun getLiveMarkerOfNearByUser() {
-//        coroutineScope.launch {
-//            try {
-//                Log.i(TAG,"In Getting Marker for nearby")
-//                val data = bleServer.charFrom?.let {
-//                    RetrofitInstance.apiLiveLocation.getLiveLocForNearBy(
-//                        it
-//                    )
-//                }
-//                if (data?.isSuccessful == true) {
-//                    val nearByData: List<getLiveLocationData?>? = data.body()
-//                    Log.i(TAG,"final dat ${data.body()}")
-//                    if (nearByData != null) {
-//                        for (userData in nearByData) {
-//                            nearBy_lat = userData?.latitude ?: 0.0
-//                            nearBy_lon = userData?.longitude ?: 0.0
-//
-//                            coreContext.postOnMainThread {
-//                                if (::map.isInitialized) {
-//                                    map.clear()
-//                                }
-//                                mapFragment.getMapAsync(callback)
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    Log.e(TAG,"Could not Load Emergency Contact API Failure!!")
-//                }
-//            } catch (e : HttpException) {
-//                Log.i(TAG,e.message().toString())
-//            } catch (e: IOException) {
-//                Log.i(TAG,e.message.toString())
-//            }
+//        if (::endPolyLine.isInitialized) {
+//            Log.i(TAG, "In end polyLine Remove!!!")
+//            endPolyLine.remove()
 //        }
-//    }
-
-//    private fun getZoomLevel(radius: Double): Int {
-//        Log.i(TAG,"i am radius $radius")
-//        val scale = radius / 500
-//        return ((16 - ln(scale) / ln(2.0)).toInt())
-//    }
+//        val startPolylineArray = ArrayList<LatLng?>()
+//        val endPolylineArray = ArrayList<LatLng?>()
+//        val startPolyOps = PolylineOptions()
+//        val endPolyOps = PolylineOptions()
 //
-//    private fun getURL(from : LatLng, to : LatLng) : String {
-//        val origin = "origin=" + from.latitude + "," + from.longitude
-//        val dest = "destination=" + to.latitude + "," + to.longitude
-//        val sensor = "sensor=false"
-//        val key = "key=AIzaSyBL3tCKWE9hgJE50EvpFiAshvJeYJy7bfU"
-//        val params = "$origin&$dest&$sensor&$key"
-//        return "https://maps.googleapis.com/maps/api/directions/json?$params"
-//    }
+//        startPolylineArray.add(startPoint)
+//        startPolylineArray.add(currentUserMarker!!.position)
+//        startPolyOps.addAll(startPolylineArray)
+//        startPolyOps.color(Color.LTGRAY)
+//        startPolyLine = map.addPolyline(startPolyOps)
 //
-//    private fun decodePoly(encoded: String): List<LatLng> {
-//        val poly = ArrayList<LatLng>()
-//        var index = 0
-//        val len = encoded.length
-//        var lat = 0
-//        var lng = 0
-//
-//        while (index < len) {
-//            var b: Int
-//            var shift = 0
-//            var result = 0
-//            do {
-//                b = encoded[index++].toInt() - 63
-//                result = result or (b and 0x1f shl shift)
-//                shift += 5
-//            } while (b >= 0x20)
-//            val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-//            lat += dlat
-//
-//            shift = 0
-//            result = 0
-//            do {
-//                b = encoded[index++].toInt() - 63
-//                result = result or (b and 0x1f shl shift)
-//                shift += 5
-//            } while (b >= 0x20)
-//            val dlng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-//            lng += dlng
-//
-//            val p = LatLng(lat.toDouble() / 1E5,
-//                lng.toDouble() / 1E5)
-//            poly.add(p)
-//        }
-//
-//        return poly
-//    }
-//
-//    @Suppress("StaticFieldLeak")
-//    private inner class GetDirection(val url : String) : AsyncTask<Void, Void, List<List<LatLng>>>(){
-//
-//        @Deprecated("Deprecated in Java")
-//        override fun doInBackground(vararg params: Void?): List<List<LatLng>> {
-//
-//            val client = OkHttpClient()
-//            val request = Request.Builder().url(url).build()
-//            val response = client.newCall(request).execute()
-//            val data = response.body!!.string()
-//
-//            val result =  ArrayList<List<LatLng>>()
-//            try{
-//                Log.i(TAG,"Sending polyline data")
-//
-//                val respObj = Gson().fromJson(data,MapData::class.java)
-//                val path =  ArrayList<LatLng>()
-//
-////                coreContext.postOnMainThread {
-//////                    view?.findViewById<TextView>(R.id.direction)?.text = respObj.routes[0].legs[0].steps[0].maneuver
-//////                    view?.findViewById<TextView>(R.id.stepCount)?.text = respObj.routes[0].legs[0].steps.size.toString()
-////                   // view?.findViewById<TextView>(R.id.endDest)?.text = respObj.routes[0].legs[0].distance.text
-////
-////                    Log.i(TAG,"Direction: ${respObj.routes[0].legs[0].steps[0].maneuver},StepCount: ${respObj.routes[0].legs[0].steps.size.toString()},EndDest: ${respObj.routes[0].legs[0].distance.text}")
-////                }
-//
-//                for (data in respObj.routes) {
-//                    Log.i(TAG,"ResObj: ${data.legs}")
-//                    for (leg in data.legs) {
-//                        Log.i(TAG,"Looping through Leg: STeps: ${leg.steps} ${leg.steps.size},Distance: ${leg.distance.text} ${leg.distance.value},Duration: ${leg.duration}")
-//                        for(step in leg.steps) {
-//                            Log.i(TAG,"Loopsing through steps ${step.maneuver} ")
-//                        }
-//                    }
-//                }
-//
-//                for (i in 0 until respObj.routes[0].legs[0].steps.size){
-//                    path.addAll(decodePoly(respObj.routes[0].legs[0].steps[i].polyline.points))
-//                    Log.i(TAG,"Data going in decode: ${respObj.routes[0].legs[0].steps[i].polyline.points}")
-//                }
-//                Log.i(TAG,"Received polyline data: ${path.size}")
-//                result.add(path)
-//            } catch (e:Exception) {
-//                e.printStackTrace()
-//            }
-//            return result
-//        }
-//
-//        override fun onPostExecute(result: List<List<LatLng>>) {
-//            val lineoption = PolylineOptions()
-//            for (i in result.indices){
-//                lineoption.addAll(result[i])
-//                Log.i(TAG,"result: ${result}")
-//                lineoption.width(10f)
-//                lineoption.color(Color.CYAN)
-//                lineoption.geodesic(true)
-//            }
-//            map.addPolyline(lineoption)
-//        }
-//    }
-//
-//
+//        endPolylineArray.add(endPoint)
+//        endPolylineArray.add(nearByUserMarker!!.position)
+//        endPolyOps.addAll(endPolylineArray)
+//        endPolyOps.color(Color.LTGRAY)
+//        endPolyLine = map.addPolyline(endPolyOps)
+    }
 
 }

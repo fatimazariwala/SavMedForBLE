@@ -6,7 +6,11 @@ data class joinData (
 )
 data class peerDetails (
     val person: String,
-    val role: String,
+    var latitude: Double,
+    var longitude: Double,
+)
+
+data class peerLatLon (
     var latitude: Double,
     var longitude: Double,
 )

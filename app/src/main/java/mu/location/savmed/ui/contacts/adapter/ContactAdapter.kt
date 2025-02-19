@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.databinding.ChatEmergencyConatctConnectAvatarBarCellBinding
 import mu.location.savmed.databinding.ContactItemLayoutBinding
 import mu.location.savmed.databinding.EmergencyContactItemsBinding
@@ -63,6 +64,7 @@ class ContactAdapter(
 
                 callButton.setOnClickListener() {
                     contactModel.friend.address?.username?.let { it1 -> onCallClick(it1) }
+                    coreContext.showPopUP.postValue("Call_button_wait")
                 }
 
                 frameLayout.setOnClickListener() {

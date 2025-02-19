@@ -46,11 +46,13 @@ class LoginActivity : AppCompatActivity() {
         const val USERNAME_KEY = "username_key"
         const val PASSWORD_KEY = "password_key"
         const val DOMAIN_KEY   = "domain_key"
+        const val PRI_KEY = "pri_key"
     }
 
     var usernameSIP = ""
     var passwordSIP = ""
     var domainSIP = ""
+    var priKey = ""
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +79,7 @@ class LoginActivity : AppCompatActivity() {
             finish();
         }
 
-        LoginBtn.setOnClickListener(){
+        LoginBtn.setOnClickListener() {
 
             if(TextUtils.isEmpty(EmailEdt.getText().toString()) && TextUtils.isEmpty(PwdEdt.getText().toString())){
                 Toast.makeText(this,"Please Enter Email and Password",Toast.LENGTH_SHORT).show()
@@ -94,7 +96,7 @@ class LoginActivity : AppCompatActivity() {
 
                     val retrofitAPI = retrofit.create(RetroFit::class.java)
 
-                    val loginreq = LoginRequest(username,password,"")
+                    val loginreq = LoginRequest(0,username,password,"")
 
                     val gson = Gson();
                     var Logreq = gson.toJson(loginreq);
@@ -112,7 +114,7 @@ class LoginActivity : AppCompatActivity() {
                             val responseString =
                                 "Response Code : " + response.code() + "\n" + responsez?.status            // Creating Response String
 
-                            Log.i("API RESPONSE login:" , " ${response.code().toString()},$responseString")
+                            Log.i("API RESPONSE login:" , " ${response.code().toString()},$responsez")
 
                             if ( responsez?.status == "OK") {
                                 Toast.makeText(
@@ -129,16 +131,17 @@ class LoginActivity : AppCompatActivity() {
                                     core.loadConfigFromXml(corePreferences.savMedDefaultValuesPath)
 
                                     val authInfo = Factory.instance()
-                                        .createAuthInfo(username, null, password, null, "212.38.94.76", "212.38.94.76", null)
+                                        .createAuthInfo(username, null, password, null, "212.38.94.76", "212.38.94.76:3429", null)
 
                                     val params = core.createAccountParams()
-                                    val identity = Factory.instance().createAddress("sip:$username@212.38.94.76")
+                                    val identity = Factory.instance().createAddress("sip:$username@212.38.94.76:3429")
 
                                     params.identityAddress = identity
                                     params.isPublishEnabled = true
 
-                                    val address = Factory.instance().createAddress("sip:212.38.94.76")
+                                    val address = Factory.instance().createAddress("sip:212.38.94.76:3429")
                                     address?.transport = TransportType.Udp
+
                                     val proxy = params.setServerAddress(address)
 
                                     Log.i("[Login Activity]","Srever addres result $proxy")
@@ -152,7 +155,7 @@ class LoginActivity : AppCompatActivity() {
                                     }
 
                                     val account = core.createAccount(params)
-                                    params.pushNotificationAllowed = false
+                                    params.pushNotificationAllowed = true
                                     params.isRtpBundleEnabled = false
 
                                     core.addAuthInfo(authInfo)
@@ -179,7 +182,7 @@ class LoginActivity : AppCompatActivity() {
 
                                     editor.putString(USERNAME_KEY,EmailEdt.getText().toString())
                                     editor.putString(PASSWORD_KEY, PwdEdt.getText().toString())
-
+                                    editor.putString(PRI_KEY,responsez.priKey.toString())
                                     editor.apply()
                                 }
 
@@ -206,7 +209,6 @@ class LoginActivity : AppCompatActivity() {
 
             }
         }
-
     }
 
     override fun onStart() {

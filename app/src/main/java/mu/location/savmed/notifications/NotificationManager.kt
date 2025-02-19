@@ -1264,13 +1264,19 @@ class NotificationsManager @MainThread constructor(private val context: Context)
 
         if (amManager.ringerMode == AudioManager.RINGER_MODE_SILENT || amManager.ringerMode == AudioManager.RINGER_MODE_VIBRATE) {
             Log.i(TAG,"Changing mode to Not Silent or Not Vibrate")
-            amManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+            try {
+                amManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+            } catch (e: Exception) {
+                coreContext.showPopUP.postValue("RINGER_MODE_NOT_CHANGED")
+                Log.i(TAG,"Could not Change mode to Not Silent or Not Vibrate, ${e.message}")
+            }
             return true
         } else {
             Log.i(TAG,"No Need to Reset Ringer Mode Already on Ringer Normal Mode RETURNING [$prevAm]")
             return prevAm != 0
         }
     }
+
     fun resetMode() {
         Log.i(TAG,"Resetting mode")
         amManager.ringerMode = prevAm

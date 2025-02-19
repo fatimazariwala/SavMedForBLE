@@ -24,6 +24,7 @@ import mu.location.savmed.ui.auth.LoginActivity
 import mu.location.savmed.ui.auth.RegistrationActivity
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
+import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.SharedPreference
 
 class RippleFragment : Fragment() {
@@ -70,6 +71,14 @@ class RippleFragment : Fragment() {
             webSocket.connect()
             //callViewModel.informEmrContacts()
         }
+
+        binding.medicalInfo.setOnClickListener() {
+            val i = Intent(requireContext(), MedicalInfoActivity::class.java)
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(i)
+            requireActivity().finish()
+        }
+
         binding.idBtnLogOut.setOnClickListener {
 
             rippleViewModel.logout()
@@ -121,6 +130,7 @@ class RippleFragment : Fragment() {
     }
 
     fun getLocation(context: Context) {
+
         val lat = coreContext.onLocationEvent.value?.get("latitude")
         val lon = coreContext.onLocationEvent.value?.get("longitude")
         Log.i(TAG,"I am in setLoc $lat $lon")

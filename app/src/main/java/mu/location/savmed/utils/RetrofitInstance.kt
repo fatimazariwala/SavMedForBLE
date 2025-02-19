@@ -45,11 +45,11 @@ object RetrofitInstance {
             .build()
             .create(RetroFit::class.java)
     }
-//    val apiRegistration : RetroFit by lazy {
-//        Retrofit.Builder()
-//            .baseUrl("https://gosaviour.com/wp-json/wdash/v3/")
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//            .create(RetroFit::class.java)
-//    }
+    val apiRegistration : RetroFit by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://gosaviour.com/wp-json/wdash/v3/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(RetroFit::class.java)
+    }
 }

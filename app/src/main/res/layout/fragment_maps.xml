@@ -25,51 +25,39 @@
         android:layout_height="match_parent"
         tools:context="mu.location.savmed.ui.locationing.MapsFragment" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="#EDEAEA">
+<!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--        android:id="@+id/constraintLayout"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="60dp"-->
+<!--        android:background="#EDEAEA">-->
 
-        <TextView
-            android:id="@+id/direction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Direction"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.084"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.512" />
 
-        <TextView
-            android:id="@+id/stepCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Step Count"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.136"
-            app:layout_constraintStart_toEndOf="@+id/direction"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.512" />
+<!--        <TextView-->
+<!--            android:id="@+id/textViewChoose"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginLeft="20dp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:text="Choose to see directions"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintVertical_bias="0.5"-->
+<!--            android:textSize="16sp" />-->
 
-        <Button
-            android:id="@+id/direct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Directions"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/stepCount"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+<!--        <Spinner-->
+<!--            android:id="@+id/userDropdown"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:layout_constraintStart_toEndOf="@id/textViewChoose"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintVertical_bias="0.5" />-->
+<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="35dp"
-        android:layout_below="@+id/constraintLayout"
         android:layout_marginTop="3dp"
         android:background="@color/green_main_300">
 
@@ -77,8 +65,8 @@
             android:id="@+id/ws_conn_text"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
-            android:text="@{wsModel.isConnected ? `Live Locationing At Key:` : `Add Live Location Key:`,default=`Add Live Location Key:`}"
-            android:textSize="15dp"
+            android:text='@{wsModel.isConnected ? "Live Locationing At Key:\n" : "Add Live Location \n Key:\n", default="Add Live Location Key:\n"}'
+            android:textSize="15sp"
             android:textStyle="bold"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -88,12 +76,15 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.466" />
 
+
         <Button
             android:id="@+id/ws_conn_stat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@{wsModel.isConnected ? `Disconnect` : `Connect`,default=`Connect`}"
+            android:backgroundTint="@{wsModel.isConnected ? @color/red  : @color/green_500,default=@color/green_500}"
             android:textSize="10sp"
+            roundCornersRadius="10dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

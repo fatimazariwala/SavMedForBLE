@@ -72,23 +72,17 @@ class MedicalInfoActivity : AppCompatActivity() {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.call -> {
-                startActivity(Intent(applicationContext, CallActivity::class.java))
-                overridePendingTransition(0, 0)
-                finish()
+                Toast.makeText(this,"Go to Home Page!",Toast.LENGTH_SHORT).show()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.nearBy -> {
-                val i = Intent(applicationContext,MainActivity::class.java)
-                i.putExtra("frag",2)
-                startActivity(i)
-                finish()
+                Toast.makeText(this,"Go to Home Page!",Toast.LENGTH_SHORT).show()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.locationMap -> {
                 return@OnNavigationItemSelectedListener true
             }
         }
-
         true
     }
 

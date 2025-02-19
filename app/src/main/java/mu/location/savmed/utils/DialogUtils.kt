@@ -68,6 +68,37 @@ class DialogUtils {
             }
         }
 
+        fun showSplashDialogCheck(message: String,context: Context, callback: (Boolean) -> Unit) {
+            val dialogBuilder = AlertDialog.Builder(context)
+            val inflater = LayoutInflater.from(context)
+            val dialogView = inflater.inflate(R.layout.normal_pop_ups, null) // Replace with your XML file name
+            dialogBuilder.setView(dialogView)
+
+            val alert = dialogBuilder.create()
+            alert.show()
+
+            // Reference the OK button and set its click listener
+            dialogView.findViewById<Button>(R.id.button_yesss)?.setOnClickListener {
+                alert.dismiss()
+                callback(true) // Call the callback with true
+            }
+
+            dialogView.findViewById<Button>(R.id.button_nooo).setOnClickListener() {
+                alert.dismiss()
+                callback(false)
+            }
+
+            // Auto-dismiss after a certain time
+            alert.setOnShowListener {
+                alert.getButton(AlertDialog.BUTTON_POSITIVE).postDelayed({
+                    if (alert.isShowing) {
+                        alert.dismiss()
+                        callback(false) // Auto-dismiss and return false
+                    }
+                }, 2000)
+            }
+        }
+
         @UiThread
         private fun getDialog(context: Context, binding: ViewDataBinding): Dialog {
             val dialog = Dialog(context, R.style.Theme_LinphoneDialog)

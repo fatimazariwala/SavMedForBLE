@@ -130,6 +130,10 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             isPaused.postValue(isCallPaused())
             isPausedByRemote.postValue(call.state == Call.State.PausedByRemote)
             canBePaused.postValue(canCallBePaused())
+
+            coreContext.postOnMainThread {
+                Log.i(TAG,"is call paused: ${isPaused.value},is paused by remote ${isPausedByRemote.value}, can be pasued- ${canBePaused.value}")
+            }
         }
         @WorkerThread
         override fun onAudioDeviceChanged(call: Call, audioDevice: AudioDevice) {
@@ -213,7 +217,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                 Log.e("$TAG No call found in incoming state, can't answer any!")
             }
         }
-
     }
 
     @UiThread
@@ -435,6 +438,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
     }
 
     fun initializeWebSocket(remoteUri: String,fragmentContext: Context,frag: String?=null) {
+        Log.i(TAG,"In ini websocketttt")
         enableOutgoingCall = true
         outGoingCallDetails = OutGoingCallDetails(
             remoteUri = remoteUri,
@@ -443,8 +447,15 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         )
         if (webSocket.isConnected.value != true) {
             webSocket.connect()
+            if (!webSocket.join_key.value.isNullOrEmpty()) {
+                webSocket.enableJoin = true
+            }
         } else {
-            outgoingCall("")
+            if (!webSocket.join_key.value.isNullOrEmpty()) {
+                outgoingCall(webSocket.join_key.value!!)
+            } else {
+                outgoingCall("")
+            }
         }
     }
 
@@ -546,12 +557,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         }
         displayedName.postValue(remoteUri!!.trim())
 
-        if (frag == "nearByFrag") {
-            startCallActivity(context = fragmentContext)
-        } else {
-            callBack?.switchToOutgoingCallFragment()
-
-        }
+        startCallActivity(context = fragmentContext)
     }
 
     fun startCallActivity(context: Context) {

@@ -7,6 +7,7 @@ import mu.location.savmed.ui.medical.MedicalInfo
 import mu.location.savmed.models.Users
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContactResponse
+import mu.location.savmed.ui.auth.pri
 import mu.location.savmed.ui.locationing.models.getLiveLocationData
 import mu.location.savmed.ui.locationing.models.liveLocationData
 import mu.location.savmed.ui.locationing.models.locationData
@@ -62,4 +63,7 @@ interface RetroFit {
 
     @GET("get")
     suspend fun getEmergencyContacts(@Query("userName") userName: String): Response<List<EmergencyContactResponse>>
+
+    @GET("getpk")
+    suspend fun getUserNameFromPri(@Query("id") id: String): Response<pri>
 }

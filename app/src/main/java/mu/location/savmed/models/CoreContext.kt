@@ -76,7 +76,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     lateinit var currentAccount: Account
     var isConnectedToAndroidAuto: Boolean = false
 
-    val emrContact: MutableList<EmergencyContact> = mutableListOf()
+    val showPopUP = MutableLiveData<String>()
     val onLocationEvent = MutableLiveData<HashMap<String, Double>>()
 
     private val activityMonitor = ActivityMonitor()
@@ -93,7 +93,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     var isActiveCall = MutableLiveData<Boolean>()
     var isOutgoingCall = MutableLiveData<Boolean>()
     var isIncomingCall = MutableLiveData<Boolean>()
-    var isCallEnded = MutableLiveData<Boolean>()
+    var fetchedJoinKey: String = ""
 
     private var _callStatus = MutableLiveData<String>()
     val callStatus : LiveData<String> = _callStatus
@@ -207,10 +207,6 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                     isIncomingCall.postValue(false)
                     isOutgoingCall.postValue(false)
                     isActiveCall.postValue(false)
-
-                    postOnMainThread {
-                        showCallActivity()
-                    }
                 }
                 else -> { }
             }
@@ -510,24 +506,21 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
     fun answerCall(call: Call) {
         org.linphone.core.tools.Log.i("$TAG Answering call ${call.remoteAddress}")
         val params = core.createCallParams(call)
-        if (webSocket.isConnected.value != true) {
-            try {
-                webSocket.disConnect()
-            } catch (e: Exception) {
-                Log.i(TAG,"Error Disconnecting to websockets: $e")
-            }
-        }
+
         try {
             val joinKey = call.remoteParams?.getCustomHeader("ws_join_key")
             Log.i(TAG,"Fethced --Join key ${call.remoteAddress.asStringUriOnly()} ${joinKey}")
-            for (cu in params?.customContents?.toList() ?: emptyList()) {
-                Log.i(TAG,"CUSSSS ${cu.getCustomHeader("ws_join_key")}")
-            }
+
             if (!joinKey.isNullOrEmpty()) {
-                Log.i(TAG,"Fetched Join Key: $joinKey")
-                webSocket.join_key.postValue(joinKey)
-                webSocket.enableJoin = true
-                webSocket.connect()
+
+                if (webSocket.join_key.value.isNullOrEmpty()) {
+                    performLiveLocJOIN(joinKey)
+                } else if (webSocket.join_key.value == joinKey) {
+                    Log.i(TAG,"Same Live Location Join key!")
+                } else {
+                    showPopUP.postValue("live_location_check")
+                    fetchedJoinKey = joinKey
+                }
             } else {
                 Log.i(TAG,"Unable to Fetch Join Key")
             }
@@ -540,9 +533,36 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
             call.accept()
             return
         }
+        pauseOrResume()
+        pauseOrResume()
         call.acceptWithParams(params)
     }
 
+    fun performLiveLocJOIN(key: String) {
+
+        Log.i(TAG,"In perform Live Location Join")
+        if (webSocket.join_key.value.isNullOrEmpty()) {
+            webSocket.enableJoin = true
+            webSocket.join_key.postValue(key)
+
+        } else if (webSocket.join_key.value == key) {
+            Log.i(TAG,"Same Live Location Join key!")
+        } else if (webSocket.destoryCurrent == true) {
+            Log.i(TAG,"in Websocket destory,......")
+            webSocket.disConnect()
+            webSocket.connect()
+            webSocket.enableJoin = true
+            webSocket.join_key.postValue(fetchedJoinKey)
+            fetchedJoinKey = ""
+        }
+
+        if (webSocket.isConnected.value != true && webSocket.destoryCurrent != true) {
+           webSocket.connect()
+        } else {
+            webSocket.join()
+        }
+        webSocket.destoryCurrent = false
+    }
 
     @WorkerThread
     fun startCall(
@@ -574,8 +594,6 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
         Log.i("Location fetch","${onLocationEvent.value?.get("latitude")},${onLocationEvent.value?.get("longitude")}")
 
-        // We also need a CallParams object
-        // Create call params expects a Call object for incoming calls, but for outgoing we must use null safely
         val params = core.createCallParams(null)
         params ?: return // Same for params
         Log.i(TAG,"Yooo joinKey: ${joinKey}")
@@ -583,13 +601,8 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
             params.addCustomHeader("ws_join_key",joinKey)
         }
         //params.addCustomHeader("Emergency","none")
-        // We can now configure it
-        // Here we ask for no encryption but we could ask for ZRTP/SRTP/DTLS
         params.mediaEncryption = MediaEncryption.None
-        // If we wanted to start the call with video directly
         //params.enableVideo(true)
-
-        // Finally we start the call
         core.inviteAddressWithParams(remoteAddress, params)
     }
 

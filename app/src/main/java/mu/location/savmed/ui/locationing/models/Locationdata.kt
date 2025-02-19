@@ -70,7 +70,7 @@ class PolyLine {
     var points = ""
 }
 
-class Location{
+class Location {
     var lat =""
     var lng =""
 }

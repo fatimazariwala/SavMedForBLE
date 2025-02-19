@@ -41,6 +41,7 @@ import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
+import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
 import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.ui.RippleFragment
@@ -76,6 +77,8 @@ class MainActivity : AppCompatActivity(){
     private lateinit var callViewModelFactory: CurrentCallViewModelFactory
 
     private lateinit var conversationViewModel: AbstractConversationViewModel
+
+    private lateinit var bleViewModel: BluetoothLEViewModel
 
     private lateinit var sharedMainViewModel: SharedMainViewModel
 
@@ -339,6 +342,10 @@ class MainActivity : AppCompatActivity(){
         conversationViewModel = run {
             ViewModelProvider(this)[ConversationViewModel::class.java]
         }
+
+        bleViewModel = run {
+            ViewModelProvider(this)[BluetoothLEViewModel::class.java]
+        }
         // Below was comente dout on 24/11/2024 at 5:30
        // bluetoothLEViewModel = ViewModelProvider(this, BluetoothLEViewModelFactory(bluetoothLEController))[BluetoothLEViewModel::class.java]
     }
@@ -349,8 +356,67 @@ class MainActivity : AppCompatActivity(){
             if (msg == "KEY_NOT_FOUND") {
                 Toast.makeText(this,"Invalid Rejoin Key!",Toast.LENGTH_SHORT).show()
             }
+            //Toast.makeText(this,"Websocket Failure!",Toast.LENGTH_SHORT).show()
         }
 
+        coreContext.showPopUP.observe(this) { mesg ->
+            if (mesg == "live_location_check") {
+                DialogUtils.showSplashDialogCheck("", this) { resultz ->
+                    if (resultz) {
+                        Log.i(TAG, "Dialog confirmed")
+                        webSocket.destoryCurrent = true
+                        coreContext.performLiveLocJOIN("")
+                    }
+                }
+            }
+            if (mesg == "RINGER_MODE_NOT_CHANGED") {
+                Toast.makeText(this,"Please Allow Do nOt disturb Access!",Toast.LENGTH_LONG).show()
+            }
+            if (mesg == "Call_button_wait") {
+                Toast.makeText(this,"Call In progress! Please Wait!",Toast.LENGTH_LONG).show()
+            }
+            if (mesg == "USER_TO_CALL_NOT_FOUND") {
+
+                DialogUtils.showSplashDialogCheck("Could NOt Find UserName of the Near-by Person! Send a Request to get UserName?", this) { resultz ->
+                    if (resultz) {
+                        Toast.makeText(this,"Please Click on Send Message!",Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        webSocket.join_key.observe(this) { value ->
+            Log.i(CallActivity.TAG,"In join_key libe $value ${callViewModel.enableOutgoingCall}")
+            if (callViewModel.enableOutgoingCall) {
+                Log.i(CallActivity.TAG,"Join Key value: $value")
+                callViewModel.outgoingCall(value)
+            } else {
+                Log.i(CallActivity.TAG,"Outgoing Call NOt Enabled: ${callViewModel.enableOutgoingCall}")
+            }
+        }
+
+        // Websocket initialized in APP class
+        webSocket.isConnected.observe(this) { value ->
+            Log.i(TAG,"New COnnnnn")
+            if (value) {
+                Toast.makeText(this, "Websocket Connection Successfull!", Toast.LENGTH_SHORT).show()
+            }
+//            } else {
+//                Toast.makeText(this,"Websocket Connection Disconnected!",Toast.LENGTH_SHORT).show()
+//            }
+
+
+            if (callViewModel.enableOutgoingCall) {
+                Log.i(CallActivity.TAG,"Outgoing call Enabled!")
+                if (value) {
+                    webSocket.initiate()
+                } else {
+                    Toast.makeText(this,"Websocket Connection Failed!",Toast.LENGTH_SHORT).show()
+                    Log.i(CallActivity.TAG,"Websocket Connection Failed Initiating Outgoing Call")
+                    callViewModel.outgoingCall("")
+                }
+            }
+        }
         bleServer.bleServerEvent.onEach { result ->
 
             when(result) {

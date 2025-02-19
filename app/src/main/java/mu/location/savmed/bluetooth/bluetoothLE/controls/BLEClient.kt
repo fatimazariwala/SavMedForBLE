@@ -39,6 +39,7 @@ import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_JOIN_KEY_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_OIDENTITY_UUID
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer.Companion.CHARACTERISTIC_USER_NAME_UUID
@@ -74,6 +75,7 @@ class BLEClient(
         get() = _bleEvent
 
     val scanStatus = MutableLiveData<String>()
+    var enableJoinKeyWrite = false
 
     val bluetoothLeScanner by lazy { bluetoothAdapter?.bluetoothLeScanner }
 
@@ -231,7 +233,11 @@ class BLEClient(
                 )
                 if (characteristic.uuid.toString().equals(CHARACTERISTIC_OIDENTITY_UUID)) {
                     Log.i(TAG,"Performing Second Write...")
-                    //secondWriteRequest(gatt.device.address)
+                    if (enableJoinKeyWrite) {
+                        if (webSocket.join_key.value != null) {
+                            sendJoinKey(webSocket.join_key.value!!)
+                        }
+                    }
                 }
             } else {
                 Log.e(TAG, "Characteristic write failed with status: $status")
@@ -284,7 +290,13 @@ class BLEClient(
 
                 Log.i(TAG,"Writting UserName N DIstance ${device.address}")
 
-                characteristic.setValue("${SharedPreference.username}#${distz}")
+                val userName = if (SharedPreference.username.contains('.')) {
+                    SharedPreference.username.split('.')[0]
+                } else {
+                    SharedPreference.username
+                }
+
+                characteristic.setValue("${userName}#${distz}")
                 Log.i(TAG,"${getActiveGattConnection(device.address!!)?.writeCharacteristic(characteristic)} - Result of characteristic....")
             }
             Log.i(TAG,"char data---ini: ${characteristic.value}")
@@ -441,11 +453,14 @@ class BLEClient(
                 if (name != null) {
 
                     val split = name.split('#')
-
+                    if (split[1] != "000"){
+                        coreContext.contactsManager.getUserNameFromPrimaryKey(split[1])
+                    }
                     val updatedDevice = updatedDevices[existingDeviceIndex].copy(
                         name = split[0],
-                        deviceName = split[1]
+                        deviceName = split[1]   // this is primary Key
                     )
+
                     updatedDevices[existingDeviceIndex] = updatedDevice
                     Log.i(TAG, "Updated Name: $name")
                 }

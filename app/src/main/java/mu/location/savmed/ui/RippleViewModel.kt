@@ -49,21 +49,18 @@ class RippleViewModel: ViewModel() {
             account ?: return@postOnCoreThread
             Log.i(
                 TAG,
-                "Accounts ---${core.defaultAccount?.params?.identityAddress?.asStringUriOnly()}"
+                "Accounts --$$$-${account.findAuthInfo()?.username}"
             )
 
             core.removeAccount(account)
+            Log.i(TAG,"Remove Account Under ${account.findAuthInfo()?.username}")
             core.clearAccounts()
             core.clearAllAuthInfo()
-            Log.i(
-                TAG,
-                "Accounts ---${core.defaultAccount?.params?.identityAddress?.asStringUriOnly()}"
-            )
 
             if (core.defaultAccount == null) {
                 Log.i(
                     TAG,
-                    "Default account is not null ${coreContext.core.defaultAccount} ${coreContext.core.defaultAccount?.params?.identityAddress?.asStringUriOnly()}"
+                    "Default account is null ${coreContext.core.defaultAccount} ${coreContext.core.defaultAccount?.params?.identityAddress?.asStringUriOnly()}"
                 )
             } else {
                 Log.i(

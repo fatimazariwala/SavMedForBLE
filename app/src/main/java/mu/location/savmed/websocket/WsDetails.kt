@@ -202,12 +202,31 @@ class WsDetails (context: Context) {
         }
     }
 
+    fun sendDeleteMessage() {
+        Log.i(TAG,"Deleting ${join_key.value}")
+        if (isConnected.value == true) {
+            val message = mapOf(
+                "type" to "destroy",
+                "person" to SharedPreference.username,
+                "join" to join_key.value
+            )
+            webSocket.send(gson.toJson(message))
+        } else {
+            Log.i(TAG,"Could not send location, InitEstabled: ${initEstablished},isConnected: ${isConnected.value}")
+        }
+    }
+
     fun disConnect() {
         enableJoin = false
         initEstablished = false
         isDisconnectDueToNetworkChange = false
         if (isConnected.value == true) {
-            webSocket.cancel()
+            sendDeleteMessage()
+
+            coroutineScope.launch {
+                delay(1000)
+                webSocket.cancel()
+            }
         }
         isConnected.value = false
     }

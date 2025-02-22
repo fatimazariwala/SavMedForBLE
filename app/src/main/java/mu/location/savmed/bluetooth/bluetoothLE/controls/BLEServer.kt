@@ -82,6 +82,7 @@ class BLEServer(
     var isPrevMessage = true
 
     val bluetoothBroadcastReceiver = BluetoothBroadcastReceiver { isBluetoothON ->
+        Log.i(TAG,"B;uetooth State: ${isBluetoothON}, ADv state: ${advertisingState}")
         if (advertisingState == false) {
             Log.i(TAG,"Starting Advertise again...")
 
@@ -294,7 +295,7 @@ class BLEServer(
 
             coreContext.performLiveLocJOIN(recv)
 
-            if (webSocket.join_key.value != recv || !webSocket.join_key.value.isNullOrEmpty()) {
+            if (webSocket.join_key.value != recv && !webSocket.join_key.value.isNullOrEmpty()) {
                 Log.i(TAG,"JoinKey Value ${webSocket.join_key.value}")
                 coreContext.showPopUP.postValue("live_location_check")
                 coreContext.fetchedJoinKey = recv

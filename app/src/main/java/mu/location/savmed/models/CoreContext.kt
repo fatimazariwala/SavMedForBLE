@@ -516,8 +516,9 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                 if (webSocket.join_key.value.isNullOrEmpty()) {
                     performLiveLocJOIN(joinKey)
                 } else if (webSocket.join_key.value == joinKey) {
-                    Log.i(TAG,"Same Live Location Join key!")
+                    Log.i(TAG,"Same Live Location Join key! ${webSocket.join_key.value}")
                 } else {
+                    Log.i(TAG,"Join key not null ${webSocket.join_key.value}")
                     showPopUP.postValue("live_location_check")
                     fetchedJoinKey = joinKey
                 }
@@ -548,7 +549,7 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
         } else if (webSocket.join_key.value == key) {
             Log.i(TAG,"Same Live Location Join key!")
         } else if (webSocket.destoryCurrent == true) {
-            Log.i(TAG,"in Websocket destory,......")
+            Log.i(TAG,"in Websocket destory,...... ${webSocket.join_key.value}")
             webSocket.disConnect()
             webSocket.connect()
             webSocket.enableJoin = true

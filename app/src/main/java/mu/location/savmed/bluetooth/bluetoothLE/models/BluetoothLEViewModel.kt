@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.webSocket
-import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment.Companion
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
@@ -31,21 +30,9 @@ class BluetoothLEViewModel constructor(): ViewModel() {
     }
 
     init {
-        bleServer.bleServerEvent.onEach { result ->
 
-            when(result) {
-                is ConnectionResult.BLETransferSucceeded -> {
-                    Log.i(TAG,"yoooooooooooo ${result.message}")
-                }
-                else -> { }
-            }
-
-        }
-            .catch { throwable ->
-                Log.e(TAG, "Error: $throwable")
-            }
-            .launchIn(viewModelScope)
     }
+
     private val _state = MutableStateFlow(BluetoothLEUiState())
     val state = combine(
         bleClient.scannedDevices,
@@ -77,24 +64,6 @@ class BluetoothLEViewModel constructor(): ViewModel() {
         }
     }
 
-    fun sendBroadCastConnection() {
-
-        viewModelScope.launch {
-            bleClient.createBroadCastConnection().collect { connectionResult ->
-                when (connectionResult) {
-                    is ConnectionResult.Success -> {
-                        Log.i(TAG, "In broadcast..Success..${connectionResult.message}")
-                    }
-                    is ConnectionResult.Error -> {
-                        Log.e(TAG, "In Broadcst Err: ${connectionResult.message}")
-                    }
-                    else -> {}
-                }
-            }
-        }
-    }
-
-    // AllowIncomignDevices
     fun stopScan() {
         bleClient.stopBleScan()
     }
@@ -113,38 +82,6 @@ class BluetoothLEViewModel constructor(): ViewModel() {
             }
         }
     }
-
-    private fun Flow<ConnectionResult>.listen(): Job {
-        return onEach { result ->
-            when(result) {
-                ConnectionResult.ConnectionEstablished -> {
-                    _state.update { it.copy(
-                        toastMessage = "Connection Established"
-                    ) }
-                }
-                is ConnectionResult.BLETransferSucceeded -> {
-                    Log.i(TAG,"wriet message -> ${result.message}")
-                    _state.update { it.copy(
-                        message = result.message
-                    ) }
-                }
-                is ConnectionResult.Error -> {
-                    _state.update { it.copy(
-                        toastMessage = result.message
-                    ) }
-                }
-                else -> { }
-            }
-        }
-            .catch { throwable ->
-                _state.update { it.copy(
-                    toastMessage = "Some Error Occurred!"
-                ) }
-                Log.i(TAG,"ConnectionResult Error: ${throwable.message}")
-            }
-            .launchIn(viewModelScope)
-    }
-
 
     override fun onCleared() {
         super.onCleared()

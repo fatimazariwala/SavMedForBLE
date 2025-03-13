@@ -12,8 +12,13 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.databinding.ChatEmergencyConatctConnectAvatarBarCellBinding
 import mu.location.savmed.databinding.ContactItemLayoutBinding
 import mu.location.savmed.databinding.EmergencyContactItemsBinding
@@ -29,6 +34,7 @@ class ContactAdapter(
     private val onRemoveClick: (ContactAvatarModel) -> Unit
 ) : ListAdapter<ContactAvatarModel, RecyclerView.ViewHolder>(ContactDiffCallback()) {
 
+    val coro = CoroutineScope(SupervisorJob()+Dispatchers.IO)
     companion object {
         const val TAG = "[Contact Adapter]"
     }
@@ -64,7 +70,11 @@ class ContactAdapter(
 
                 callButton.setOnClickListener() {
                     contactModel.friend.address?.username?.let { it1 -> onCallClick(it1) }
-                    coreContext.showPopUP.postValue("Call_button_wait")
+                    coro.launch {
+                        coreContext._globalEvents.emit(
+                            GlobalEventTriggers.CallButtonPressed
+                        )
+                    }
                 }
 
                 frameLayout.setOnClickListener() {

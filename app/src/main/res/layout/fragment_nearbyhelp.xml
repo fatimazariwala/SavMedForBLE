@@ -4,12 +4,12 @@
     xmlns:bind="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data>
-        <import type="android.view.View" />
-        <variable
-            name="viewModel"
-            type="mu.location.savmed.bluetooth.bluetoothClassic.uiModel.BluetoothViewModel" />
-    </data>
+<!--    <data>-->
+<!--        <import type="android.view.View" />-->
+<!--        <variable-->
+<!--            name="viewModel"-->
+<!--            type="mu.location.savmed.bluetooth.bluetoothClassic.uiModel.BluetoothViewModel" />-->
+<!--    </data>-->
 
     <FrameLayout
         android:layout_width="match_parent"

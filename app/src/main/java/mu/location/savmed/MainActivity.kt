@@ -2,7 +2,6 @@ package mu.location.savmed
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -10,52 +9,35 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.RadioButton
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ReportFragment.Companion.reportFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mu.location.savmed.SavMed.Companion.bleServer
-//import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.NearByFragment
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
-import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
-import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
-import mu.location.savmed.ui.RippleFragment
-import mu.location.savmed.ui.RippleFragment.Companion
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.ui.call.CallActivity
 import mu.location.savmed.ui.call.viewModelFactory.CurrentCallViewModelFactory
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
 import mu.location.savmed.ui.chat.viewModel.AbstractConversationViewModel
 import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
-import mu.location.savmed.ui.locationing.DataProcessing.TaskLoadedCallback
-import mu.location.savmed.ui.locationing.MapsFragment
 import mu.location.savmed.ui.main.SharedMainViewModel
-import mu.location.savmed.ui.medical.MedicalInfoActivity
-import mu.location.savmed.utils.ActivityHolder
 import mu.location.savmed.utils.DialogUtils
 import mu.location.savmed.utils.SettingsManager
 import mu.location.savmed.utils.SharedPreference
@@ -69,6 +51,8 @@ class MainActivity : AppCompatActivity(){
    // private lateinit var bluetoothLEViewModel: BluetoothLEViewModel
 
     private lateinit var navController : NavController
+    var chatNotificationArgs = false
+
 
     private var permissionsChecked = false
     var currentSelectedItemId : Int = 0
@@ -84,25 +68,11 @@ class MainActivity : AppCompatActivity(){
 
     lateinit var bottomNav: BottomNavigationView
 
-    val backgroundLocResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (it) {
-            Log.i(TAG,"Background Location Permissions Granted!")
-        } else {
-           // val dialogResult = showSplashDialog("Please Allow All Time Location Permissions For Background Tracking During Emergencies.")
-
-//            if (dialogResult) {
-//                val param = arrayOf(
-//                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-//                )
-//                launchPermissionAgain(param)
-//            } else {
-//                Toast.makeText(
-//                    this,
-//                    "Background Tracking disabled..",
-//                    Toast.LENGTH_SHORT).show()
-//            }
+        val backgroundLocResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            if (it) {
+                Log.i(TAG,"Background Location Permissions Granted!")
+            }
         }
-    }
 
     // Permission Launcher
     private val permissionCheck = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -207,7 +177,6 @@ class MainActivity : AppCompatActivity(){
         checkAndRequestPermissions()
         SharedPreference.init(this)
         initializeViewModels()
-        ActivityHolder.MainActivity = this
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView) as NavHostFragment
         navController = navHostFragment.navController
@@ -215,63 +184,35 @@ class MainActivity : AppCompatActivity(){
         bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        val intentExtra = intent.getIntExtra("frag",0)
-        Log.i(TAG,"value of frag $intentExtra")
-        if (intentExtra != 0) {
-            if (intentExtra == 2) {
-                Log.i(TAG,"i gett....ripple" )
-                navController.navigate(R.id.nearByFragment)
-                bottomNav.selectedItemId = R.id.nearBy
+        if (savedInstanceState != null) {
+            val navState = savedInstanceState.getBundle("nav_state")
+            if (navState != null) {
+                Log.i(TAG,"in NavSTate...")
+                navController.restoreState(navState)
             }
         }
-        currentSelectedItemId = bottomNav.selectedItemId
+
+        chatNotificationArgs = intent.getBooleanExtra("Chat",false)
+        Log.i(TAG,"From ChatNotif $chatNotificationArgs")
+        if (chatNotificationArgs == true) {
+            val localSipUri = intent.getStringExtra("LocalSipUri")
+            val remoteSipUri = intent.getStringExtra("RemoteSipUri")
+
+            Log.i(TAG,"Notification Found LocalSipUri: [${localSipUri}] RemoteSipUri: [${remoteSipUri}]")
+
+            if (localSipUri != null && remoteSipUri != null) {
+
+                val bundle = Bundle().apply {
+                    putString("localSipUri",localSipUri)
+                    putString("remoteSipUri",remoteSipUri)
+                }
+                navController.navigate(R.id.conversationFragment,bundle)
+            }
+        }
+
+       // currentSelectedItemId = bottomNav.selectedItemId  [use this from vewModel]
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
-        bleServer.messageReceivedFromBLE.observe(this){ result ->
-            if (!bleServer.isPrevMessage) {
-                Log.i(NearByFragment.TAG,"mesdg slpash $result")
-                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
-                    if (resultz) {
-                        Log.i(TAG, "Dialog confirmed")
-                        navController.navigate(R.id.mapsFragment)
-
-//                        if (message != null) {
-//                            val lat = message.lat.toDouble()
-//                            val lon = message.lon
-//                            val name = message.From
-//                            val dist = message.dist
-//
-//                            // Create the bundle to pass the data to the MapsFragment
-//                            val bundle = Bundle().apply {
-//                                putDouble("lat", lat)
-//                                putDouble("long", lon)
-//                                putString("foundUserName", name)
-//                                putDouble("dist",dist)
-//                            }
-//
-//                            // Navigate to MapsFragment and pass the data
-//                            val mapsFragment = MapsFragment()
-//                            mapsFragment.arguments = bundle
-//
-//                            supportFragmentManager.beginTransaction()
-//                                .replace(R.id.fragmentContainerView, mapsFragment) // Make sure the container ID is correct
-//                                .addToBackStack(null) // Optional: add to back stack if needed
-//                                .commit()
-//                        } else {
-//                            Toast.makeText(this,"Cannot Find User's Coordinates!",Toast.LENGTH_SHORT).show()
-//                        }
-
-                    } else {
-                        Log.i(TAG, "Dialog dismissed or canceled")
-                    }
-                }
-                bleServer.isPrevMessage = true
-            } else {
-                Log.i(NearByFragment.TAG,"message already displayed")
-            }
-        }
-
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -325,6 +266,7 @@ class MainActivity : AppCompatActivity(){
 
         observeRegistrationStatus()
         observeMessages()
+        observeEvents()
        // observeEmergencyContacts()
     }
 
@@ -356,33 +298,6 @@ class MainActivity : AppCompatActivity(){
             if (msg == "KEY_NOT_FOUND") {
                 Toast.makeText(this,"Invalid Rejoin Key!",Toast.LENGTH_SHORT).show()
             }
-            //Toast.makeText(this,"Websocket Failure!",Toast.LENGTH_SHORT).show()
-        }
-
-        coreContext.showPopUP.observe(this) { mesg ->
-            if (mesg == "live_location_check") {
-                DialogUtils.showSplashDialogCheck("", this) { resultz ->
-                    if (resultz) {
-                        Log.i(TAG, "Dialog confirmed")
-                        webSocket.destoryCurrent = true
-                        coreContext.performLiveLocJOIN("")
-                    }
-                }
-            }
-            if (mesg == "RINGER_MODE_NOT_CHANGED") {
-                Toast.makeText(this,"Please Allow Do nOt disturb Access!",Toast.LENGTH_LONG).show()
-            }
-            if (mesg == "Call_button_wait") {
-                Toast.makeText(this,"Call In progress! Please Wait!",Toast.LENGTH_LONG).show()
-            }
-            if (mesg == "USER_TO_CALL_NOT_FOUND") {
-
-                DialogUtils.showSplashDialogCheck("Could NOt Find UserName of the Near-by Person! Send a Request to get UserName?", this) { resultz ->
-                    if (resultz) {
-                        Toast.makeText(this,"Please Click on Send Message!",Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
         }
 
         webSocket.join_key.observe(this) { value ->
@@ -395,16 +310,11 @@ class MainActivity : AppCompatActivity(){
             }
         }
 
-        // Websocket initialized in APP class
         webSocket.isConnected.observe(this) { value ->
             Log.i(TAG,"New COnnnnn")
             if (value) {
                 Toast.makeText(this, "Websocket Connection Successfull!", Toast.LENGTH_SHORT).show()
             }
-//            } else {
-//                Toast.makeText(this,"Websocket Connection Disconnected!",Toast.LENGTH_SHORT).show()
-//            }
-
 
             if (callViewModel.enableOutgoingCall) {
                 Log.i(CallActivity.TAG,"Outgoing call Enabled!")
@@ -417,21 +327,23 @@ class MainActivity : AppCompatActivity(){
                 }
             }
         }
-        bleServer.bleServerEvent.onEach { result ->
 
-            when(result) {
-                is ConnectionResult.BLETransferSucceeded -> {
-                    Log.i(NearByFragment.TAG,"yoooooooooooo ${result.message}")
-                    Toast.makeText(this,result.message,Toast.LENGTH_SHORT).show()
+        bleServer.messageReceivedFromBLE.observe(this){ result ->
+            if (!bleServer.isPrevMessage) {
+                Log.i(NearByFragment.TAG,"mesdg slpash $result")
+                DialogUtils.showSplashDialogNearBy(result,this) { resultz ->
+                    if (resultz) {
+                        Log.i(TAG, "Dialog confirmed")
+                        navController.navigate(R.id.mapsFragment)
+                    } else {
+                        Log.i(TAG, "Dialog dismissed or canceled")
+                    }
                 }
-                else -> { }
+                bleServer.isPrevMessage = true
+            } else {
+                Log.i(NearByFragment.TAG,"message already displayed")
             }
-
         }
-        .catch { throwable ->
-            Log.e(NearByFragment.TAG, "Error: $throwable")
-        }
-        .launchIn(lifecycleScope)
     }
 
     private fun observeRegistrationStatus() {
@@ -473,8 +385,67 @@ class MainActivity : AppCompatActivity(){
 
     override fun onResume() {
         super.onResume()
-        bottomNav.selectedItemId = currentSelectedItemId
+        //bottomNav.selectedItemId = currentSelectedItemId
+        Log.d("NavDebug", "Current Destination: ${findNavController(R.id.fragmentContainerView).currentDestination}")
     }
 
+    private fun observeEvents() {
+        coreContext.globalEvents.onEach { result ->
+            when (result) {
+                GlobalEventTriggers.ConnectionEstablished -> {
+                    Toast.makeText(this,"Connected!",Toast.LENGTH_SHORT).show()
+                }
+                is GlobalEventTriggers.Error -> {
+                    Toast.makeText(this,result.message,Toast.LENGTH_LONG).show()
+                }
+                GlobalEventTriggers.DataTransferSucceeded -> {
+                    Toast.makeText(this,"Message Sent!",Toast.LENGTH_SHORT).show()
+                }
+                GlobalEventTriggers.LiveLocationCheck -> {
+                    Log.i(TAG,"in live loc mesg recv")
+                    DialogUtils.showSplashDialogCheck("","","", this) { resultz ->
+                        if (resultz) {
+                            Log.i(TAG, "Dialog confirmed")
+                            webSocket.changeSession = true
+                            coreContext.performLiveLocJOIN("")
+                        }
+                    }
+                }
+                GlobalEventTriggers.DestroyWsSession -> {
+                    Log.i(TAG,"in live loc mesg recv")
+                    DialogUtils.showSplashDialogCheck("Do you want to Destroy the Session or Disconnect From the Session?\n \bNOTE: If you Destroy the session Everyone's Location Tracking on the Session will be disabled!\b",
+                        "Destroy","Disconnect", this) { resultz ->
+                        if (resultz) {
+                            Log.i(TAG, "Dialog confirmed")
+                            webSocket.destroyCurrent = true
+                        } else {
+                            webSocket.destroyCurrent = false
+                        }
+                        webSocket.disConnect()
+                    }
+                }
+                GlobalEventTriggers.RingerPermissionError -> {
+                    Toast.makeText(this,"Please Allow Do nOt disturb Access!",Toast.LENGTH_LONG).show()
+                }
+                GlobalEventTriggers.CallButtonPressed -> {
+                    Toast.makeText(this,"Call In progress! Please Wait!",Toast.LENGTH_LONG).show()
+                }
+                GlobalEventTriggers.UserNotFound -> {
+                    Toast.makeText(this,"User Not Found!",Toast.LENGTH_LONG).show()
+                }
+                else -> { }
+            }
+        }
+        .catch { throwable ->
+            Log.e(NearByFragment.TAG, "Error: $throwable")
+        }
+        .launchIn(lifecycleScope)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.i(TAG,"buldble navstate ${navController.saveState()}")
+        outState.putBundle("nav_state", navController.saveState())
+    }
 }
 

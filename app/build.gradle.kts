@@ -18,10 +18,6 @@ android {
     namespace = "mu.location.savmed"
     compileSdk = 35
 
-    viewBinding {
-        enable = true
-    }
-
     defaultConfig {
         applicationId = "mu.location.savmed"
         minSdk = 24
@@ -33,6 +29,9 @@ android {
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    viewBinding {
+        enable = true
     }
 
     buildTypes {
@@ -94,45 +93,56 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.emoji2.emojipicker)
-   implementation(libs.play.services.maps)
+    implementation(libs.play.services.maps)
     implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.transport.api)
+    implementation(libs.transport.api)
+    implementation(libs.transport.api)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // For API
     implementation(libs.retrofit)
     implementation(libs.coverterGson)
+
+    // For Location Extraction
     implementation(libs.playServicesLocation)
 
     implementation(libs.coil)
     implementation(libs.coil.gif)
     implementation(libs.coil.svg)
     implementation(libs.coil.video)
-    implementation ("com.google.maps.android:android-maps-utils:3.4.0")
+    implementation (libs.android.maps.utils)
 
-    implementation ("androidx.databinding:databinding-runtime:7.3.1")
-    //implementation("com.nbsp:library:1.8")
-    //implementation(libs.linphone-sdk)
-    //implementation("org.linphone:linphone-sdk-android-debug:5.4.+")
-    implementation("org.greenrobot:eventbus:3.3.1")
-    implementation ("androidx.navigation:navigation-compose:2.8.3")
+    implementation (libs.androidx.databinding.runtime)
+    implementation (libs.androidx.navigation.compose)
+
+    // Linphone Recommended Media Library to Manage Audio
+    implementation ("androidx.media:media:1.7.0")
 
     // Views/Fragments Integration
-    implementation ("androidx.navigation:navigation-fragment:2.8.3")
-    implementation ("androidx.navigation:navigation-ui:2.8.3")
+    implementation (libs.androidx.navigation.fragment)
+    implementation (libs.androidx.navigation.ui)
 
     // Feature module support for Fragments
-    implementation ("androidx.navigation:navigation-dynamic-features-fragment:2.8.3")
+    implementation (libs.androidx.navigation.dynamic.features.fragment)
 
-    // librarey for circular view of porfile photo in conatct list
+    // Library for circular view of Profile photo in Contact list
     implementation (libs.circleimageview)
     implementation(libs.google.flexbox)
     implementation(libs.linphone)
-//    implementation(libs.anko.sdk15)
     implementation(libs.klaxon)
+
     // Testing Navigation
-    androidTestImplementation ("androidx.navigation:navigation-testing:2.8.3")
+    androidTestImplementation (libs.androidx.navigation.testing)
 
-    //ripple effect homepage
-    implementation ("com.skyfishjy.ripplebackground:library:1.0.1")
+    // Ripple effect homepage
+    implementation (libs.library)
 
+    // For Work Manager
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // Creating Event Bus to Flood Data on the App
+    //implementation(libs.eventbus)
 }

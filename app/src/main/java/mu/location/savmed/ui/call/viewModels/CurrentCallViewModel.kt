@@ -355,7 +355,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             val micMuted = call.conference?.microphoneMuted ?: call.microphoneMuted
             if (micMuted) {
                 Log.w("$TAG Microphone is currently muted")
-            }
+            } 
             isMicrophoneMuted.postValue(micMuted)
         }
 

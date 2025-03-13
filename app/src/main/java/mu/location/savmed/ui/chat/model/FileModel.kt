@@ -99,7 +99,6 @@ class FileModel @AnyThread constructor(
                     Log.i(TAG,"i am mediaPreview ${mediaPreview.value}")
                 }
                 mediaPreviewAvailable.postValue(true)
-                Log.i(TAG,"i am mediaPreviewAVal ${mediaPreviewAvailable.value}")
             } else if (isVideoPreview) {
                 loadVideoPreview()
             }

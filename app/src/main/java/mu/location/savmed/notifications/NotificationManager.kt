@@ -30,9 +30,14 @@ import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.LocusIdCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.compatibility.Compatibility
 import mu.location.savmed.contacts.AvatarGenerator
@@ -55,6 +60,7 @@ import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Friend
 import org.linphone.core.tools.Log
+import kotlin.coroutines.coroutineContext
 
 class NotificationsManager @MainThread constructor(private val context: Context) {
 
@@ -89,6 +95,7 @@ class NotificationsManager @MainThread constructor(private val context: Context)
     private var currentKeepAliveThirdPartyAccountsForegroundServiceNotificationId = -1
 
     private var currentlyRingingCallRemoteAddress: Address? = null
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     lateinit var amManager: AudioManager
     var prevAm: Int = 0
@@ -1136,7 +1143,7 @@ class NotificationsManager @MainThread constructor(private val context: Context)
         // Not using NavDeepLinkBuilder to prevent stacking a ConversationsListFragment above another one
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(
-                Intent(context, CallActivity::class.java).apply {
+                Intent(context, MainActivity::class.java).apply {
                     setAction(Intent.ACTION_MAIN) // Needed as well
                     putExtras(args) // Need to pass args here for Chat extra
                 }
@@ -1267,7 +1274,9 @@ class NotificationsManager @MainThread constructor(private val context: Context)
             try {
                 amManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
             } catch (e: Exception) {
-                coreContext.showPopUP.postValue("RINGER_MODE_NOT_CHANGED")
+                coroutineScope.launch {
+                    coreContext._globalEvents.emit(GlobalEventTriggers.RingerPermissionError)
+                }
                 Log.i(TAG,"Could not Change mode to Not Silent or Not Vibrate, ${e.message}")
             }
             return true

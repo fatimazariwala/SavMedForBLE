@@ -94,7 +94,9 @@ class CoversationListViewModel @UiThread constructor(): ViewModel() {
         var count = 0
 
         val account = SavMedUtils.getDefaultAccount()
+        Log.i(TAG,"i am default account ${account?.params?.identityAddress?.asStringUriOnly()}")
         val chatRooms = account?.chatRooms
+        Log.i(TAG,"Found Rooms: $chatRooms ${chatRooms?.size}")
         for (chatRoom in chatRooms.orEmpty()) {
             val model = ConversationModel(chatRoom)
             list.add(model)
@@ -104,7 +106,9 @@ class CoversationListViewModel @UiThread constructor(): ViewModel() {
                 conversations.postValue(list)
             }
         }
-
+        for (d in list) {
+            Log.i(TAG,"Yoo i got da room ${d.id}")
+        }
         conversations.postValue(list)
     }
 

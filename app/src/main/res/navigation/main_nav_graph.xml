@@ -18,7 +18,7 @@
     </fragment>
     <fragment
         android:id="@+id/rippleFragment"
-        android:name="mu.location.savmed.ui.RippleFragment"
+        android:name="mu.location.savmed.ui.main.home.RippleFragment"
         android:label="fragment_ripple"
         tools:layout="@layout/fragment_ripple" >
         <action
@@ -27,6 +27,9 @@
         <action
             android:id="@+id/action_rippleFragment_to_mapsFragment"
             app:destination="@id/mapsFragment" />
+        <action
+            android:id="@+id/action_rippleFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
     </fragment>
     <fragment
         android:id="@+id/messageListFragment"
@@ -78,12 +81,15 @@
     <argument
         android:name="remoteSipUri"
         app:argType="string"/>
-        <action
-            android:id="@+id/action_conversationFragment_to_contactProfilePage"
-            app:destination="@id/contactProfilePage" />
-        <action
-            android:id="@+id/action_conversationFragment_to_chatListFragment"
-            app:destination="@id/chatListFragment" />
+    <action
+        android:id="@+id/action_conversationFragment_to_contactProfilePage"
+        app:destination="@id/contactProfilePage" />
+    <action
+        android:id="@+id/action_conversationFragment_to_chatListFragment"
+        app:destination="@id/chatListFragment" />
+    <action
+        android:id="@+id/action_global_conversationFragment"
+        app:destination="@id/conversationFragment" />
     </fragment>
     <fragment
         android:id="@+id/contactProfilePage"
@@ -106,6 +112,9 @@
         <action
             android:id="@+id/action_chatListFragment_to_conversationFragment"
             app:destination="@id/conversationFragment" />
+        <action
+            android:id="@+id/action_chatListFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
     </fragment>
         <!--    <fragment-->
 <!--        android:id="@+id/mapsFragment"-->

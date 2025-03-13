@@ -5,9 +5,8 @@ import android.app.Application
 import android.bluetooth.BluetoothManager
 import android.os.Handler
 import android.os.Looper
+import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.color.DynamicColors
-import mu.location.savmed.bluetooth.bluetoothClassic.BluetoothController
-import mu.location.savmed.bluetooth.bluetoothLE.BluetoothLEController
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
 //import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEControllerFactory
 import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEServer
@@ -60,6 +59,7 @@ class SavMed : Application() {
         super.onCreate()
         val context = applicationContext
 
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         Factory.instance().setLogCollectionPath(context.filesDir.absolutePath)
         Factory.instance().enableLogCollection(LogCollectionState.Enabled)
         SharedPreference.init(applicationContext)
@@ -90,7 +90,7 @@ class SavMed : Application() {
         coreContext = CoreContext(context)
         coreContext.start()
 
-        DynamicColors.applyToActivitiesIfAvailable(this)
+       DynamicColors.applyToActivitiesIfAvailable(this)
     }
 
     override fun onTerminate() {
@@ -98,6 +98,5 @@ class SavMed : Application() {
         Log.i(TAG,"IN Termination....")
         coreContext.core.consolidatedPresence = ConsolidatedPresence.Offline
     }
-
 
 }

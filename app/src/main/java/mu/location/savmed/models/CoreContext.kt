@@ -14,39 +14,33 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed
-import mu.location.savmed.SavMed.Companion.coreContext
-//import mu.location.savmed.SavMed.Companion.bluetoothController
 import mu.location.savmed.SavMed.Companion.corePreferences
 import mu.location.savmed.SavMed.Companion.isWebSocketInitialized
 import mu.location.savmed.SavMed.Companion.webSocket
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.contacts.ContactsDB
 import mu.location.savmed.contacts.ContactsManager
 import mu.location.savmed.notifications.NotificationsManager
-import mu.location.savmed.ui.auth.EmergencyContacts.EmergencyContact
 import mu.location.savmed.ui.call.CallActivity
-//import mu.location.savmed.sip.SipActivity
 import mu.location.savmed.ui.call.services.CoreForeground
-import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
-import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel.Companion
 import mu.location.savmed.utils.ActivityMonitor
 import mu.location.savmed.utils.AppUtils
-import mu.location.savmed.utils.Event
-import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SavMedUtils
 import mu.location.savmed.utils.SettingsManager
 import org.linphone.core.Account
 import org.linphone.core.AudioDevice
 import org.linphone.core.BuildConfig
 import org.linphone.core.Call
-import org.linphone.core.ChatMessage
-import org.linphone.core.ChatRoom
 import org.linphone.core.CodecPriorityPolicy
-import org.linphone.core.Config
 import org.linphone.core.ConfiguringState
 import org.linphone.core.ConsolidatedPresence
 import org.linphone.core.Core
@@ -60,8 +54,7 @@ import org.linphone.core.MediaEncryption
 import org.linphone.core.ProxyConfig
 import org.linphone.core.Reason
 import org.linphone.core.RegistrationState
-import retrofit2.HttpException
-import java.io.IOException
+
 
 class CoreContext @UiThread constructor(val context: Context) : HandlerThread("Core Thread") {
 
@@ -71,17 +64,15 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
     lateinit var core: Core
     var isLocationGranted = false
-    var isGpsEnabled = false
-    var isNetworkAvailable = false
-    lateinit var currentAccount: Account
     var isConnectedToAndroidAuto: Boolean = false
-
-    val showPopUP = MutableLiveData<String>()
+//
+//    val showPopUP = MutableLiveData<String>()
     val onLocationEvent = MutableLiveData<HashMap<String, Double>>()
 
     private val activityMonitor = ActivityMonitor()
 
     private val mainThread = Handler(Looper.getMainLooper())
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val notificationManager: NotificationsManager by lazy {
         NotificationsManager(context)
@@ -100,6 +91,10 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
     private var _registrationStatus = MutableLiveData<String>()
     val registrationStatus : LiveData<String> = _registrationStatus
+
+    val _globalEvents = MutableSharedFlow<GlobalEventTriggers>()
+    val globalEvents: SharedFlow<GlobalEventTriggers>
+        get() = _globalEvents
 
     fun newCallStatus(callStatus : String) {
         _callStatus.value = callStatus
@@ -519,7 +514,11 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                     Log.i(TAG,"Same Live Location Join key! ${webSocket.join_key.value}")
                 } else {
                     Log.i(TAG,"Join key not null ${webSocket.join_key.value}")
-                    showPopUP.postValue("live_location_check")
+
+                    coroutineScope.launch {
+                        _globalEvents.emit(GlobalEventTriggers.LiveLocationCheck)
+                    }
+
                     fetchedJoinKey = joinKey
                 }
             } else {
@@ -534,8 +533,8 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
             call.accept()
             return
         }
-        pauseOrResume()
-        pauseOrResume()
+//        pauseOrResume()
+//        pauseOrResume()
         call.acceptWithParams(params)
     }
 
@@ -548,21 +547,22 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
 
         } else if (webSocket.join_key.value == key) {
             Log.i(TAG,"Same Live Location Join key!")
-        } else if (webSocket.destoryCurrent == true) {
+        } else if (webSocket.changeSession == true) {
             Log.i(TAG,"in Websocket destory,...... ${webSocket.join_key.value}")
+            webSocket.changeSession = false
             webSocket.disConnect()
             webSocket.connect()
             webSocket.enableJoin = true
             webSocket.join_key.postValue(fetchedJoinKey)
             fetchedJoinKey = ""
+            return
         }
 
-        if (webSocket.isConnected.value != true && webSocket.destoryCurrent != true) {
+        if (webSocket.isConnected.value != true && webSocket.changeSession != true) {
            webSocket.connect()
         } else {
             webSocket.join()
         }
-        webSocket.destoryCurrent = false
     }
 
     @WorkerThread
@@ -580,12 +580,14 @@ class CoreContext @UiThread constructor(val context: Context) : HandlerThread("C
                 Factory.instance().createAddress("sip:$remoteUri")
             }
             remoteUri.startsWith("sip") && !remoteUri.contains('@') -> {
-                Factory.instance().createAddress("$remoteUri@212.38.94.76")
+                Factory.instance().createAddress("$remoteUri@212.38.94.76:3429")
             }
             else -> {
-                Factory.instance().createAddress("sip:$remoteUri@212.38.94.76")
+                Factory.instance().createAddress("sip:$remoteUri@212.38.94.76:3429")
             }
         }
+
+        Log.i(TAG,"I am remotr add $remoteAddress")
 
         if (remoteAddress == null) {
             Log.i(TAG ,"Could Not parse Remote Address")

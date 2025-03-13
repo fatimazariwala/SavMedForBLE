@@ -1,4 +1,4 @@
-package mu.location.savmed.ui
+package mu.location.savmed.ui.main.home
 
 import android.content.Context
 import android.content.Intent
@@ -11,19 +11,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import mu.location.savmed.MainActivity
-import mu.location.savmed.SavMed.Companion.bleClient
-import mu.location.savmed.SavMed.Companion.bleServer
+import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.webSocket
-import mu.location.savmed.contacts.ContactsManager.Companion.SAVMED_ADDRESS_BOOK_FRIEND_LIST
 import mu.location.savmed.databinding.FragmentRippleBinding
 import mu.location.savmed.ui.auth.LoginActivity
 import mu.location.savmed.ui.auth.RegistrationActivity
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
-import mu.location.savmed.ui.contacts.fragments.ContactFragment
 import mu.location.savmed.ui.medical.MedicalInfoActivity
 import mu.location.savmed.utils.SharedPreference
 
@@ -41,6 +38,7 @@ class RippleFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG,"In onViewCreated")
         SharedPreference.init(requireContext())
     }
 
@@ -58,17 +56,20 @@ class RippleFragment : Fragment() {
         }
 
         binding = FragmentRippleBinding.inflate(inflater, container, false)
+        //binding.viewModelz = rippleViewModel
+        binding.lifecycleOwner = this
 
         binding.content.startRippleAnimation()
 
         Log.i(TAG,"In shared pref going")
 
         binding.sos.setOnClickListener() {
+            findNavController().navigate(R.id.action_rippleFragment_to_contactFragment)
 //            bleServer.stopAdvertise()
 //            bleServer.startAdvertise()
-            webSocket.enableJoin = true
-            webSocket.join_key.postValue("8qkWUHanqiPrlK1Q")
-            webSocket.connect()
+//            webSocket.enableJoin = true
+//            webSocket.join_key.postValue("8qkWUHanqiPrlK1Q")
+//            webSocket.connect()
             //callViewModel.informEmrContacts()
         }
 

@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.utils.SharedPreference
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -45,7 +46,8 @@ class WsDetails (context: Context) {
     var enableJoin = false
     val errorMessage = MutableLiveData<String>()
 
-    var destoryCurrent = false
+    var destroyCurrent = false
+    var changeSession = false
 
     val onPeerLocationEvent = MutableLiveData<HashMap<String,peerLatLon>>()
 
@@ -83,18 +85,12 @@ class WsDetails (context: Context) {
                         }
                     }
 
-//                runOnUiThread {
-//                    Toast.makeText(context, "Connection Open!", Toast.LENGTH_SHORT).show()
-//                }
                 }
 
                 override fun onMessage(webSocket: okhttp3.WebSocket, text: String) {
                     super.onMessage(webSocket, text)
                     Log.i(TAG, "Message received: $text")
                     processReceivedMessage(text)
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "Message Received!", Toast.LENGTH_SHORT).show()
-//                }
                 }
 
                 override fun onClosed(webSocket: okhttp3.WebSocket, code: Int, reason: String) {
@@ -102,10 +98,6 @@ class WsDetails (context: Context) {
                     Log.i(TAG, "Connection closed: $reason")
                     initEstablished = false
                     isConnected.postValue(false)
-
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "Connection Closed!", Toast.LENGTH_SHORT).show()
-//                }
                 }
 
                 override fun onFailure(
@@ -120,9 +112,6 @@ class WsDetails (context: Context) {
                         isDisconnectDueToNetworkChange = true
                     }
                     initEstablished = false
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "WebSocket Failure!", Toast.LENGTH_SHORT).show()
-//                }
                 }
             })
         } else {
@@ -133,31 +122,53 @@ class WsDetails (context: Context) {
     fun processReceivedMessage(text: String) {
         Log.i(TAG,"In process recened Message....ws")
 
-        if (text.contains("init")) {
+        when {
+            text.contains("init") -> {
 
-            val join: joinData = Gson().fromJson(text, joinData::class.java)
-            Log.i(TAG,"received Join_key: ${join.join}")
-            join_key.postValue(join.join)
-            if (bleClient.activeGattConnections.isNotEmpty()) {
-                Log.i(TAG,"in send to active get connections")
-                bleClient.sendJoinKey(join.join)
+                val join: joinData = Gson().fromJson(text, joinData::class.java)
+                Log.i(TAG,"received Join_key: ${join.join}")
+                join_key.postValue(join.join)
+                if (bleClient.activeGattConnections.isNotEmpty()) {
+                    Log.i(TAG,"in send to active get connections")
+                    bleClient.sendJoinKey(join.join)
+                }
+                initEstablished = true
+                sendLocationMessage(coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,coreContext.onLocationEvent.value?.get("longitude") ?: 0.0)
+
             }
-            initEstablished = true
-            sendLocationMessage(coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,coreContext.onLocationEvent.value?.get("longitude") ?: 0.0)
+            text.contains("Location Data") -> {
 
-        } else if (text.contains("Location Data")) {
+                val peerDetails: peerDetails = Gson().fromJson(text,peerDetails::class.java)
+                Log.i(TAG,"Peer Data: $peerDetails")
+                checkNaddToHashMap(peerDetails)
 
-            val peerDetails: peerDetails = Gson().fromJson(text,peerDetails::class.java)
-            Log.i(TAG,"Peer Data: $peerDetails")
-            checkNaddToHashMap(peerDetails)
-
-        } else if (text.contains("error")) {
-
-            val error: error = Gson().fromJson(text,error::class.java)
-            if (error.message.contains("Join Key NOT Found:")) {
-                errorMessage.postValue("KEY_NOT_FOUND")
             }
+            text.contains("error") -> {
 
+                val error: otherMessage = Gson().fromJson(text,otherMessage::class.java)
+                if (error.message.contains("Join Key NOT Found:")) {
+                    errorMessage.postValue("KEY_NOT_FOUND")
+                }
+
+            }
+            text.contains("connection_message") -> {
+                val connMessage: otherMessage = Gson().fromJson(text,otherMessage::class.java)
+                coroutineScope.launch {
+                    coreContext._globalEvents.emit (
+                        GlobalEventTriggers.WsMessages(connMessage.message)
+                    )
+                }
+                if (connMessage.message.contains("Destroyed")) {
+                    Log.i(TAG,"Destroy Message Received")
+                    if (!join_key.value.isNullOrEmpty()) {
+                        if (connMessage.message.contains(join_key.value!!)) {
+                            Log.i(TAG,"Performing DIsconnect!")
+                            destroyCurrent = false
+                            disConnect()
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -219,12 +230,11 @@ class WsDetails (context: Context) {
     fun disConnect() {
         enableJoin = false
         initEstablished = false
-        isDisconnectDueToNetworkChange = false
         if (isConnected.value == true) {
-            sendDeleteMessage()
-
-            coroutineScope.launch {
-                delay(1000)
+            if (destroyCurrent) {
+                sendDeleteMessage()
+            } else {
+                isDisconnectDueToNetworkChange = false
                 webSocket.cancel()
             }
         }
@@ -246,8 +256,6 @@ class WsDetails (context: Context) {
                 data.longitude = peerDetails.longitude
             }
         }
-
         onPeerLocationEvent.postValue(hashMap)
     }
-
 }

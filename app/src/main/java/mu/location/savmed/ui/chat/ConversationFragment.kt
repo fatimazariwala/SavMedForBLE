@@ -25,10 +25,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mu.location.savmed.BuildConfig
+import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.databinding.FragmentConversationBinding
@@ -143,6 +145,7 @@ class ConversationFragment : Fragment() {
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.i(TAG,"in activivty result..........")
         if (requestCode == EXPORT_FILE_AS_DOCUMENT) {
             if (resultCode == Activity.RESULT_OK) {
                 val filePath = filePathToExport
@@ -187,6 +190,9 @@ class ConversationFragment : Fragment() {
         binding = FragmentConversationBinding.inflate(inflater,container,false)
 
         binding.lifecycleOwner = viewLifecycleOwner
+
+//        val bottomNav = (activity as MainActivity).findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+//        bottomNav.visibility = View.GONE
 
         // The following prevents re-computing conversation history
         // when going back from a sub-fragment such as media grid or info
@@ -306,7 +312,6 @@ class ConversationFragment : Fragment() {
             }
         }
 
-
         scrollListener = object : ConversationScrollListener(layoutManager) {
             @UiThread
             override fun onLoadMore(totalItemsCount: Int) {
@@ -345,12 +350,6 @@ class ConversationFragment : Fragment() {
             findNavController().popBackStack()
         }
 
-        binding.setOpenFilePickerClickListener {
-            Log.i(TAG,"$ Opening media picker")
-            pickMedia.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-            )
-        }
 
         binding.sendArea.messageToSend.setControlEnterListener(object :
             RichEditText.RichEditTextSendListener {
@@ -383,7 +382,7 @@ class ConversationFragment : Fragment() {
                 try {
                     val publicUri = FileProvider.getUriForFile(
                         Objects.requireNonNull(requireContext()),
-                        BuildConfig.APPLICATION_ID + ".fileprovider",
+                        mu.location.savmed.BuildConfig.APPLICATION_ID + ".fileprovider",  // HERE buildConfg.APplication_ID was used
                         file
                     )
                     pendingImageCaptureFile = file
@@ -417,6 +416,14 @@ class ConversationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.setOpenFilePickerClickListener {
+            Log.i(TAG,"$ Opening media picker")
+            pickMedia.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+            )
+        }
+
 
         sharedMainViewModel.displayFileEvent.observe(viewLifecycleOwner) {
             it.consume { bundle ->

@@ -1,13 +1,10 @@
 package mu.location.savmed.ui.auth
 
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.os.IBinder
 import android.text.TextUtils
 import android.util.Log
 import android.widget.Button
@@ -20,7 +17,7 @@ import mu.location.savmed.MainActivity
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.corePreferences
-import mu.location.savmed.ui.RippleFragment.Companion.TAG
+import mu.location.savmed.ui.main.home.RippleFragment.Companion.TAG
 import mu.location.savmed.utils.RetroFit
 //import mu.location.savmed.sip.services.SipService
 import org.linphone.core.Factory
@@ -125,7 +122,7 @@ class LoginActivity : AppCompatActivity() {
 
                                 coreContext.postOnCoreThread { core ->
 
-                                    core.transports.udpPort = 11111
+                                    core.transports.udpPort = 3429
                                     core.isIpv6Enabled = false
                                     core.isPushNotificationEnabled = true
                                     core.loadConfigFromXml(corePreferences.savMedDefaultValuesPath)
@@ -134,7 +131,8 @@ class LoginActivity : AppCompatActivity() {
                                         .createAuthInfo(username, null, password, null, "212.38.94.76", "212.38.94.76:3429", null)
 
                                     val params = core.createAccountParams()
-                                    val identity = Factory.instance().createAddress("sip:$username@212.38.94.76:3429")
+                                    val identity = Factory.instance().createAddress("sip:$username@212.38.94.76")
+
 
                                     params.identityAddress = identity
                                     params.isPublishEnabled = true

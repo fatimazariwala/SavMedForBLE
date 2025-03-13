@@ -4,14 +4,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-
     <data>
         <import type="android.view.View"/>
         <variable
             name="viewModel"
-            type="mu.location.savmed.ui.RippleViewModel" />
+            type="mu.location.savmed.ui.main.home.RippleViewModel" />
     </data>
-
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -87,7 +85,6 @@
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/savlogpng" />
 
-
                     <TextView
                         android:id="@+id/appname"
                         android:layout_width="wrap_content"
@@ -103,9 +100,6 @@
                         app:layout_constraintStart_toStartOf="@+id/imageView"
                         app:layout_constraintTop_toTopOf="parent" />
 
-
-
-
                     <androidx.cardview.widget.CardView
                         android:id="@+id/cardView"
                         android:layout_width="match_parent"
@@ -120,17 +114,11 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/appname">
 
-
-
-
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:id="@+id/usernotloggedin"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:visibility="gone">
-
-
-
 
                             <TextView
                                 android:id="@+id/logintoview"
@@ -169,7 +157,7 @@
                             android:layout_height="match_parent"
                             android:visibility="visible">
 
-
+<!--                            bind:model="@{viewModel.avatar}"-->
                             <include
                                 android:id="@+id/avatar"
                                 android:layout_width="wrap_content"
@@ -178,7 +166,6 @@
                                 android:layout_marginTop="5dp"
                                 android:layout_marginBottom="5dp"
                                 layout="@layout/contact_avatar"
-                                bind:model="@{viewModel.avatar}"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
@@ -273,7 +260,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/cardView"
-                        tools:context=".ui.RippleFragment">
+                        tools:context=".ui.main.home.RippleFragment">
 
 
                         <com.skyfishjy.library.RippleBackground

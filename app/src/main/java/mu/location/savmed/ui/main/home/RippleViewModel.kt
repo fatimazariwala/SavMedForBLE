@@ -1,12 +1,11 @@
-package mu.location.savmed.ui
+package mu.location.savmed.ui.main.home
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import mu.location.savmed.SavMed.Companion.coreContext
-import mu.location.savmed.ui.RippleFragment.Companion.TAG
+import mu.location.savmed.ui.main.home.RippleFragment.Companion.TAG
 import mu.location.savmed.ui.contacts.models.ContactAvatarModel
-import org.linphone.core.Factory
 
 class RippleViewModel: ViewModel() {
 

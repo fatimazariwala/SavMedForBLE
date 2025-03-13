@@ -81,8 +81,6 @@ class DefaultLocationClient(
                         super.onLocationResult(result)
                         result.locations.lastOrNull()?.let { location ->
                             launch {
-//                                coreContext.core.defaultAccount?.setCustomHeader("latitude",location.latitude.toString())
-//                                coreContext.core.defaultAccount?.setCustomHeader("longitude",location.longitude.toString())
                                 Log.i(TAG,"Value of OnLocation Event: ${coreContext.onLocationEvent.value?.get("latitude")}")
                                 if (coreContext.onLocationEvent.value?.get("latitude") != location.longitude || coreContext.onLocationEvent.value?.get("longitude") != location.latitude) {
                                     if (isWebSocketInitialized() && webSocket.isConnected.value == true) {

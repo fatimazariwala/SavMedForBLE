@@ -93,7 +93,7 @@ class CallActivity : AppCompatActivity() {
 //
 //            if (localSipUri != null && remoteSipUri != null) {
 //                navController.navigate(
-//                    CallNavGraphDirections.actionGlobalConversationFragment(
+//                   CallNavGraphDirections.actionGlobalConversationFragment(
 //                        localSipUri,
 //                        remoteSipUri
 //                    )

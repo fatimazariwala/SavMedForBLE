@@ -141,9 +141,6 @@
             android:turnScreenOn="true"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".ui.locationing.LocationActivity"
-            android:exported="true" />
-        <activity
             android:name=".ui.medical.MedicalInfoActivity"
             android:exported="false"
             android:launchMode="singleTask"
@@ -160,6 +157,7 @@
             android:launchMode="singleTask"
             android:resizeableActivity="true"
             android:showWhenLocked="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:supportsPictureInPicture="true"
             android:turnScreenOn="true"
             android:windowSoftInputMode="adjustResize" >

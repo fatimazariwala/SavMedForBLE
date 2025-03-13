@@ -45,4 +45,8 @@ lime_update_threshold=86400
 [alerts]
 alerts_enabled=1
 
+[audio]
+android_pause_calls_when_audio_focus_lost=0
+android_disable_audio_focus_requests=1
+
 ## End of factory rc

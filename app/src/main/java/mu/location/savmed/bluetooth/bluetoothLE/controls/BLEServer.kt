@@ -46,7 +46,7 @@ import mu.location.savmed.SavMed.Companion.bluetoothManager
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.webSocket
 import mu.location.savmed.bluetooth.bluetoothLE.BroadCast.BluetoothBroadcastReceiver
-import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.bluetooth.bluetoothLE.models.LocationChar
 import mu.location.savmed.bluetooth.bluetoothLE.models.writeMessage
 import mu.location.savmed.models.CoreContext
@@ -98,10 +98,6 @@ class BLEServer(
 
     lateinit var bluetoothLeAdvertiser: BluetoothLeAdvertiser
     lateinit var bluetoothGattServer: BluetoothGattServer
-
-    private val _bleServerEvent = MutableSharedFlow<ConnectionResult>()
-    val bleServerEvent: SharedFlow<ConnectionResult>
-        get() = _bleServerEvent
 
     private lateinit var service: BluetoothGattService
     var charFrom: String ?= ""
@@ -175,18 +171,11 @@ class BLEServer(
             if(newState == BluetoothProfile.STATE_CONNECTED) {
 
                 Log.i(TAG,"Device Connected ${device?.address}")
-                flow {
-                    emit(ConnectionResult.ConnectionEstablished)
-                }
                 stopAdvertise()
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
                 Log.i(TAG,"Device Disconnected ${device?.address} Bluetooth LE Advertisinser: ${advertiser}")
-
-                flow {
-                    emit(ConnectionResult.Error("Connection DIsConnected: $status"))
-                }
                 startAdvertise()
             }
         }
@@ -208,12 +197,6 @@ class BLEServer(
             }
             isPrevMessage = false
             processWriteRequest(characteristic,value)
-
-            coroutineScope.launch {
-                _bleServerEvent.emit(
-                    ConnectionResult.Success("BLE Write Message Received!")
-                )
-            }
         }
     }
 
@@ -297,8 +280,15 @@ class BLEServer(
 
             if (webSocket.join_key.value != recv && !webSocket.join_key.value.isNullOrEmpty()) {
                 Log.i(TAG,"JoinKey Value ${webSocket.join_key.value}")
-                coreContext.showPopUP.postValue("live_location_check")
+
+                coroutineScope.launch {
+                    coreContext._globalEvents.emit(
+                        GlobalEventTriggers.LiveLocationCheck
+                    )
+                }
                 coreContext.fetchedJoinKey = recv
+            } else {
+                Log.i(TAG,"JoinKey Value in else block ${webSocket.join_key.value}")
             }
 
             _listOfMessages.update { messages ->

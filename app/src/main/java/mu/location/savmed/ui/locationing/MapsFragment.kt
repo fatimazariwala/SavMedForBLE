@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener
@@ -27,9 +28,11 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.SphericalUtil
+import kotlinx.coroutines.launch
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.webSocket
+import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.databinding.FragmentMapsBinding
 import mu.location.savmed.ui.locationing.DataProcessing.FetchURL
 import mu.location.savmed.ui.locationing.DataProcessing.TaskLoadedCallback
@@ -187,7 +190,11 @@ class MapsFragment : Fragment(),TaskLoadedCallback {
         binding.wsConnStat.setOnClickListener() {
             Toast.makeText(requireContext(),"Live Locationing Stopping...!",Toast.LENGTH_SHORT).show()
             if (webSocket.isConnected.value == true) {
-                webSocket.disConnect()
+
+                lifecycleScope.launch {
+                    coreContext._globalEvents.emit(GlobalEventTriggers.DestroyWsSession)
+                }
+
                 mapsViewModel.manualJoinKey.value = ""
             } else {
                 if (!mapsViewModel.manualJoinKey.value.isNullOrEmpty()) {

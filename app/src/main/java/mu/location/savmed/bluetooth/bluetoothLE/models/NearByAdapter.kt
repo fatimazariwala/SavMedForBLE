@@ -13,7 +13,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import mu.location.savmed.R
 import mu.location.savmed.SavMed.Companion.coreContext
 import mu.location.savmed.SavMed.Companion.webSocket
@@ -30,6 +34,7 @@ class NearByAdapter(
     private val onCallCLick: (String) -> Unit,
 ) : ListAdapter<BluetoothLEScannedDevices, NearByAdapter.BlueToothBLEDeviceViewHolder>(BleDeviceDiffCallback()) {
 
+    val coroutineScope = CoroutineScope(SupervisorJob()+Dispatchers.IO)
     companion object {
         const val TAG = "[BLE Adapter]"
     }
@@ -87,12 +92,14 @@ class NearByAdapter(
                             if (userToCall.isNotEmpty()) {
                                 onCallCLick(userToCall)
                             } else {
-                                coreContext.showPopUP.postValue("USER_TO_CALL_NOT_FOUND")
+                                coroutineScope.launch {
+                                    coreContext._globalEvents.emit(GlobalEventTriggers.UserNotFound)
+                                }
                             }
                         }
                     } else {
-                        flow {
-                            emit(ConnectionResult.Error("Cannot Call, Empty UserName!"))
+                        coroutineScope.launch {
+                            coreContext._globalEvents.emit(GlobalEventTriggers.UserNotFound)
                         }
                     }
                 }

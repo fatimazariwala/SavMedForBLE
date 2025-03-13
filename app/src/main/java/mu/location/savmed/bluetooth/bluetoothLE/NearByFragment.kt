@@ -33,8 +33,6 @@ import mu.location.savmed.bluetooth.bluetoothLE.controls.BLEClient
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.NearByAdapter
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModel
-import mu.location.savmed.bluetooth.bluetoothLE.models.ConnectionResult
-//import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEViewModelFactory
 import mu.location.savmed.databinding.FragmentNearbyhelpBinding
 import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
 import mu.location.savmed.ui.contacts.fragments.ContactFragment
@@ -128,9 +126,7 @@ class NearByFragment : Fragment() {
         }
         Log.i(TAG, "SAV_MEDaaaa")
 
-        observeEvents()
-
-        if (prevConnectionState.scannedDevices.isNullOrEmpty()) {
+        if (prevConnectionState.scannedDevices.isEmpty()) {
             startScan()
         } else {
             Toast.makeText(requireContext(),"Devices available from previous scan!",Toast.LENGTH_SHORT).show()
@@ -171,13 +167,10 @@ class NearByFragment : Fragment() {
             }
         }
 
-//        binding.sendBroadcast.setOnClickListener() {
-//            bluetoothLEViewModel.sendBroadCastConnection()
-//        }
-
         binding.messages.setOnClickListener() {
             //Toast.makeText(requireContext(),"Upcoming!!",Toast.LENGTH_SHORT).show()
             findNavController().navigate(R.id.action_nearByFragment_to_messageListFragment)
+            //bluetoothLEViewModel.stopScan()
         }
 
         return binding.root
@@ -185,44 +178,6 @@ class NearByFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        observeMessages()
-    }
-
-    private fun observeEvents() {
-        bleClient.bleEvent.onEach { result ->
-            when (result) {
-                ConnectionResult.ConnectionEstablished -> {
-                    Toast.makeText(requireContext(),"Connected!",Toast.LENGTH_SHORT).show()
-                }
-                is ConnectionResult.Error -> {
-                    Toast.makeText(requireContext(),result.message,Toast.LENGTH_LONG).show()
-                }
-                else -> { }
-            }
-        }
-        .catch { throwable ->
-            Log.e(TAG, "Error: $throwable")
-        }
-        .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    private fun observeMessages() {
-
-        bleServer.bleServerEvent.onEach { result ->
-
-            when(result) {
-                is ConnectionResult.BLETransferSucceeded -> {
-                    Log.i(TAG,"yoooooooooooo ${result.message}")
-                    Toast.makeText(requireContext(),result.message,Toast.LENGTH_SHORT).show()
-                }
-                else -> { }
-            }
-
-        }
-        .catch { throwable ->
-            Log.e(TAG, "Error: $throwable")
-        }
-        .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun startScan() {

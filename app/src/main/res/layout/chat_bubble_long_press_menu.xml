@@ -28,22 +28,22 @@
 <!--                bind:viewModel="@{viewModel.messageModel}}-->
 <!--                bind:viewModel="@{() -> viewModel.pickEmoji()}"-->
 <!--            app:layout_constraintHorizontal_bias="@{viewModel.horizontalBias, default=0}"-->
-            <include
-                android:id="@+id/emojis"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:visibility="visible"
-                layout="@layout/chat_emoji_reaction_picker"
-                bind:model=" "
-                bind:pickEmojiClickListener=" "
-                app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintWidth_max="@dimen/emoji_list_max_width"
-                app:layout_constraintBottom_toTopOf="@id/bubbles"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+<!--            <include-->
+<!--                android:id="@+id/emojis"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginBottom="5dp"-->
+<!--                android:layout_marginStart="10dp"-->
+<!--                android:layout_marginEnd="10dp"-->
+<!--                android:visibility="visible"-->
+<!--                layout="@layout/chat_emoji_reaction_picker"-->
+<!--                bind:model=" "-->
+<!--                bind:pickEmojiClickListener=" "-->
+<!--                app:layout_constraintHorizontal_bias="0"-->
+<!--                app:layout_constraintWidth_max="@dimen/emoji_list_max_width"-->
+<!--                app:layout_constraintBottom_toTopOf="@id/bubbles"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"/>-->
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/bubbles"

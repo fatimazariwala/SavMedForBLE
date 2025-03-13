@@ -5,10 +5,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import mu.location.savmed.R
 import mu.location.savmed.databinding.FragmentChatListBinding
 import mu.location.savmed.ui.chat.Adapters.ConversationsListAdapter
 import mu.location.savmed.ui.chat.viewModel.ConversationViewModel
@@ -41,6 +43,13 @@ class ChatListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+                findNavController().navigate(R.id.action_chatListFragment_to_contactFragment)
+            }
+        })
 
         binding = FragmentChatListBinding.inflate(inflater,container,false)
         return binding.root

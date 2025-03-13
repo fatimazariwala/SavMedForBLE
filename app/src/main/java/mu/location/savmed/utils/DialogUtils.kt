@@ -68,11 +68,21 @@ class DialogUtils {
             }
         }
 
-        fun showSplashDialogCheck(message: String,context: Context, callback: (Boolean) -> Unit) {
+        fun showSplashDialogCheck(message: String = "",buttonA: String = "",buttonB: String = "", context: Context, callback: (Boolean) -> Unit) {
             val dialogBuilder = AlertDialog.Builder(context)
             val inflater = LayoutInflater.from(context)
             val dialogView = inflater.inflate(R.layout.normal_pop_ups, null) // Replace with your XML file name
             dialogBuilder.setView(dialogView)
+
+            if (message.isNotEmpty()) {
+                dialogView.findViewById<TextView>(R.id.messg).text = message
+            }
+            if (buttonA.isNotEmpty()) {
+                dialogView.findViewById<Button>(R.id.button_yesss).text = buttonA
+            }
+            if (buttonB.isNotEmpty()) {
+                dialogView.findViewById<Button>(R.id.button_nooo).text = message
+            }
 
             val alert = dialogBuilder.create()
             alert.show()

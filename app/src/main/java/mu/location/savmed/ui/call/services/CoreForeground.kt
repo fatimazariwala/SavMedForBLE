@@ -3,6 +3,9 @@ package mu.location.savmed.ui.call.services
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +15,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.coreContext
+import mu.location.savmed.models.ScheduleBackgroundTask
 import mu.location.savmed.notifications.OnDestroyBroadCastReceiver
 import mu.location.savmed.ui.locationing.DefaultLocationClient
 import mu.location.savmed.utils.SharedPreference
 import org.linphone.core.tools.Log
+import java.util.concurrent.TimeUnit
 
 class CoreForeground : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -29,21 +34,22 @@ class CoreForeground : Service() {
         super.onCreate()
         Log.i("$TAG Created")
 
+        val periodicStart = PeriodicWorkRequestBuilder<ScheduleBackgroundTask>(
+            15,TimeUnit.MINUTES
+        ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "StartService",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicStart
+        )
+
         val locationClient = DefaultLocationClient(
             applicationContext,
             LocationServices.getFusedLocationProviderClient(applicationContext)
         )
 
         SharedPreference.init(this)
-//        if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT,this) && hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE,this)) {
-//
-//            bluetoothLEController = AndroidBluetoothLEController(applicationContext)
-//
-//        } else {
-//
-//            Log.e(TAG, "Bluetooth permissions not granted.")
-//
-//        }
 
         locationClient
             .getLocationUpdates(10000L)

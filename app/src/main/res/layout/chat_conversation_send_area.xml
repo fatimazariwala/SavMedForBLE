@@ -14,7 +14,6 @@
         <variable
             name="viewModel"
             type="mu.location.savmed.ui.chat.viewModel.SendInMessageViewModel" />
-
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -39,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="@{viewModel.isVoiceRecording ? View.INVISIBLE : (viewModel.isKeyboardOpen || viewModel.isCallConversation || !viewModel.isFileTransferServerAvailable) ? View.GONE : View.VISIBLE}"
-            app:constraint_referenced_ids="emoji_picker_toggle, capture_image" />
+            app:constraint_referenced_ids=" capture_image" />
 
         <!--        from below kode visibility,bind was changed-->
 
@@ -72,13 +71,13 @@
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/attachments" />
 
-        <androidx.emoji2.emojipicker.EmojiPickerView
-            android:id="@+id/emoji_picker"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/chat_room_emoji_picker_height"
-            android:background="?attr/color_grey_100"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/attachments" />
+<!--        <androidx.emoji2.emojipicker.EmojiPickerView-->
+<!--            android:id="@+id/emoji_picker"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="@dimen/chat_room_emoji_picker_height"-->
+<!--            android:background="?attr/color_grey_100"-->
+<!--            android:visibility="gone"-->
+<!--            app:layout_constraintTop_toBottomOf="@id/attachments" />-->
 
 <!--        app:constraint_referenced_ids="emoji_picker, participants, attachments, reply_area"-->
         <androidx.constraintlayout.widget.Barrier
@@ -86,69 +85,55 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="emoji_picker, participants, attachments, reply_area" />
+            app:constraint_referenced_ids="participants, attachments, reply_area" />
 
         <!-- Form below kode onclick was removed, src was changed        -->
-        <ImageView
-            android:id="@+id/emoji_picker_toggle"
-            android:layout_width="40dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="5dp"
-            android:padding="8dp"
-            android:visibility="gone"
-            android:contentDescription="@string/content_description_chat_open_emoji_picker"
-            android:src="@drawable/smiley"
-            app:layout_constraintBottom_toBottomOf="@id/message_area_background"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/message_area_background"
-            app:tint="@color/icon_color_selector" />
 
         <!-- Form below kode enabled was changed          -->
+
+        <!-- from below code =enablerd dwas removed        -->
 
         <ImageView
             android:id="@+id/attach_file"
             android:layout_width="40dp"
             android:layout_height="0dp"
-            android:layout_marginStart="5dp"
+            android:contentDescription="@string/content_description_chat_open_attach_media"
+            android:enabled="@{!viewModel.maxNumberOfAttachmentsReached}"
             android:onClick="@{openFilePickerClickListener}"
             android:padding="8dp"
-            android:enabled="@{!viewModel.maxNumberOfAttachmentsReached}"
             android:src="@drawable/paperclip"
-            android:contentDescription="@string/content_description_chat_open_attach_media"
             app:layout_constraintBottom_toBottomOf="@id/message_area_background"
             app:layout_constraintEnd_toStartOf="@id/capture_image"
-            app:layout_constraintStart_toEndOf="@id/emoji_picker_toggle"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/message_area_background"
             app:tint="@color/icon_color_selector" />
 
-        <!-- from below code =enablerd dwas removed        -->
         <ImageView
             android:id="@+id/capture_image"
             android:layout_width="40dp"
             android:layout_height="0dp"
-            android:layout_marginStart="5dp"
-            android:onClick="@{openCameraClickListener}"
+            android:contentDescription="@string/content_description_chat_take_picture"
             android:enabled="@{!viewModel.maxNumberOfAttachmentsReached}"
+            android:onClick="@{openCameraClickListener}"
             android:padding="8dp"
             android:src="@drawable/camera"
-            android:contentDescription="@string/content_description_chat_take_picture"
             app:layout_constraintBottom_toBottomOf="@id/message_area_background"
             app:layout_constraintEnd_toStartOf="@id/message_area_background"
-            app:layout_constraintStart_toEndOf="@id/attach_file"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/message_area_background"
+            app:layout_constraintVertical_bias="1.0"
             app:tint="@color/icon_color_selector" />
 
         <ImageView
             android:id="@+id/message_area_background"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="5dp"
+            android:layout_width="304dp"
+            android:layout_height="49dp"
             android:layout_marginEnd="16dp"
-            android:src="@drawable/edit_text_background"
             android:contentDescription="@null"
+            android:src="@drawable/edit_text_background"
             app:layout_constraintBottom_toBottomOf="@id/message_to_send"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/capture_image"
             app:layout_constraintTop_toTopOf="@id/message_to_send" />
 
         <mu.location.savmed.ui.chat.view.RichEditText

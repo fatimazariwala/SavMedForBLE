@@ -22,6 +22,8 @@ size=vga
 
 [app]
 tunnel=disabled
+auto_start=1
+record_aware=1
 
 [tunnel]
 host=
@@ -34,10 +36,6 @@ version_check_url_root=https://www.linphone.org/releases
 max_calls=10
 history_max_size=100
 conference_layout=1
-
-[in-app-purchase]
-server_url=https://subscribe.linphone.org:444/inapp.php
-purchasable_items_ids=test_account_subscription
 
 [magic_search]
 return_empty_friends=1

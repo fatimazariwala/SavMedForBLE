@@ -15,7 +15,7 @@ data class peerLatLon (
     var longitude: Double,
 )
 
-data class error (
+data class otherMessage (
     val type: String,
     val message : String,
 )

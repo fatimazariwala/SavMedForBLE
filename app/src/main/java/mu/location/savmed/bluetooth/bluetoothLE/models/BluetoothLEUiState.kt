@@ -41,6 +41,7 @@ data class LocationChar (
 )
 
 data class NearByForAPI (
+    val em_key: String,
     val em_caller: String,
     val em_responder: String,
     val em_responder_location: LocationChar,

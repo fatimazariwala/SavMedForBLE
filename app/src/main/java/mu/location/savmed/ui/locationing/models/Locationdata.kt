@@ -17,6 +17,7 @@ data class getLiveLocationData(
 )
 
 data class locationData(
+    var emr_key: String,
     var Latitude : Double,
     var Longitude : Double,
     var sqlStatus : Int,

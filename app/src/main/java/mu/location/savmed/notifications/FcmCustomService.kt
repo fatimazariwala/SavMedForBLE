@@ -8,13 +8,21 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import mu.location.savmed.MainActivity
 import mu.location.savmed.R
+import mu.location.savmed.SavMed.Companion.bleClient
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class FcmCustomService: FirebaseMessagingService() {
+
+    val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
@@ -22,6 +30,15 @@ class FcmCustomService: FirebaseMessagingService() {
             Log.d("[FirBaseMessagingC]", "Message Notification Body: ${notification.body}")
             // Show the notification
             showNotification(notification.title, notification.body)
+        }
+        Log.i("[FCM Custom]","Received Push Data.. ${remoteMessage.data}.")
+
+        if (remoteMessage.data["body"] == "start_scan")  {
+            Log.i("[FCM Custom]","Tryyna STart SCan")
+            bleClient.sendToDashBoard = true
+            coroutineScope.launch {
+                bleClient.startBLEScan()
+            }
         }
     }
 

@@ -74,12 +74,6 @@ class CallActivity : AppCompatActivity() {
             ViewModelProvider(this)[ConversationViewModel::class.java]
         }
 
-        bleClient.locationReadComplete.observe(this) { locationRead ->
-            if (locationRead) {
-                    callViewModel.sendNearByUsers()
-            }
-        }
-
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainerView2) as NavHostFragment
         navController = navHostFragment.navController
 

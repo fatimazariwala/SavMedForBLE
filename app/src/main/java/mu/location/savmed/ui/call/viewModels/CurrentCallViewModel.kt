@@ -53,7 +53,6 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
     var enableOutgoingCall = false
 
     var chatRoom: ChatRoom? = null
-    var lastNearByAddress: String ?= null
 
     val displayedName = MutableLiveData<String>()
 
@@ -470,7 +469,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
         val lat = coreContext.onLocationEvent.value?.get("latitude")?: 0.0
         val lon = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0
-        lastNearByAddress = null
+
         val geocoder = Geocoder(fragmentContext!!)
         try {
             val addresses = geocoder.getFromLocation(lat, lon, 1)
@@ -482,7 +481,8 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         Log.i(TAG,"in outside forgggggg")
 
         //informEmrContacts()
-       // sendNearByUsers()
+
+        bleClient.sendToDashBoard = true
         viewModelScope.launch {
             bleClient.startBLEScan()
         }
@@ -492,6 +492,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
             val gson = Gson();
             var LocJson = gson.toJson(
                 locationData(
+                    webSocket.join_key.value ?:"",
                     lat,
                     lon,
                     0,
@@ -501,7 +502,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
                         Date()
                     ),
                     address,
-                    coreContext.core.defaultAccount?.params?.identityAddress?.username.toString(),
+                    SharedPreference.username,
                     remoteUri!!.trim(),
                 )
             );
@@ -511,6 +512,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
 
                 RetrofitInstance.apiLocation.postLocationData(
                     locationData(
+                        emr_key = webSocket.join_key.value ?:"",
                         Latitude = coreContext.onLocationEvent.value?.get("latitude") ?: 0.0,
                         Longitude = coreContext.onLocationEvent.value?.get("longitude") ?: 0.0,
                         sqlStatus = 0,Address = address,
@@ -566,78 +568,19 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
     }
 
      fun informEmrContacts() {
-        val friendList = coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
-        for (contact in friendList ?: emptyArray()) {
-            if (contact.starred) {
-                createBasicChatRoom(contact.address?.username.toString())
-                val message =
-                    "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
-                android.util.Log.i(ContactFragment.TAG, message)
-                val chatMessage = chatRoom!!.createMessageFromUtf8(message)
-                chatMessage.send()
-            }
-        }
-    }
-
-    fun sendNearByUsers() {
-
-        val nearBySavMedUsers = bleClient.scannedDevices.value
-        val user = nearBySavMedUsers.findLast { device ->
-            device.isSavMed
-        }
-        if (user != null && user.address != lastNearByAddress) {
-            Log.i(TAG,"User Not Null ${user.address}")
-               // if (user.isSavMed) {
-                    Log.i(TAG,"Jsnskjwjiowejio... [${user.name}]..[${user.latLon?.lat}]. [${user.latLon?.lon}].")
-                    val call: retrofit2.Call<NearByForAPI?>? = try {
-
-                        Log.i(TAG,"Sending Request....")
-                        RetrofitInstance.apiNearBy.postNearByUsers(
-                            NearByForAPI (
-                                em_responder = user.name ?: "Saved_User",
-                                em_caller = SharedPreference.username,
-                                em_responder_location = user.latLon ?: LocationChar(0.0,0.0),
-                                event_timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
-                                    Locale("en", "IN")
-                                ).format(
-                                    Date()
-                                )
-                            )
-                        )
-                    } catch (e: IOException) {
-                        Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
-                        return
-                    } catch (e: HttpException) {
-                        Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
-                        return
-                    }
-
-                    call?.enqueue(object: Callback<NearByForAPI?> {
-                        override fun onResponse(
-                            call: retrofit2.Call<NearByForAPI?>,
-                            response: Response<NearByForAPI?>
-                        ) {
-                            Log.i(TAG,"Response From NearBy: [${response.body()}] [${response.code()}]")
-                            if (response.code() == 200 && response.isSuccessful) {
-                                lastNearByAddress = user.address
-                            } else {
-                                Log.i(TAG,"Response Failure")
-                            }
-                        }
-
-                        override fun onFailure(
-                            call: retrofit2.Call<NearByForAPI?>,
-                            t: Throwable
-                        ) {
-                            Log.i(TAG,"Response : Failure -----${t.message}")
-                        }
-                    })
-               // }
-        } else {
-            Log.i(TAG,"User Already Present... [${user?.address}] [$lastNearByAddress]")
-        }
-    }
-
+         val friendList =
+             coreContext.core.getFriendListByName(SAVMED_ADDRESS_BOOK_FRIEND_LIST)?.friends
+         for (contact in friendList ?: emptyArray()) {
+             if (contact.starred) {
+                 createBasicChatRoom(contact.address?.username.toString())
+                 val message =
+                     "EMR Help Needed by ${coreContext.core.defaultAccount?.params?.identityAddress?.username} at ->\n ${address}"
+                 android.util.Log.i(ContactFragment.TAG, message)
+                 val chatMessage = chatRoom!!.createMessageFromUtf8(message)
+                 chatMessage.send()
+             }
+         }
+     }
 
     @UiThread
     override fun onCleared() {

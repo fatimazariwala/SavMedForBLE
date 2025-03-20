@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mu.location.savmed.SavMed.Companion.bleClient
 import mu.location.savmed.SavMed.Companion.bleServer
 import mu.location.savmed.SavMed.Companion.bluetoothAdapter
 import mu.location.savmed.SavMed.Companion.bluetoothManager
@@ -48,9 +49,19 @@ import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLESavMedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.BluetoothLEScannedDevices
 import mu.location.savmed.bluetooth.bluetoothLE.models.GlobalEventTriggers
 import mu.location.savmed.bluetooth.bluetoothLE.models.LocationChar
+import mu.location.savmed.bluetooth.bluetoothLE.models.NearByForAPI
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel
+import mu.location.savmed.ui.call.viewModels.CurrentCallViewModel.Companion
+import mu.location.savmed.utils.RetrofitInstance
 import mu.location.savmed.utils.SettingsManager.hasPermission
 import mu.location.savmed.utils.SharedPreference
+import retrofit2.Callback
+import retrofit2.HttpException
+import retrofit2.Response
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import kotlin.math.pow
 
@@ -63,6 +74,9 @@ class BLEClient(
     companion object {
         const val TAG = "[BLE CLient]"
     }
+
+    var sendToDashBoard = false
+    var noOfSavMedDevices = 0
 
     val activeGattConnections = HashMap<String, BluetoothGatt>()
     val locationReadComplete = MutableLiveData<Boolean>()
@@ -199,8 +213,17 @@ class BLEClient(
                 if (char.equals(CHARACTERISTIC_USER_NAME_UUID)) {
                     Log.i(TAG,"In char found!!!")
                     addDeviceToSavMedDevicesList(gatt, null, valueString)
+                    Log.i(TAG,"SavMed COunt $noOfSavMedDevices $sendToDashBoard")
+                    if (noOfSavMedDevices != 0) {
+                        noOfSavMedDevices -= 1
+                        Log.i(TAG,"No savMed Devices $noOfSavMedDevices");
+                    }
+                    if (sendToDashBoard && noOfSavMedDevices == 0) {
+                        Log.i(TAG,"Calling Send to DashbOard...")
+                        sendNearByUsers()
+                        sendToDashBoard = false
+                    }
                 }
-
             } else {
                 Log.w(TAG, "Error reading characteristic: $status")
             }
@@ -244,6 +267,7 @@ class BLEClient(
         }
 
         if (!scanning) {
+            noOfSavMedDevices = 0
             handler.postDelayed({
                 scanning = false
                 stopBleScan()
@@ -466,6 +490,7 @@ class BLEClient(
             Log.i(TAG,"In Connection Looop")
             if (device.isSavMed == true) {
 
+                noOfSavMedDevices += 1
                 val deviceFound = bluetoothAdapter.getRemoteDevice(device.address)
                 val connectionState = bluetoothManager.getConnectionState(deviceFound,BluetoothProfile.GATT)
 
@@ -556,4 +581,58 @@ class BLEClient(
     fun getActiveGattConnection(device: String): BluetoothGatt? {
         return activeGattConnections.get(device)
     }
+
+    fun sendNearByUsers() {
+
+        val nearBySavMedUsers = bleClient.scannedDevices.value
+        nearBySavMedUsers.forEach { device ->
+            if (device.isSavMed) {
+
+                val user = device
+                val call: retrofit2.Call<NearByForAPI?>? = try {
+
+                    org.linphone.core.tools.Log.i(TAG,"Sending Request....")
+                    RetrofitInstance.apiNearBy.postNearByUsers(
+                        NearByForAPI (
+                            em_key = webSocket.join_key.value ?: "",
+                            em_responder = user.name ?: "Saved_User",
+                            em_caller = SharedPreference.username,
+                            em_responder_location = user.latLon ?: LocationChar(0.0,0.0),
+                            event_timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                                Locale("en", "IN")
+                            ).format(
+                                Date()
+                            )
+                        )
+                    )
+                } catch (e: IOException) {
+                    org.linphone.core.tools.Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
+                    return
+                } catch (e: HttpException) {
+                    org.linphone.core.tools.Log.i(TAG,"Error Sending NearBY Data: [${e.message}]")
+                    return
+                }
+
+                call?.enqueue(object: Callback<NearByForAPI?> {
+                    override fun onResponse(
+                        call: retrofit2.Call<NearByForAPI?>,
+                        response: Response<NearByForAPI?>
+                    ) {
+                        org.linphone.core.tools.Log.i(TAG,"Response From NearBy: [${response.body()}] [${response.code()}]")
+                    }
+
+                    override fun onFailure(
+                        call: retrofit2.Call<NearByForAPI?>,
+                        t: Throwable
+                    ) {
+                        org.linphone.core.tools.Log.i(TAG,"Response : Failure -----${t.message}")
+                    }
+                })
+
+            }
+        }
+
+
+    }
+
 }

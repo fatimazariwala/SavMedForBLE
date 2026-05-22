@@ -62,7 +62,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBL3tCKWE9hgJE50EvpFiAshvJeYJy7bfU" /> <!-- <activity -->
+            android:value="" /> <!-- <activity -->
         <!-- android:name=".ui.chat.receiver.FileViewerActivity" -->
         <!-- android:exported="false" /> -->
         <!-- <activity -->

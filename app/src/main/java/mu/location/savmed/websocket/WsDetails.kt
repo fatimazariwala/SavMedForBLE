@@ -59,7 +59,7 @@ class WsDetails (context: Context) {
     fun connect() {
 
         if (isConnected.value == false) {
-            val request = Request.Builder().url("ws://212.38.94.76:8001").build()
+            val request = Request.Builder().url("ws://x.x.x.x").build()
             Log.i(TAG, "in COnnect......Ws")
 
             webSocket = client.newWebSocket(request, object : WebSocketListener() {

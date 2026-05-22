@@ -8,7 +8,7 @@ import retrofit2.create
 object RetrofitInstance {
     val apiContacts : RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/v7/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)
@@ -16,7 +16,7 @@ object RetrofitInstance {
 
     val apiLiveLocation : RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/v8/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)
@@ -24,7 +24,7 @@ object RetrofitInstance {
 
     val apiLocation : RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/v2/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)
@@ -32,7 +32,7 @@ object RetrofitInstance {
 
     val apiEmergencyContacts: RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/v9/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)
@@ -40,14 +40,14 @@ object RetrofitInstance {
 
     val apiNearBy: RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/vN/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)
     }
     val apiRegistration : RetroFit by lazy {
         Retrofit.Builder()
-            .baseUrl("https://gosaviour.com/wp-json/wdash/v3/")
+            .baseUrl("")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(RetroFit::class.java)

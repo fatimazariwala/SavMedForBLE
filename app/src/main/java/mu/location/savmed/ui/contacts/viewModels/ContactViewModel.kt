@@ -55,7 +55,7 @@ class ContactViewModel : ViewModel() {
     lateinit var friend: Friend
 
     private var previousFilter = "NotSet"
-    private var domainFilter = "212.38.94.76"
+    private var domainFilter = "x.x.x.x"
     val fetchInProgress = MutableLiveData<Boolean>()
 
     val searchFilter = MutableLiveData<String>()

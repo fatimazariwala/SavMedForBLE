@@ -87,7 +87,7 @@ class LoginActivity : AppCompatActivity() {
 
                     Toast.makeText(this,"Login In-Progress!",Toast.LENGTH_SHORT).show()
                     val retrofit = Retrofit.Builder()
-                        .baseUrl("https://gosaviour.com/wp-json/wdash/v6/")
+                        .baseUrl("")
                         .addConverterFactory(GsonConverterFactory.create())
                         .build()
 
@@ -122,22 +122,22 @@ class LoginActivity : AppCompatActivity() {
 
                                 coreContext.postOnCoreThread { core ->
 
-                                    core.transports.udpPort = 3429
+                                    core.transports.udpPort = 5060
                                     core.isIpv6Enabled = false
                                     core.isPushNotificationEnabled = true
                                     core.loadConfigFromXml(corePreferences.savMedDefaultValuesPath)
 
                                     val authInfo = Factory.instance()
-                                        .createAuthInfo(username, null, password, null, "212.38.94.76", "212.38.94.76:3429", null)
+                                        .createAuthInfo(username, null, password, null, "x.x.x.x", "x.x.x.x", null)
 
                                     val params = core.createAccountParams()
-                                    val identity = Factory.instance().createAddress("sip:$username@212.38.94.76")
+                                    val identity = Factory.instance().createAddress("sip:$username@x.x.x.x")
 
 
                                     params.identityAddress = identity
                                     params.isPublishEnabled = true
 
-                                    val address = Factory.instance().createAddress("sip:212.38.94.76:3429")
+                                    val address = Factory.instance().createAddress("sip:x.x.x.x")
                                     address?.transport = TransportType.Udp
 
                                     val proxy = params.setServerAddress(address)

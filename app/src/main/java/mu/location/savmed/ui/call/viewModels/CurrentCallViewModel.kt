@@ -411,7 +411,7 @@ class CurrentCallViewModel @UiThread constructor(private val callBack: EndSwitch
         params.subject = "One-to-One CHat room"
 
         if (params.isValid) {
-            val remoteAddress = Factory.instance().createAddress("sip:${remoteUri}@212.38.94.76")
+            val remoteAddress = Factory.instance().createAddress("sip:${remoteUri}@x.x.x.x")
 
             if (remoteAddress != null) {
 

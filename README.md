@@ -59,13 +59,13 @@ No complex menus. No long forms. One button — and help is on the way.
 <img src="screenshots/step1_ble_discovery.jpeg" width="600" alt="BLE Feature Set">
 
 ### Device Identified & SOS Alert Received
-![SOS Workflow](https://github.com/fatimazariwala/SavMedForBLE/screenshots/step2_sos_workflow.jpeg)
+<img src="screenshots/step2_sos_workflow.jpeg" width="600" alt="SOS Workflow">
 
 ### VoIP Call & Emergency Contact Messaging
-![VoIP and Chat](https:/github.com/fatimazariwala/SavMedForBLE/screenshots/step3_voip_chat.jpeg)
+<img src="screenshots/step3_voip_chat.jpeg" width="600" alt="VoIP and Chat">
 
 ### Live Location Streamed to Security Room
-![Live Tracking](https://github.com/fatimazariwala/SavMedForBLE/screenshots/step4_live_tracking.jpeg)
+<img src="screenshots/step4_live_tracking.jpeg" width="600" alt="Live Tracking">
 
 ---
 

@@ -56,16 +56,16 @@ No complex menus. No long forms. One button — and help is on the way.
 ## App Screenshots & Workflow
 
 ### BLE Device Discovery
-![BLE Feature Set](https://raw.githubusercontent.com/fatimazariwala/SavMedForBLE/screenshots/step1_ble_discovery.png)
+![BLE Feature Set](https://github.com/fatimazariwala/SavMedForBLE/screenshots/step1_ble_discovery.png)
 
 ### Device Identified & SOS Alert Received
-![SOS Workflow](https://raw.githubusercontent.com/fatimazariwala/SavMedForBLE/screenshots/step2_sos_workflow.png)
+![SOS Workflow](https://github.com/fatimazariwala/SavMedForBLE/screenshots/step2_sos_workflow.png)
 
 ### VoIP Call & Emergency Contact Messaging
-![VoIP and Chat](https://raw.githubusercontent.com/fatimazariwala/SavMedForBLE/screenshots/step3_voip_chat.png)
+![VoIP and Chat](https:/github.com/fatimazariwala/SavMedForBLE/screenshots/step3_voip_chat.png)
 
 ### Live Location Streamed to Security Room
-![Live Tracking](https://raw.githubusercontent.com/fatimazariwala/SavMedForBLE/screenshots/step4_live_tracking.png)
+![Live Tracking](https://github.com/fatimazariwala/SavMedForBLE/screenshots/step4_live_tracking.png)
 
 ---
 
@@ -224,7 +224,7 @@ Core libraries, tools, and documentation used in building SavMed:
 
 ## Project Status
 
-SavMed is a proprietary startup project. The source code is not publicly available. This repository serves as a technical reference and portfolio showcase.
+SavMed is a proprietary startup project. The source code is currently publicly available. This repository serves as a technical reference and portfolio showcase.
 
 For collaboration, partnership, or licensing enquiries, please reach out directly.
 
